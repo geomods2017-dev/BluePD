@@ -19,15 +19,19 @@ workflows:
     scripts:
       - name: Debug project structure
         script: |
-          echo "Listing files..."
+          echo "=== Xcode projects ==="
           find . -name "*.xcodeproj"
+          echo "=== Xcode workspaces ==="
           find . -name "*.xcworkspace"
-          find . -name "*.xcscheme"
+          echo "=== Shared schemes ==="
+          find . -path "*xcshareddata/xcschemes/*.xcscheme"
 
       - name: Install CocoaPods (if needed)
         script: |
           if [ -f "Podfile" ]; then
             pod install
+          else
+            echo "No Podfile found, skipping pod install"
           fi
 
       - name: Apply provisioning profiles
@@ -41,15 +45,21 @@ workflows:
 
           echo "Workspace: $WORKSPACE"
           echo "Project: $PROJECT"
+          echo "Scheme: $XCODE_SCHEME"
 
           if [ -n "$WORKSPACE" ]; then
+            xcodebuild -list -workspace "$WORKSPACE" || true
             xcode-project build-ipa \
               --workspace "$WORKSPACE" \
               --scheme "$XCODE_SCHEME"
-          else
+          elif [ -n "$PROJECT" ]; then
+            xcodebuild -list -project "$PROJECT" || true
             xcode-project build-ipa \
               --project "$PROJECT" \
               --scheme "$XCODE_SCHEME"
+          else
+            echo "No valid BluePD.xcworkspace or BluePD.xcodeproj file found."
+            exit 1
           fi
 
     artifacts:
@@ -64,3 +74,6 @@ workflows:
       email:
         recipients:
           - tylerclampitt@gmail.com
+        notify:
+          success: true
+          failure: true
