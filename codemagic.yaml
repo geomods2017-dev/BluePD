@@ -1,20 +1,56 @@
 workflows:
-  ios-workflow:
-    name: Blue PD iOS Build
-    max_build_duration: 60
-    instance_type: mac_mini_m1
+  ios-release:
+    name: BluePD iOS Release
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: BluePD
 
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bluepd.app
       vars:
-        XCODE_PROJECT: "BluePD.xcodeproj"
         XCODE_SCHEME: "BluePD"
-      xcode: latest
+        BUNDLE_ID: "com.bluepd.app"
+      xcode: 16.2
+      cocoapods: default
 
     scripts:
-      - name: Build iOS app (no signing)
+      - name: Install XcodeGen
         script: |
-          xcodebuild build \
-            -project "$XCODE_PROJECT" \
-            -scheme "$XCODE_SCHEME" \
-            -destination 'platform=iOS Simulator,name=iPhone 15' \
-            CODE_SIGNING_ALLOWED=NO
+          brew install xcodegen
+
+      - name: Generate Xcode project
+        script: |
+          xcodegen generate
+
+      - name: Apply provisioning profiles
+        script: |
+          xcode-project use-profiles
+
+      - name: Build signed IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/BluePD.xcodeproj" \
+            --scheme "$XCODE_SCHEME" \
+            --archive-flags="CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=$CM_DEVELOPMENT_TEAM PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+
+      email:
+        recipients:
+          - tylerclampitt@gmail.com
+        notify:
+          success: true
+          failure: true
