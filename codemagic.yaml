@@ -10,12 +10,9 @@ workflows:
         XCODE_PROJECT: "BluePD/BluePD.xcodeproj"
         XCODE_SCHEME: "BluePD"
         APPLE_TEAM_ID: "TP65F453BM"
+        BUNDLE_ID: "com.bluepd.app"
 
     scripts:
-      - name: Set bundle ID
-        script: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.bluepd.app" BluePD/BluePD/Info.plist
-
       - name: Build signed iOS app
         script: |
           xcodebuild build \
@@ -24,7 +21,7 @@ workflows:
             -destination 'generic/platform=iOS' \
             -allowProvisioningUpdates \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PRODUCT_BUNDLE_IDENTIFIER="com.bluepd.app"
+            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID"
 
     artifacts:
       - build/ios/ipa/*.ipa
