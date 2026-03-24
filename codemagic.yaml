@@ -20,3 +20,6 @@ workflows:
             -destination 'generic/platform=iOS' \
             -allowProvisioningUpdates \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
