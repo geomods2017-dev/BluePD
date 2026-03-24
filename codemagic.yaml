@@ -1,24 +1,55 @@
 workflows:
-  ios-workflow:
-    name: Blue PD iOS Build
-    max_build_duration: 60
-    instance_type: mac_mini_m1
+  ios-release:
+    name: BluePD iOS Release
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: BluePD
 
     environment:
-      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bluepd.app
       vars:
-        XCODE_PROJECT: "BluePD/BluePD.xcodeproj"
+        XCODE_PROJECT: "BluePD.xcodeproj"
         XCODE_SCHEME: "BluePD"
-        APPLE_TEAM_ID: "TP65F453BM"
         BUNDLE_ID: "com.bluepd.app"
+      xcode: 26.2
+      cocoapods: default
 
     scripts:
-      - name: Build IPA for TestFlight
+      - name: Install CocoaPods dependencies
+        script: |
+          if [ -f "Podfile" ]; then
+            pod install
+          else
+            echo "No Podfile found, skipping pod install"
+          fi
+
+      - name: Apply provisioning profiles to Xcode project
         script: |
           xcode-project use-profiles
+
+      - name: Build signed IPA
+        script: |
           xcode-project build-ipa \
-            --project "$XCODE_PROJECT" \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+      email:
+        recipients:
+          - geomods2017@gmail.com
+        notify:
+          success: true
+          failure: true
