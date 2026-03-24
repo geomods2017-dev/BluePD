@@ -6,7 +6,7 @@ workflows:
 
     environment:
       vars:
-        XCODE_PROJECT: "BluePD.xcodeproj"
+        XCODE_PROJECT: XCODE_PROJECT: "BluePD/BluePD/BluePD.xcodeproj"
         XCODE_SCHEME: "BluePD"
       xcode: latest
 
