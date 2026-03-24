@@ -22,16 +22,21 @@ workflows:
         script: |
           if [ -f "Podfile" ]; then
             pod install
-          else
-            echo "No Podfile found, skipping pod install"
           fi
 
-      - name: Locate project files
+      - name: Force automatic signing in project file
         script: |
-          echo "Projects:"
-          find . -name "*.xcodeproj"
-          echo "Workspaces:"
-          find . -name "*.xcworkspace" | grep -v ".xcodeproj/" || true
+          PROJECT=$(find . -name "BluePD.xcodeproj" | head -1)
+
+          echo "Fixing signing inside project..."
+
+          # Force automatic signing everywhere
+          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' "$PROJECT/project.pbxproj"
+          sed -i '' 's/ProvisioningStyle = Manual;/ProvisioningStyle = Automatic;/g' "$PROJECT/project.pbxproj"
+
+          # Remove any hardcoded provisioning profile references
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' "$PROJECT/project.pbxproj"
+          sed -i '' 's/PROVISIONING_PROFILE = .*;/PROVISIONING_PROFILE = "";/g' "$PROJECT/project.pbxproj"
 
       - name: Apply provisioning profiles
         script: |
@@ -44,31 +49,22 @@ workflows:
 
           echo "Workspace: $WORKSPACE"
           echo "Project: $PROJECT"
-          echo "Scheme: $XCODE_SCHEME"
-          echo "Bundle ID: $BUNDLE_ID"
 
           if [ -n "$WORKSPACE" ]; then
             xcode-project build-ipa \
               --workspace "$WORKSPACE" \
               --scheme "$XCODE_SCHEME" \
-              --archive-flags="CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=$CM_DEVELOPMENT_TEAM PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID" \
-              --export-options-plist="/Users/builder/export_options.plist"
-          elif [ -n "$PROJECT" ]; then
+              --archive-flags="CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=$CM_DEVELOPMENT_TEAM PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID"
+          else
             xcode-project build-ipa \
               --project "$PROJECT" \
               --scheme "$XCODE_SCHEME" \
-              --archive-flags="CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=$CM_DEVELOPMENT_TEAM PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID" \
-              --export-options-plist="/Users/builder/export_options.plist"
-          else
-            echo "No valid BluePD.xcworkspace or BluePD.xcodeproj file found."
-            exit 1
+              --archive-flags="CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=$CM_DEVELOPMENT_TEAM PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID"
           fi
 
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
     publishing:
       app_store_connect:
@@ -78,6 +74,3 @@ workflows:
       email:
         recipients:
           - tylerclampitt@gmail.com
-        notify:
-          success: true
-          failure: true
