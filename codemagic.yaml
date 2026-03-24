@@ -13,26 +13,27 @@ workflows:
         bundle_identifier: com.bluepd.app
       vars:
         XCODE_SCHEME: "BluePD"
+        BUNDLE_ID: "com.bluepd.app"
       xcode: latest
       cocoapods: default
 
     scripts:
-      - name: Debug project structure
-        script: |
-          echo "=== Xcode projects ==="
-          find . -name "*.xcodeproj"
-          echo "=== Xcode workspaces ==="
-          find . -name "*.xcworkspace"
-          echo "=== Shared schemes ==="
-          find . -path "*xcshareddata/xcschemes/*.xcscheme"
-
       - name: Install CocoaPods (if needed)
         script: |
           if [ -f "Podfile" ]; then
             pod install
-          else
-            echo "No Podfile found, skipping pod install"
           fi
+
+      - name: Force automatic code signing
+        script: |
+          echo "Setting automatic signing..."
+
+          PROJECT=$(find . -name "BluePD.xcodeproj" | head -1)
+
+          /usr/libexec/PlistBuddy -c "Set :objects" "$PROJECT/project.pbxproj" || true
+
+          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' "$PROJECT/project.pbxproj" || true
+          sed -i '' 's/ProvisioningStyle = Manual;/ProvisioningStyle = Automatic;/g' "$PROJECT/project.pbxproj" || true
 
       - name: Apply provisioning profiles
         script: |
@@ -45,21 +46,15 @@ workflows:
 
           echo "Workspace: $WORKSPACE"
           echo "Project: $PROJECT"
-          echo "Scheme: $XCODE_SCHEME"
 
           if [ -n "$WORKSPACE" ]; then
-            xcodebuild -list -workspace "$WORKSPACE" || true
             xcode-project build-ipa \
               --workspace "$WORKSPACE" \
               --scheme "$XCODE_SCHEME"
-          elif [ -n "$PROJECT" ]; then
-            xcodebuild -list -project "$PROJECT" || true
+          else
             xcode-project build-ipa \
               --project "$PROJECT" \
               --scheme "$XCODE_SCHEME"
-          else
-            echo "No valid BluePD.xcworkspace or BluePD.xcodeproj file found."
-            exit 1
           fi
 
     artifacts:
@@ -73,7 +68,7 @@ workflows:
 
       email:
         recipients:
-          - tylerclampitt@gmail.com
+          - geomods2017@gmail.com
         notify:
           success: true
           failure: true
