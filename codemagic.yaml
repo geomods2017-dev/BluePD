@@ -5,38 +5,16 @@ workflows:
     instance_type: mac_mini_m1
 
     environment:
-      ios_signing:
-        distribution_type: development
-        bundle_identifier: com.bluepd.app
       vars:
         XCODE_PROJECT: "BluePD.xcodeproj"
         XCODE_SCHEME: "BluePD"
       xcode: latest
 
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: main
-          include: true
-          source: true
-
     scripts:
-      - name: Show Xcode version
-        script: |
-          xcodebuild -version
-
-      - name: Build iOS app
+      - name: Build iOS app (no signing)
         script: |
           xcodebuild build \
             -project "$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
-            -destination 'platform=iOS Simulator,name=iPhone 15'
-
-    artifacts:
-      - /tmp/xcodebuild_logs/*.log
-
-    publishing:
-      email:
-        recipients:
-          - geomods2017@gmail.com
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            CODE_SIGNING_ALLOWED=NO
