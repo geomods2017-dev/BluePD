@@ -5,10 +5,10 @@ workflows:
     instance_type: mac_mini_m1
 
     environment:
+      xcode: latest
       vars:
         XCODE_PROJECT: "BluePD/BluePD/BluePD.xcodeproj"
         XCODE_SCHEME: "BluePD"
-      xcode: latest
 
     scripts:
       - name: Build iOS app (no signing)
