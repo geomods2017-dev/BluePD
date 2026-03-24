@@ -14,7 +14,8 @@ workflows:
       vars:
         XCODE_SCHEME: "BluePD"
         BUNDLE_ID: "com.bluepd.app"
-      xcode: latest
+        PROFILE_NAME: "BluePD"
+      xcode: 26.2
       cocoapods: default
 
     scripts:
@@ -22,55 +23,79 @@ workflows:
         script: |
           if [ -f "Podfile" ]; then
             pod install
+          else
+            echo "No Podfile found, skipping pod install"
           fi
+
+      - name: Locate project files
+        script: |
+          echo "Projects:"
+          find . -name "*.xcodeproj"
+          echo "Workspaces:"
+          find . -name "*.xcworkspace" | grep -v ".xcodeproj/" || true
 
       - name: Apply provisioning profiles
         script: |
           xcode-project use-profiles
 
-      - name: Build signed IPA (force signing)
+      - name: Create export options plist
+        script: |
+          cat > /Users/builder/export_options.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>teamID</key>
+            <string>${CM_DEVELOPMENT_TEAM}</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${BUNDLE_ID}</key>
+              <string>${PROFILE_NAME}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+          echo "Created export options plist:"
+          cat /Users/builder/export_options.plist
+
+      - name: Build signed IPA
         script: |
           WORKSPACE=$(find . -name "BluePD.xcworkspace" | grep -v ".xcodeproj/" | head -1)
           PROJECT=$(find . -name "BluePD.xcodeproj" | head -1)
 
           echo "Workspace: $WORKSPACE"
           echo "Project: $PROJECT"
+          echo "Scheme: $XCODE_SCHEME"
+          echo "Bundle ID: $BUNDLE_ID"
+          echo "Profile name: $PROFILE_NAME"
 
           if [ -n "$WORKSPACE" ]; then
-            xcodebuild \
-              -workspace "$WORKSPACE" \
-              -scheme "$XCODE_SCHEME" \
-              -configuration Release \
-              -archivePath build/BluePD.xcarchive \
-              archive \
-              DEVELOPMENT_TEAM="$CM_DEVELOPMENT_TEAM" \
-              CODE_SIGN_STYLE=Automatic \
-              -allowProvisioningUpdates
-
-            xcodebuild -exportArchive \
-              -archivePath build/BluePD.xcarchive \
-              -exportOptionsPlist /Users/builder/export_options.plist \
-              -exportPath build/ios/ipa
+            xcode-project build-ipa \
+              --workspace "$WORKSPACE" \
+              --scheme "$XCODE_SCHEME" \
+              --archive-flags="CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=$CM_DEVELOPMENT_TEAM PROVISIONING_PROFILE_SPECIFIER=$PROFILE_NAME PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID" \
+              --export-options-plist="/Users/builder/export_options.plist"
+          elif [ -n "$PROJECT" ]; then
+            xcode-project build-ipa \
+              --project "$PROJECT" \
+              --scheme "$XCODE_SCHEME" \
+              --archive-flags="CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=$CM_DEVELOPMENT_TEAM PROVISIONING_PROFILE_SPECIFIER=$PROFILE_NAME PRODUCT_BUNDLE_IDENTIFIER=$BUNDLE_ID" \
+              --export-options-plist="/Users/builder/export_options.plist"
           else
-            xcodebuild \
-              -project "$PROJECT" \
-              -scheme "$XCODE_SCHEME" \
-              -configuration Release \
-              -archivePath build/BluePD.xcarchive \
-              archive \
-              DEVELOPMENT_TEAM="$CM_DEVELOPMENT_TEAM" \
-              CODE_SIGN_STYLE=Automatic \
-              -allowProvisioningUpdates
-
-            xcodebuild -exportArchive \
-              -archivePath build/BluePD.xcarchive \
-              -exportOptionsPlist /Users/builder/export_options.plist \
-              -exportPath build/ios/ipa
+            echo "No valid BluePD.xcworkspace or BluePD.xcodeproj file found."
+            exit 1
           fi
 
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
     publishing:
       app_store_connect:
@@ -80,3 +105,6 @@ workflows:
       email:
         recipients:
           - tylerclampitt@gmail.com
+        notify:
+          success: true
+          failure: true
