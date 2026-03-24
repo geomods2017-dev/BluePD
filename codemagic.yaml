@@ -24,22 +24,11 @@ workflows:
             pod install
           fi
 
-      - name: Force automatic code signing
-        script: |
-          echo "Setting automatic signing..."
-
-          PROJECT=$(find . -name "BluePD.xcodeproj" | head -1)
-
-          /usr/libexec/PlistBuddy -c "Set :objects" "$PROJECT/project.pbxproj" || true
-
-          sed -i '' 's/CODE_SIGN_STYLE = Manual;/CODE_SIGN_STYLE = Automatic;/g' "$PROJECT/project.pbxproj" || true
-          sed -i '' 's/ProvisioningStyle = Manual;/ProvisioningStyle = Automatic;/g' "$PROJECT/project.pbxproj" || true
-
       - name: Apply provisioning profiles
         script: |
           xcode-project use-profiles
 
-      - name: Build signed IPA
+      - name: Build signed IPA (force signing)
         script: |
           WORKSPACE=$(find . -name "BluePD.xcworkspace" | grep -v ".xcodeproj/" | head -1)
           PROJECT=$(find . -name "BluePD.xcodeproj" | head -1)
@@ -48,13 +37,35 @@ workflows:
           echo "Project: $PROJECT"
 
           if [ -n "$WORKSPACE" ]; then
-            xcode-project build-ipa \
-              --workspace "$WORKSPACE" \
-              --scheme "$XCODE_SCHEME"
+            xcodebuild \
+              -workspace "$WORKSPACE" \
+              -scheme "$XCODE_SCHEME" \
+              -configuration Release \
+              -archivePath build/BluePD.xcarchive \
+              archive \
+              DEVELOPMENT_TEAM="$CM_DEVELOPMENT_TEAM" \
+              CODE_SIGN_STYLE=Automatic \
+              -allowProvisioningUpdates
+
+            xcodebuild -exportArchive \
+              -archivePath build/BluePD.xcarchive \
+              -exportOptionsPlist /Users/builder/export_options.plist \
+              -exportPath build/ios/ipa
           else
-            xcode-project build-ipa \
-              --project "$PROJECT" \
-              --scheme "$XCODE_SCHEME"
+            xcodebuild \
+              -project "$PROJECT" \
+              -scheme "$XCODE_SCHEME" \
+              -configuration Release \
+              -archivePath build/BluePD.xcarchive \
+              archive \
+              DEVELOPMENT_TEAM="$CM_DEVELOPMENT_TEAM" \
+              CODE_SIGN_STYLE=Automatic \
+              -allowProvisioningUpdates
+
+            xcodebuild -exportArchive \
+              -archivePath build/BluePD.xcarchive \
+              -exportOptionsPlist /Users/builder/export_options.plist \
+              -exportPath build/ios/ipa
           fi
 
     artifacts:
@@ -68,7 +79,4 @@ workflows:
 
       email:
         recipients:
-          - geomods2017@gmail.com
-        notify:
-          success: true
-          failure: true
+          - tylerclampitt@gmail.com
