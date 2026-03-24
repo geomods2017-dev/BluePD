@@ -1,0 +1,21 @@
+name: BluePD
+options:
+  bundleIdPrefix: com.bluepd
+targets:
+  BluePD:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources: [BluePD]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bluepd.app
+        INFOPLIST_FILE: BluePD/Info.plist
+    info:
+      path: BluePD/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UIRequiredDeviceCapabilities:
+          - armv7
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
