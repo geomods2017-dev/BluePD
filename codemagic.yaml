@@ -18,7 +18,3 @@ workflows:
             -scheme "$XCODE_SCHEME" \
             -destination 'generic/platform=iOS' \
             -allowProvisioningUpdates
-
-    publishing:
-      app_store_connect:
-        auth: integration
