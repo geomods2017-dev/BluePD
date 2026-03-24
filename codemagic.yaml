@@ -1,14 +1,30 @@
-scripts:
-  - name: Set bundle ID
-    script: |
-      /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.bluepd.app" BluePD/BluePD/Info.plist
+workflows:
+  ios-workflow:
+    name: Blue PD iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
 
-  - name: Build signed iOS app
-    script: |
-      xcodebuild build \
-        -project "$XCODE_PROJECT" \
-        -scheme "$XCODE_SCHEME" \
-        -destination 'generic/platform=iOS' \
-        -allowProvisioningUpdates \
-        DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-        PRODUCT_BUNDLE_IDENTIFIER="com.bluepd.app"
+    environment:
+      xcode: latest
+      vars:
+        XCODE_PROJECT: "BluePD/BluePD.xcodeproj"
+        XCODE_SCHEME: "BluePD"
+        APPLE_TEAM_ID: "TP65F453BM"
+
+    scripts:
+      - name: Set bundle ID
+        script: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier com.bluepd.app" BluePD/BluePD/Info.plist
+
+      - name: Build signed iOS app
+        script: |
+          xcodebuild build \
+            -project "$XCODE_PROJECT" \
+            -scheme "$XCODE_SCHEME" \
+            -destination 'generic/platform=iOS' \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            PRODUCT_BUNDLE_IDENTIFIER="com.bluepd.app"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
