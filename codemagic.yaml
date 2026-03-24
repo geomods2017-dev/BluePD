@@ -9,6 +9,7 @@ workflows:
       vars:
         XCODE_PROJECT: "BluePD/BluePD.xcodeproj"
         XCODE_SCHEME: "BluePD"
+        APPLE_TEAM_ID: "TP65F453BM"
 
     scripts:
       - name: Build signed iOS app
@@ -17,4 +18,5 @@ workflows:
             -project "$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
             -destination 'generic/platform=iOS' \
-            -allowProvisioningUpdates
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
