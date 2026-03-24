@@ -13,17 +13,21 @@ workflows:
         bundle_identifier: com.bluepd.app
       vars:
         XCODE_SCHEME: "BluePD"
-        BUNDLE_ID: "com.bluepd.app"
       xcode: latest
       cocoapods: default
 
     scripts:
+      - name: Debug project structure
+        script: |
+          echo "Listing files..."
+          find . -name "*.xcodeproj"
+          find . -name "*.xcworkspace"
+          find . -name "*.xcscheme"
+
       - name: Install CocoaPods (if needed)
         script: |
           if [ -f "Podfile" ]; then
             pod install
-          else
-            echo "No Podfile found, skipping pod install"
           fi
 
       - name: Apply provisioning profiles
@@ -32,8 +36,6 @@ workflows:
 
       - name: Build signed IPA
         script: |
-          echo "Searching for correct Xcode workspace/project..."
-
           WORKSPACE=$(find . -name "BluePD.xcworkspace" | grep -v ".xcodeproj/" | head -1)
           PROJECT=$(find . -name "BluePD.xcodeproj" | head -1)
 
@@ -44,20 +46,15 @@ workflows:
             xcode-project build-ipa \
               --workspace "$WORKSPACE" \
               --scheme "$XCODE_SCHEME"
-          elif [ -n "$PROJECT" ]; then
+          else
             xcode-project build-ipa \
               --project "$PROJECT" \
               --scheme "$XCODE_SCHEME"
-          else
-            echo "No valid BluePD.xcworkspace or BluePD.xcodeproj file found."
-            exit 1
           fi
 
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
     publishing:
       app_store_connect:
@@ -66,7 +63,4 @@ workflows:
 
       email:
         recipients:
-          - geomods2017@gmail.com
-        notify:
-          success: true
-          failure: true
+          - tylerclampitt@gmail.com
