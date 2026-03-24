@@ -11,10 +11,14 @@ workflows:
         XCODE_SCHEME: "BluePD"
 
     scripts:
-      - name: Build iOS app (no signing)
+      - name: Build signed iOS app
         script: |
           xcodebuild build \
             -project "$XCODE_PROJECT" \
             -scheme "$XCODE_SCHEME" \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO
+            -destination 'generic/platform=iOS' \
+            -allowProvisioningUpdates
+
+    publishing:
+      app_store_connect:
+        auth: integration
