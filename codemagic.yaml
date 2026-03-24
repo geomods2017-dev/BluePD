@@ -13,6 +13,7 @@ workflows:
         bundle_identifier: com.bluepd.app
       vars:
         XCODE_SCHEME: "BluePD"
+        BUNDLE_ID: "com.bluepd.app"
       xcode: latest
       cocoapods: default
 
@@ -22,7 +23,7 @@ workflows:
           if [ -f "Podfile" ]; then
             pod install
           else
-            echo "No Podfile found"
+            echo "No Podfile found, skipping pod install"
           fi
 
       - name: Apply provisioning profiles
@@ -31,20 +32,34 @@ workflows:
 
       - name: Build signed IPA
         script: |
-          # Try workspace first, fallback to project
-          if [ -d "$CM_BUILD_DIR/BluePD.xcworkspace" ]; then
+          echo "Searching for Xcode workspace/project..."
+          find . -name "*.xcworkspace"
+          find . -name "*.xcodeproj"
+
+          WORKSPACE=$(find . -name "*.xcworkspace" | head -1)
+          PROJECT=$(find . -name "*.xcodeproj" | head -1)
+
+          echo "Workspace found: $WORKSPACE"
+          echo "Project found: $PROJECT"
+
+          if [ -n "$WORKSPACE" ]; then
             xcode-project build-ipa \
-              --workspace "$CM_BUILD_DIR/BluePD.xcworkspace" \
+              --workspace "$WORKSPACE" \
+              --scheme "$XCODE_SCHEME"
+          elif [ -n "$PROJECT" ]; then
+            xcode-project build-ipa \
+              --project "$PROJECT" \
               --scheme "$XCODE_SCHEME"
           else
-            xcode-project build-ipa \
-              --project "$CM_BUILD_DIR/BluePD.xcodeproj" \
-              --scheme "$XCODE_SCHEME"
+            echo "No .xcworkspace or .xcodeproj file found."
+            exit 1
           fi
 
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
     publishing:
       app_store_connect:
