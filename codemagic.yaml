@@ -13,15 +13,12 @@ workflows:
         BUNDLE_ID: "com.bluepd.app"
 
     scripts:
-      - name: Build signed iOS app
+      - name: Build IPA for TestFlight
         script: |
-          xcodebuild build \
-            -project "$XCODE_PROJECT" \
-            -scheme "$XCODE_SCHEME" \
-            -destination 'generic/platform=iOS' \
-            -allowProvisioningUpdates \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID"
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
