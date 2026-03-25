@@ -9,6 +9,10 @@ workflows:
         bundle_identifier: com.bluepd.app
 
     scripts:
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+
       - name: Set build version
         script: |
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1" BluePD/Info.plist
@@ -17,8 +21,12 @@ workflows:
       - name: Build IPA
         script: |
           xcode-project build-ipa \
-            --project "BluePD.xcodeproj" \
+            --project "BluePD/BluePD.xcodeproj" \
             --scheme "BluePD"
 
     artifacts:
       - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
