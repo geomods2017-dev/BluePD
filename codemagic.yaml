@@ -18,8 +18,7 @@ workflows:
         script: |
           xcode-project build-ipa \
             --project "BluePD/BluePD.xcodeproj" \
-            --scheme "BluePD" \
-            --automatic-code-signing
+            --scheme "BluePD"
 
     artifacts:
       - build/ios/ipa/*.ipa
