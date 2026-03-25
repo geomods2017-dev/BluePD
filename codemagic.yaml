@@ -19,6 +19,11 @@ workflows:
         script: |
           /usr/libexec/PlistBuddy -c "Print" BluePD/Info.plist
 
+      - name: Set build version
+        script: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.1" BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 101" BluePD/Info.plist
+
       - name: Build IPA
         script: |
           xcode-project build-ipa \
