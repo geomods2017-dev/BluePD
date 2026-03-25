@@ -9,7 +9,7 @@ targets:
     deploymentTarget: "17.0"
 
     sources:
-      - path: BluePD
+      - path: BluePD/BluePD
 
     settings:
       base:
@@ -25,3 +25,8 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight

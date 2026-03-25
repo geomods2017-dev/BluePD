@@ -15,7 +15,6 @@ workflows:
         XCODE_SCHEME: "BluePD"
         BUNDLE_ID: "com.bluepd.app"
       xcode: 16.2
-      cocoapods: default
 
     scripts:
       - name: Install XcodeGen
