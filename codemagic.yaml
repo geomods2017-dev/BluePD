@@ -3,9 +3,18 @@ workflows:
     name: iOS Build
 
     environment:
+      groups:
+        - Default
       xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bluepd.app
 
     scripts:
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+
       - name: Set build version
         script: |
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1" BluePD/Info.plist
@@ -22,6 +31,6 @@ workflows:
 
     publishing:
       app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        private_key: $APP_STORE_CONNECT_PRIVATE_KEY
