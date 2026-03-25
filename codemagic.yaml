@@ -6,6 +6,9 @@ workflows:
       xcode: latest
       groups:
         - Default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bluepd.app
 
     scripts:
       - name: Set up code signing
