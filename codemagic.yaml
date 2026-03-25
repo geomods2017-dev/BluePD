@@ -17,8 +17,8 @@ workflows:
 
       - name: Set build version
         script: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1" BluePD/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 3" BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.2" BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 1" BluePD/Info.plist
 
       - name: Build IPA
         script: |
