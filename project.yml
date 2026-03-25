@@ -17,9 +17,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.bluepd.app
         INFOPLIST_FILE: BluePD/Info.plist
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: ""
-        MARKETING_VERSION: 9.9
-        CURRENT_PROJECT_VERSION: 99
+        DEVELOPMENT_TEAM: ""  # leave empty if Codemagic handles signing
 
     info:
       path: BluePD/Info.plist
