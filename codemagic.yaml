@@ -15,14 +15,9 @@ workflows:
         script: |
           xcode-project use-profiles
 
-      - name: Set build version (force Xcode)
+      - name: Verify Info.plist
         script: |
-          BUILD=$(date +%s)
-
-          agvtool new-version -all $BUILD
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.0" BluePD/Info.plist
-
-          echo "BUILD=$BUILD"
+          /usr/libexec/PlistBuddy -c "Print" BluePD/Info.plist
 
       - name: Build IPA
         script: |
