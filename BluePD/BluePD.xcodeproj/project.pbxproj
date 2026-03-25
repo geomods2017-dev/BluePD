@@ -18,6 +18,11 @@
 		A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */; };
 		A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */; };
 		A1B2C3E91E1F2A3B4C5D6E7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */; };
+		A1B2C4011E1F2A3B4C5D6E7F /* CaseLawDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4021E1F2A3B4C5D6E7F /* CaseLawDetailView.swift */; };
+		A1B2C4031E1F2A3B4C5D6E7F /* StateModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4041E1F2A3B4C5D6E7F /* StateModels.swift */; };
+		A1B2C4051E1F2A3B4C5D6E7F /* StateCategoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4061E1F2A3B4C5D6E7F /* StateCategoryView.swift */; };
+		A1B2C4071E1F2A3B4C5D6E7F /* StateStatuteListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4081E1F2A3B4C5D6E7F /* StateStatuteListView.swift */; };
+		A1B2C4091E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C40A1E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +38,11 @@
 		A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvidenceView.swift; sourceTree = "<group>"; };
 		A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1B2C4021E1F2A3B4C5D6E7F /* CaseLawDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseLawDetailView.swift; sourceTree = "<group>"; };
+		A1B2C4041E1F2A3B4C5D6E7F /* StateModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateModels.swift; sourceTree = "<group>"; };
+		A1B2C4061E1F2A3B4C5D6E7F /* StateCategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateCategoryView.swift; sourceTree = "<group>"; };
+		A1B2C4081E1F2A3B4C5D6E7F /* StateStatuteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateStatuteListView.swift; sourceTree = "<group>"; };
+		A1B2C40A1E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateStatuteDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,7 +74,12 @@
 				A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */,
 				A1B2C3E01E1F2A3B4C5D6E7F /* MirandaView.swift */,
 				A1B2C3E21E1F2A3B4C5D6E7F /* CaseLawView.swift */,
+				A1B2C4021E1F2A3B4C5D6E7F /* CaseLawDetailView.swift */,
 				A1B2C3E41E1F2A3B4C5D6E7F /* StatesView.swift */,
+				A1B2C4041E1F2A3B4C5D6E7F /* StateModels.swift */,
+				A1B2C4061E1F2A3B4C5D6E7F /* StateCategoryView.swift */,
+				A1B2C4081E1F2A3B4C5D6E7F /* StateStatuteListView.swift */,
+				A1B2C40A1E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift */,
 				A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */,
 				A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */,
 				A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */,
@@ -157,7 +172,12 @@
 				A1B2C3DD1E1F2A3B4C5D6E7F /* MainTabView.swift in Sources */,
 				A1B2C3DF1E1F2A3B4C5D6E7F /* MirandaView.swift in Sources */,
 				A1B2C3E11E1F2A3B4C5D6E7F /* CaseLawView.swift in Sources */,
+				A1B2C4011E1F2A3B4C5D6E7F /* CaseLawDetailView.swift in Sources */,
 				A1B2C3E31E1F2A3B4C5D6E7F /* StatesView.swift in Sources */,
+				A1B2C4031E1F2A3B4C5D6E7F /* StateModels.swift in Sources */,
+				A1B2C4051E1F2A3B4C5D6E7F /* StateCategoryView.swift in Sources */,
+				A1B2C4071E1F2A3B4C5D6E7F /* StateStatuteListView.swift in Sources */,
+				A1B2C4091E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift in Sources */,
 				A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */,
 				A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */,
 			);
