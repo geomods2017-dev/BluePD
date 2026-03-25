@@ -3,9 +3,9 @@ workflows:
     name: iOS Build
 
     environment:
+      xcode: latest
       groups:
         - Default
-      xcode: latest
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.bluepd.app
@@ -17,8 +17,9 @@ workflows:
 
       - name: Set build version
         script: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.3" BluePD/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 7" BluePD/Info.plist
+          cd BluePD
+          agvtool new-marketing-version 1.5
+          agvtool new-version -all 10
 
       - name: Build IPA
         script: |
@@ -31,6 +32,6 @@ workflows:
 
     publishing:
       app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        private_key: $APP_STORE_CONNECT_PRIVATE_KEY
