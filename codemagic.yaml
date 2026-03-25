@@ -15,11 +15,14 @@ workflows:
         script: |
           xcode-project use-profiles
 
+      - name: Verify Info.plist
+        script: |
+          /usr/libexec/PlistBuddy -c "Print" BluePD/BluePD/Info.plist
+
       - name: Set build version
         script: |
-          cd BluePD
-          agvtool new-marketing-version 1.5
-          agvtool new-version -all 10
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.5" BluePD/BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 11" BluePD/BluePD/Info.plist
 
       - name: Build IPA
         script: |
