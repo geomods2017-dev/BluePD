@@ -1,8 +1,12 @@
 workflows:
   ios-workflow:
     name: iOS Build
+
     environment:
       xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.bluepd.app
 
     scripts:
       - name: Set build version
@@ -18,8 +22,3 @@ workflows:
 
     artifacts:
       - build/ios/ipa/*.ipa
-
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
