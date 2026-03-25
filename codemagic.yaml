@@ -9,6 +9,10 @@ workflows:
         bundle_identifier: com.bluepd.app
 
     scripts:
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+
       - name: Set build version
         script: |
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1" BluePD/Info.plist
