@@ -17,12 +17,12 @@ workflows:
 
       - name: Verify Info.plist
         script: |
-          /usr/libexec/PlistBuddy -c "Print" BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Print" BluePD/BluePD/Info.plist
 
       - name: Set build version
         script: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.1" BluePD/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 101" BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.1" BluePD/BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 101" BluePD/BluePD/Info.plist
 
       - name: Build IPA
         script: |
