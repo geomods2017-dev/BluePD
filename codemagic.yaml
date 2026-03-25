@@ -5,6 +5,14 @@ workflows:
       xcode: latest
 
     scripts:
+      - name: Install XcodeGen
+        script: |
+          brew install xcodegen
+
+      - name: Generate Xcode project
+        script: |
+          xcodegen generate
+
       - name: Set build version
         script: |
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1" BluePD/Info.plist
