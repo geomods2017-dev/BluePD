@@ -19,12 +19,16 @@ workflows:
         script: |
           /usr/libexec/PlistBuddy -c "Print" BluePD/Info.plist
 
-      - name: Set build version
+      - name: Set build version (unique every build)
         script: |
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.0" BluePD/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion 100" BluePD/Info.plist
-          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" BluePD/Info.plist
-          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" BluePD/Info.plist
+          VERSION=2.$(date +%s)
+          BUILD=$(date +%s)
+
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD" BluePD/Info.plist
+
+          echo "VERSION=$VERSION"
+          echo "BUILD=$BUILD"
 
       - name: Build IPA
         script: |
