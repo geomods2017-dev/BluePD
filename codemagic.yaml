@@ -1,5 +1,5 @@
 workflows:
-  ios-workflow:
+  ios-release:
     name: iOS Build
     environment:
       xcode: latest
