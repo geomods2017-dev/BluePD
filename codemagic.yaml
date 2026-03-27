@@ -19,16 +19,12 @@ workflows:
         script: |
           /usr/libexec/PlistBuddy -c "Print" BluePD/BluePD/Info.plist
 
-      - name: Auto increment build number
+      - name: Set build version
         script: |
-          CURRENT=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" BluePD/BluePD/Info.plist)
-          if [ -z "$CURRENT" ]; then
-            CURRENT=1
-          fi
-          NEW=$((CURRENT + 1))
+          BUILD_NUM=$(($PROJECT_BUILD_NUMBER + 101))
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 2.1" BluePD/BluePD/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $NEW" BluePD/BluePD/Info.plist
-          echo "Using build number: $NEW"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" BluePD/BluePD/Info.plist
+          echo "Using build number: $BUILD_NUM"
 
       - name: Build IPA
         script: |
