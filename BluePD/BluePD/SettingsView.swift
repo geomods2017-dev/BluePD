@@ -17,6 +17,12 @@ struct SettingsView: View {
             Section("Appearance") {
                 Toggle("Dark Mode", isOn: $darkModeEnabled)
             }
+
+            Section("Legal") {
+                NavigationLink(destination: DisclaimerView()) {
+                    Label("Legal Disclaimer", systemImage: "doc.text")
+                }
+            }
         }
         .navigationTitle("Settings")
     }
