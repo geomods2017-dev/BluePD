@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct StateStatute: Identifiable {
+struct StateStatuteItem: Identifiable {
     let id = UUID()
     let state: String
     let codeTitle: String
@@ -9,14 +9,14 @@ struct StateStatute: Identifiable {
 }
 
 struct StatesView: View {
-    let statutes: [StateStatute] = [
-        StateStatute(
+    let statutes: [StateStatuteItem] = [
+        StateStatuteItem(
             state: "Indiana",
             codeTitle: "Indiana Criminal Code",
             summary: "Access Indiana criminal statutes.",
             link: "https://iga.in.gov/laws"
         ),
-        StateStatute(
+        StateStatuteItem(
             state: "Illinois",
             codeTitle: "Illinois Compiled Statutes",
             summary: "Access Illinois statutes.",
