@@ -1,64 +1,244 @@
 import SwiftUI
-import UIKit
-
-struct StateStatuteItem: Identifiable {
-    let id = UUID()
-    let state: String
-    let codeTitle: String
-    let summary: String
-    let link: String
-}
+import SafariServices
 
 struct StatesView: View {
-    let statutes: [StateStatuteItem] = [
-        StateStatuteItem(
-            state: "Indiana",
-            codeTitle: "Indiana Code",
-            summary: "Open the official Indiana Code website.",
-            link: "https://iga.in.gov/laws/2025/ic/titles/1"
-        ),
-        StateStatuteItem(
-            state: "Illinois",
-            codeTitle: "Illinois Compiled Statutes",
-            summary: "Open the official Illinois statutes website.",
-            link: "https://www.ilga.gov/legislation/ilcs/ilcs.asp"
-        )
+    @State private var searchText = ""
+    @State private var selectedURL: URL?
+
+    private let states: [StateLink] = [
+        StateLink(name: "Indiana", abbreviation: "IN", urlString: "https://iga.in.gov/laws/2025/ic/titles/1", isPinned: true),
+
+        StateLink(name: "Alabama", abbreviation: "AL", urlString: "https://alisondb.legislature.state.al.us"),
+        StateLink(name: "Alaska", abbreviation: "AK", urlString: "https://www.akleg.gov/basis/statutes.asp"),
+        StateLink(name: "Arizona", abbreviation: "AZ", urlString: "https://www.azleg.gov/arstitle"),
+        StateLink(name: "Arkansas", abbreviation: "AR", urlString: "https://www.arkleg.state.ar.us/ArkansasCode/Index"),
+        StateLink(name: "California", abbreviation: "CA", urlString: "https://leginfo.legislature.ca.gov/faces/codes.xhtml"),
+        StateLink(name: "Colorado", abbreviation: "CO", urlString: "https://leg.colorado.gov/agencies/office-legislative-legal-services/colorado-revised-statutes"),
+        StateLink(name: "Connecticut", abbreviation: "CT", urlString: "https://www.cga.ct.gov/current/pub/titles.htm"),
+        StateLink(name: "Delaware", abbreviation: "DE", urlString: "https://delcode.delaware.gov"),
+        StateLink(name: "Florida", abbreviation: "FL", urlString: "http://www.leg.state.fl.us/statutes"),
+        StateLink(name: "Georgia", abbreviation: "GA", urlString: "https://law.justia.com/codes/georgia"),
+        StateLink(name: "Hawaii", abbreviation: "HI", urlString: "https://www.capitol.hawaii.gov/hrscurrent"),
+        StateLink(name: "Idaho", abbreviation: "ID", urlString: "https://legislature.idaho.gov/statutesrules/idstat"),
+        StateLink(name: "Illinois", abbreviation: "IL", urlString: "https://www.ilga.gov/legislation/ilcs/ilcs.asp"),
+        StateLink(name: "Iowa", abbreviation: "IA", urlString: "https://www.legis.iowa.gov/law/iowaCode"),
+        StateLink(name: "Kansas", abbreviation: "KS", urlString: "https://www.kslegislature.org/li/b2025_26/statute"),
+        StateLink(name: "Kentucky", abbreviation: "KY", urlString: "https://apps.legislature.ky.gov/law/statutes"),
+        StateLink(name: "Louisiana", abbreviation: "LA", urlString: "https://www.legis.la.gov/legis/Laws_Toc.aspx"),
+        StateLink(name: "Maine", abbreviation: "ME", urlString: "https://legislature.maine.gov/statutes"),
+        StateLink(name: "Maryland", abbreviation: "MD", urlString: "https://mgaleg.maryland.gov/mgawebsite/Laws/StatuteText"),
+        StateLink(name: "Massachusetts", abbreviation: "MA", urlString: "https://malegislature.gov/Laws/GeneralLaws"),
+        StateLink(name: "Michigan", abbreviation: "MI", urlString: "https://www.legislature.mi.gov/Laws/MCL"),
+        StateLink(name: "Minnesota", abbreviation: "MN", urlString: "https://www.revisor.mn.gov/statutes"),
+        StateLink(name: "Mississippi", abbreviation: "MS", urlString: "https://advance.lexis.com/container?config=00JAA1MDBlZmQ0Yi1lODNhLTQ0OWQtYTU0Yi0zZjdiNTQ0MDRhYmMKAFBvZENhdGFsb2f6Wl0lru6x0n3bJt1Y&crid=ca419408-8546-4d73-b7b3-582106621fca"),
+        StateLink(name: "Missouri", abbreviation: "MO", urlString: "https://revisor.mo.gov/main/Home.aspx"),
+        StateLink(name: "Montana", abbreviation: "MT", urlString: "https://leg.mt.gov/bills/mca/title_index.html"),
+        StateLink(name: "Nebraska", abbreviation: "NE", urlString: "https://nebraskalegislature.gov/laws/statutes.php"),
+        StateLink(name: "Nevada", abbreviation: "NV", urlString: "https://www.leg.state.nv.us/NRS"),
+        StateLink(name: "New Hampshire", abbreviation: "NH", urlString: "https://www.gencourt.state.nh.us/rsa/html/indexes"),
+        StateLink(name: "New Jersey", abbreviation: "NJ", urlString: "https://www.njleg.state.nj.us/laws-statutory"),
+        StateLink(name: "New Mexico", abbreviation: "NM", urlString: "https://nmonesource.com/nmos/nmsa/en/nav_date.do"),
+        StateLink(name: "New York", abbreviation: "NY", urlString: "https://www.nysenate.gov/legislation/laws"),
+        StateLink(name: "North Carolina", abbreviation: "NC", urlString: "https://www.ncleg.gov/Laws/GeneralStatutesTOC"),
+        StateLink(name: "North Dakota", abbreviation: "ND", urlString: "https://www.ndlegis.gov/general-information/north-dakota-century-code"),
+        StateLink(name: "Ohio", abbreviation: "OH", urlString: "https://codes.ohio.gov/ohio-revised-code"),
+        StateLink(name: "Oklahoma", abbreviation: "OK", urlString: "https://oksenate.gov/legislation/oklahoma_statutes.aspx"),
+        StateLink(name: "Oregon", abbreviation: "OR", urlString: "https://www.oregonlegislature.gov/bills_laws/ors/ors.html"),
+        StateLink(name: "Pennsylvania", abbreviation: "PA", urlString: "https://www.legis.state.pa.us/cfdocs/legis/LI/Public/cons_index.cfm"),
+        StateLink(name: "Rhode Island", abbreviation: "RI", urlString: "https://webserver.rilegislature.gov/Statutes"),
+        StateLink(name: "South Carolina", abbreviation: "SC", urlString: "https://www.scstatehouse.gov/code/statmast.php"),
+        StateLink(name: "South Dakota", abbreviation: "SD", urlString: "https://sdlegislature.gov/Statutes"),
+        StateLink(name: "Tennessee", abbreviation: "TN", urlString: "https://advance.lexis.com/container?config=00JAA1OWQ5NzViZS0wMWM0LTRhZjAtYjQ3Yy1kYjY0MTQ4M2ZmYTYKAFBvZENhdGFsb2c5ci%2B8lY8iHUpmii4gON7F&crid=4e2f1d06-6db9-4cb0-9e5f-08ef2501c1ee"),
+        StateLink(name: "Texas", abbreviation: "TX", urlString: "https://statutes.capitol.texas.gov"),
+        StateLink(name: "Utah", abbreviation: "UT", urlString: "https://le.utah.gov/xcode/code.html"),
+        StateLink(name: "Vermont", abbreviation: "VT", urlString: "https://legislature.vermont.gov/statutes"),
+        StateLink(name: "Virginia", abbreviation: "VA", urlString: "https://law.lis.virginia.gov/vacode"),
+        StateLink(name: "Washington", abbreviation: "WA", urlString: "https://app.leg.wa.gov/rcw"),
+        StateLink(name: "West Virginia", abbreviation: "WV", urlString: "https://code.wvlegislature.gov"),
+        StateLink(name: "Wisconsin", abbreviation: "WI", urlString: "https://docs.legis.wisconsin.gov/statutes/statutes"),
+        StateLink(name: "Wyoming", abbreviation: "WY", urlString: "https://wyoleg.gov/Legislation/Statutes")
     ]
 
-    var body: some View {
-        List(statutes) { item in
-            Button(action: {
-                openLink(item.link)
-            }) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(item.state)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+    private var filteredStates: [StateLink] {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-                        Text(item.codeTitle)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-
-                        Text(item.summary)
-                            .font(.body)
-                            .foregroundColor(.primary)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "arrow.up.right.square")
-                        .foregroundColor(.blue)
+        if trimmed.isEmpty {
+            return states.sorted { lhs, rhs in
+                if lhs.isPinned != rhs.isPinned {
+                    return lhs.isPinned && !rhs.isPinned
                 }
-                .padding(.vertical, 6)
+                return lhs.name < rhs.name
             }
-            .buttonStyle(.plain)
         }
-        .navigationTitle("States")
+
+        return states
+            .filter {
+                $0.name.localizedCaseInsensitiveContains(trimmed) ||
+                $0.abbreviation.localizedCaseInsensitiveContains(trimmed)
+            }
+            .sorted { lhs, rhs in
+                if lhs.isPinned != rhs.isPinned {
+                    return lhs.isPinned && !rhs.isPinned
+                }
+                return lhs.name < rhs.name
+            }
     }
 
-    private func openLink(_ link: String) {
-        guard let url = URL(string: link) else { return }
-        UIApplication.shared.open(url)
+    var body: some View {
+        VStack(spacing: 0) {
+            headerSection
+
+            List {
+                if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && filteredStates.isEmpty {
+                    VStack(alignment: .center, spacing: 10) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
+
+                        Text("No states found")
+                            .font(.headline)
+
+                        Text("Try searching by state name or abbreviation.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 24)
+                    .listRowBackground(Color.clear)
+                } else {
+                    ForEach(filteredStates) { state in
+                        Button {
+                            selectedURL = state.url
+                        } label: {
+                            StateRowCard(state: state)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                    }
+                }
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Color(.systemGroupedBackground))
+        }
+        .background(Color(.systemGroupedBackground))
+        .navigationTitle("States")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $selectedURL) { url in
+            SafariView(url: url)
+        }
+    }
+
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Official State Code Links")
+                .font(.headline)
+
+            Text("Open official state statute and code sites quickly. Indiana stays pinned at the top.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+
+                TextField("Search state or abbreviation", text: $searchText)
+                    .textInputAutocapitalization(.words)
+                    .autocorrectionDisabled()
+            }
+            .padding(12)
+            .background(Color(.secondarySystemGroupedBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .padding()
+    }
+}
+
+struct StateRowCard: View {
+    let state: StateLink
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(state.isPinned ? Color.blue.opacity(0.16) : Color.blue.opacity(0.10))
+                    .frame(width: 52, height: 52)
+
+                VStack(spacing: 2) {
+                    Image(systemName: state.isPinned ? "star.fill" : "map.fill")
+                        .font(.caption)
+                        .foregroundColor(.blue)
+
+                    Text(state.abbreviation)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(state.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    if state.isPinned {
+                        Text("Pinned")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.blue.opacity(0.12))
+                            .foregroundColor(.blue)
+                            .clipShape(Capsule())
+                    }
+                }
+
+                Text("Official code / statute site")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "arrow.up.right.square")
+                .foregroundColor(.gray)
+        }
+        .padding()
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+}
+
+struct StateLink: Identifiable {
+    let id = UUID()
+    let name: String
+    let abbreviation: String
+    let urlString: String
+    let isPinned: Bool
+
+    var url: URL? {
+        URL(string: urlString)
+    }
+
+    init(name: String, abbreviation: String, urlString: String, isPinned: Bool = false) {
+        self.name = name
+        self.abbreviation = abbreviation
+        self.urlString = urlString
+        self.isPinned = isPinned
+    }
+}
+
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        SFSafariViewController(url: url)
+    }
+
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
     }
 }
