@@ -22,7 +22,7 @@ struct CaseLawView: View {
             title: "Miranda v. Arizona",
             court: "U.S. Supreme Court",
             date: "1966",
-            summary: "Established the requirement to advise suspects of key constitutional rights during custodial interrogation.",
+            summary: "Established the requirement to advise suspects of constitutional rights during custodial interrogation.",
             citation: "384 U.S. 436"
         )
     ]
