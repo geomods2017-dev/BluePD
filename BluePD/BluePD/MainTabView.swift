@@ -18,6 +18,13 @@ struct MainTabView: View {
             }
 
             NavigationView {
+                PastReportsView()
+            }
+            .tabItem {
+                Label("Reports", systemImage: "doc.text")
+            }
+
+            NavigationView {
                 CaseLawView()
             }
             .tabItem {
