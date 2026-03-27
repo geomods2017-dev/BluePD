@@ -3,7 +3,7 @@ import SafariServices
 
 struct StatesView: View {
     @State private var searchText = ""
-    @State private var selectedURL: URL?
+    @State private var selectedURL: IdentifiableURL?
 
     private let states: [StateLink] = [
         StateLink(name: "Indiana", abbreviation: "IN", urlString: "https://iga.in.gov/laws/2025/ic/titles/1", isPinned: true),
@@ -62,26 +62,21 @@ struct StatesView: View {
     private var filteredStates: [StateLink] {
         let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if trimmed.isEmpty {
-            return states.sorted { lhs, rhs in
-                if lhs.isPinned != rhs.isPinned {
-                    return lhs.isPinned && !rhs.isPinned
-                }
-                return lhs.name < rhs.name
+        let sortedStates = states.sorted { lhs, rhs in
+            if lhs.isPinned != rhs.isPinned {
+                return lhs.isPinned && !rhs.isPinned
             }
+            return lhs.name < rhs.name
         }
 
-        return states
-            .filter {
-                $0.name.localizedCaseInsensitiveContains(trimmed) ||
-                $0.abbreviation.localizedCaseInsensitiveContains(trimmed)
-            }
-            .sorted { lhs, rhs in
-                if lhs.isPinned != rhs.isPinned {
-                    return lhs.isPinned && !rhs.isPinned
-                }
-                return lhs.name < rhs.name
-            }
+        if trimmed.isEmpty {
+            return sortedStates
+        }
+
+        return sortedStates.filter {
+            $0.name.localizedCaseInsensitiveContains(trimmed) ||
+            $0.abbreviation.localizedCaseInsensitiveContains(trimmed)
+        }
     }
 
     var body: some View {
@@ -90,7 +85,7 @@ struct StatesView: View {
 
             List {
                 if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && filteredStates.isEmpty {
-                    VStack(alignment: .center, spacing: 10) {
+                    VStack(spacing: 10) {
                         Image(systemName: "magnifyingglass")
                             .font(.title2)
                             .foregroundStyle(.secondary)
@@ -109,7 +104,9 @@ struct StatesView: View {
                 } else {
                     ForEach(filteredStates) { state in
                         Button {
-                            selectedURL = state.url
+                            if let url = state.url {
+                                selectedURL = IdentifiableURL(url: url)
+                            }
                         } label: {
                             StateRowCard(state: state)
                         }
@@ -127,8 +124,8 @@ struct StatesView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle("States")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(item: $selectedURL) { url in
-            SafariView(url: url)
+        .sheet(item: $selectedURL) { item in
+            SafariView(url: item.url)
         }
     }
 
@@ -230,6 +227,11 @@ struct StateLink: Identifiable {
         self.urlString = urlString
         self.isPinned = isPinned
     }
+}
+
+struct IdentifiableURL: Identifiable {
+    let id = UUID()
+    let url: URL
 }
 
 struct SafariView: UIViewControllerRepresentable {
