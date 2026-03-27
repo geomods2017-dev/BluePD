@@ -2,10 +2,6 @@ import SwiftUI
 import UIKit
 
 struct SFSTView: View {
-    @AppStorage("officerName") private var officerName: String = ""
-    @AppStorage("badgeNumber") private var badgeNumber: String = ""
-    @AppStorage("agencyName") private var agencyName: String = ""
-
     @State private var subjectName = ""
     @State private var incidentDate = Date()
     @State private var incidentTime = Date()
@@ -15,6 +11,7 @@ struct SFSTView: View {
     @State private var weather = ""
     @State private var footwear = ""
     @State private var medicalConditions = ""
+    @State private var subjectStatements = ""
     @State private var officerNotes = ""
 
     @State private var hgnSmoothPursuitLeft = false
@@ -41,10 +38,16 @@ struct SFSTView: View {
     @State private var generatedSummary = ""
     @State private var copiedMessage = ""
     @State private var savedMessage = ""
+    @State private var showingResetConfirmation = false
 
-    @FocusState private var notesFieldFocused: Bool
+    @FocusState private var activeField: ActiveField?
 
     private let reportsStorageKey = "saved_sfst_reports"
+
+    enum ActiveField: Hashable {
+        case subjectStatements
+        case officerNotes
+    }
 
     var hgnCount: Int {
         [
@@ -114,7 +117,7 @@ struct SFSTView: View {
                 Text("• Instruct the subject to follow the stimulus with the eyes only and keep the head still.")
                 Text("• Observe each eye for the standardized clues.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             Section("HGN Clues — Total: \(hgnCount)/6") {
@@ -134,7 +137,7 @@ struct SFSTView: View {
                 Text("• Take 9 heel-to-toe steps, turn using a series of small steps, and take 9 heel-to-toe steps back.")
                 Text("• Count steps out loud and watch the feet.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Walk-and-Turn Clues — Total: \(watCount)/8") {
@@ -155,7 +158,7 @@ struct SFSTView: View {
                 Text("• Look at the raised foot and count out loud as instructed.")
                 Text("• Continue until told to stop.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             Section("One-Leg Stand Clues — Total: \(olsCount)/4") {
@@ -165,10 +168,16 @@ struct SFSTView: View {
                 Toggle("Puts Foot Down", isOn: $olsFootDown)
             }
 
+            Section("Subject Statements") {
+                TextEditor(text: $subjectStatements)
+                    .frame(minHeight: 100)
+                    .focused($activeField, equals: .subjectStatements)
+            }
+
             Section("Officer Notes") {
                 TextEditor(text: $officerNotes)
                     .frame(minHeight: 140)
-                    .focused($notesFieldFocused)
+                    .focused($activeField, equals: .officerNotes)
             }
 
             Section("Quick Totals") {
@@ -177,54 +186,54 @@ struct SFSTView: View {
                 Text("One-Leg Stand: \(olsCount) / 4")
             }
 
-            Section {
-                Button("Generate Full Report") {
-                    notesFieldFocused = false
+            Section("Actions") {
+                Button("Generate Field Notes Summary") {
+                    activeField = nil
                     generatedSummary = buildSummary()
                     copiedMessage = ""
                     savedMessage = ""
                 }
 
                 if !generatedSummary.isEmpty {
-                    Button("Copy Report") {
+                    Button("Copy Summary") {
                         UIPasteboard.general.string = generatedSummary
-                        copiedMessage = "Report copied to clipboard."
+                        copiedMessage = "Summary copied to clipboard."
                         savedMessage = ""
-                        notesFieldFocused = false
+                        activeField = nil
                     }
 
-                    Button("Save Report") {
+                    Button("Save Summary") {
                         saveCurrentReport()
                         copiedMessage = ""
-                        notesFieldFocused = false
+                        activeField = nil
                     }
                 }
 
                 Button("Dismiss Keyboard") {
-                    notesFieldFocused = false
+                    activeField = nil
                 }
 
                 Button("Reset SFST Form", role: .destructive) {
-                    resetForm()
+                    showingResetConfirmation = true
                 }
             }
 
             if !copiedMessage.isEmpty {
                 Section {
                     Text(copiedMessage)
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                 }
             }
 
             if !savedMessage.isEmpty {
                 Section {
                     Text(savedMessage)
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                 }
             }
 
             if !generatedSummary.isEmpty {
-                Section("Generated Report") {
+                Section("Generated Field Notes Summary") {
                     Text(generatedSummary)
                         .textSelection(.enabled)
                         .font(.body)
@@ -237,58 +246,69 @@ struct SFSTView: View {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
-                    notesFieldFocused = false
+                    activeField = nil
                 }
             }
+        }
+        .alert("Reset SFST Form?", isPresented: $showingResetConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset", role: .destructive) {
+                resetForm()
+            }
+        } message: {
+            Text("This will clear all selected clues, notes, and summary text.")
         }
     }
 
     private func buildSummary() -> String {
         let subjectText = subjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            ? "the subject"
+            ? "Not entered"
             : subjectName.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let officerIdentity = officerLine()
+        let infoBlock = """
+Subject: \(subjectText)
+Date: \(formattedDate(incidentDate))
+Time: \(formattedTime(incidentTime))
+Location: \(valueOrPlaceholder(location))
+Surface: \(valueOrPlaceholder(roadSurface))
+Lighting: \(valueOrPlaceholder(lighting))
+Weather: \(valueOrPlaceholder(weather))
+Footwear: \(valueOrPlaceholder(footwear))
+Medical / Physical Limitations: \(valueOrPlaceholder(medicalConditions))
+"""
 
-        let header = """
-        On \(formattedDate(incidentDate)), at approximately \(formattedTime(incidentTime)), \(officerIdentity) administered Standardized Field Sobriety Tests to \(subjectText) at \(valueOrPlaceholder(location)).
-        """
+        let hgnBlock = """
+HGN (\(hgnCount)/6):
+\(bulletList(from: selectedHGNClues()))
+"""
 
-        let conditions = """
-        The tests were conducted under the following conditions: surface: \(valueOrPlaceholder(roadSurface)); lighting: \(valueOrPlaceholder(lighting)); weather: \(valueOrPlaceholder(weather)); footwear: \(valueOrPlaceholder(footwear)); medical or physical limitations noted: \(valueOrPlaceholder(medicalConditions)).
-        """
+        let watBlock = """
+Walk-and-Turn (\(watCount)/8):
+\(bulletList(from: selectedWATClues()))
+"""
 
-        let hgnParagraph = """
-        Horizontal Gaze Nystagmus (HGN) was explained and demonstrated as appropriate. A total of \(hgnCount) of 6 clues were observed. Observed clues: \(clueSentence(from: selectedHGNClues())).
-        """
+        let olsBlock = """
+One-Leg Stand (\(olsCount)/4):
+\(bulletList(from: selectedOLSClues()))
+"""
 
-        let watParagraph = """
-        Walk-and-Turn was explained and demonstrated as appropriate. A total of \(watCount) of 8 clues were observed. Observed clues: \(clueSentence(from: selectedWATClues())).
-        """
+        let subjectStatementBlock = """
+Subject Statements:
+\(multilineValueOrPlaceholder(subjectStatements))
+"""
 
-        let olsParagraph = """
-        One-Leg Stand was explained and demonstrated as appropriate. A total of \(olsCount) of 4 clues were observed. Observed clues: \(clueSentence(from: selectedOLSClues())).
-        """
-
-        let notesParagraph: String
-        if officerNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            notesParagraph = "No additional officer notes were entered."
-        } else {
-            notesParagraph = "Additional observations and notes: \(officerNotes.trimmingCharacters(in: .whitespacesAndNewlines))."
-        }
-
-        let conclusion = """
-        Based on the subject's performance on the standardized field sobriety tests, the above observations were documented for report and evidentiary purposes.
-        """
+        let notesBlock = """
+Officer Notes:
+\(multilineValueOrPlaceholder(officerNotes))
+"""
 
         return [
-            header,
-            conditions,
-            hgnParagraph,
-            watParagraph,
-            olsParagraph,
-            notesParagraph,
-            conclusion
+            infoBlock,
+            hgnBlock,
+            watBlock,
+            olsBlock,
+            subjectStatementBlock,
+            notesBlock
         ].joined(separator: "\n\n")
     }
 
@@ -307,9 +327,9 @@ struct SFSTView: View {
         do {
             let data = try JSONEncoder().encode(existingReports)
             UserDefaults.standard.set(data, forKey: reportsStorageKey)
-            savedMessage = "Report saved."
+            savedMessage = "Summary saved."
         } catch {
-            savedMessage = "Could not save report."
+            savedMessage = "Could not save summary."
         }
     }
 
@@ -325,31 +345,15 @@ struct SFSTView: View {
         }
     }
 
-    private func officerLine() -> String {
-        let trimmedOfficerName = officerName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedBadgeNumber = badgeNumber.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedAgencyName = agencyName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if !trimmedOfficerName.isEmpty && !trimmedBadgeNumber.isEmpty && !trimmedAgencyName.isEmpty {
-            return "Officer \(trimmedOfficerName), badge \(trimmedBadgeNumber), of \(trimmedAgencyName)"
-        } else if !trimmedOfficerName.isEmpty && !trimmedBadgeNumber.isEmpty {
-            return "Officer \(trimmedOfficerName), badge \(trimmedBadgeNumber)"
-        } else if !trimmedOfficerName.isEmpty {
-            return "Officer \(trimmedOfficerName)"
-        } else {
-            return "the reporting officer"
-        }
-    }
-
     private func selectedHGNClues() -> [String] {
         var clues: [String] = []
 
-        if hgnSmoothPursuitLeft { clues.append("lack of smooth pursuit in the left eye") }
-        if hgnSmoothPursuitRight { clues.append("lack of smooth pursuit in the right eye") }
-        if hgnMaxDeviationLeft { clues.append("distinct and sustained nystagmus at maximum deviation in the left eye") }
-        if hgnMaxDeviationRight { clues.append("distinct and sustained nystagmus at maximum deviation in the right eye") }
-        if hgnOnset45Left { clues.append("onset of nystagmus prior to 45 degrees in the left eye") }
-        if hgnOnset45Right { clues.append("onset of nystagmus prior to 45 degrees in the right eye") }
+        if hgnSmoothPursuitLeft { clues.append("Lack of smooth pursuit — left eye") }
+        if hgnSmoothPursuitRight { clues.append("Lack of smooth pursuit — right eye") }
+        if hgnMaxDeviationLeft { clues.append("Distinct and sustained nystagmus at maximum deviation — left eye") }
+        if hgnMaxDeviationRight { clues.append("Distinct and sustained nystagmus at maximum deviation — right eye") }
+        if hgnOnset45Left { clues.append("Onset of nystagmus prior to 45 degrees — left eye") }
+        if hgnOnset45Right { clues.append("Onset of nystagmus prior to 45 degrees — right eye") }
 
         return clues
     }
@@ -357,14 +361,14 @@ struct SFSTView: View {
     private func selectedWATClues() -> [String] {
         var clues: [String] = []
 
-        if watCannotBalance { clues.append("could not keep balance during the instruction stage") }
-        if watStartsTooSoon { clues.append("started too soon") }
-        if watStopsWalking { clues.append("stopped while walking") }
-        if watMissesHeelToToe { clues.append("missed heel-to-toe") }
-        if watStepsOffLine { clues.append("stepped off line") }
-        if watUsesArms { clues.append("used arms for balance") }
-        if watImproperTurn { clues.append("made an improper turn") }
-        if watWrongStepCount { clues.append("took an incorrect number of steps") }
+        if watCannotBalance { clues.append("Cannot keep balance during instructions") }
+        if watStartsTooSoon { clues.append("Starts too soon") }
+        if watStopsWalking { clues.append("Stops while walking") }
+        if watMissesHeelToToe { clues.append("Misses heel-to-toe") }
+        if watStepsOffLine { clues.append("Steps off line") }
+        if watUsesArms { clues.append("Uses arms for balance") }
+        if watImproperTurn { clues.append("Improper turn") }
+        if watWrongStepCount { clues.append("Incorrect number of steps") }
 
         return clues
     }
@@ -372,25 +376,29 @@ struct SFSTView: View {
     private func selectedOLSClues() -> [String] {
         var clues: [String] = []
 
-        if olsSways { clues.append("swayed while balancing") }
-        if olsUsesArms { clues.append("used arms for balance") }
-        if olsHops { clues.append("hopped") }
-        if olsFootDown { clues.append("put foot down") }
+        if olsSways { clues.append("Sways while balancing") }
+        if olsUsesArms { clues.append("Uses arms for balance") }
+        if olsHops { clues.append("Hops") }
+        if olsFootDown { clues.append("Puts foot down") }
 
         return clues
     }
 
-    private func clueSentence(from clues: [String]) -> String {
-        if clues.isEmpty {
-            return "no standardized clues were marked"
-        } else {
-            return clues.joined(separator: ", ")
+    private func bulletList(from items: [String]) -> String {
+        if items.isEmpty {
+            return "• No clues selected"
         }
+        return items.map { "• \($0)" }.joined(separator: "\n")
     }
 
     private func valueOrPlaceholder(_ value: String) -> String {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "not entered" : trimmed
+        return trimmed.isEmpty ? "Not entered" : trimmed
+    }
+
+    private func multilineValueOrPlaceholder(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Not entered" : trimmed
     }
 
     private func formattedDate(_ date: Date) -> String {
@@ -417,6 +425,7 @@ struct SFSTView: View {
         weather = ""
         footwear = ""
         medicalConditions = ""
+        subjectStatements = ""
         officerNotes = ""
 
         hgnSmoothPursuitLeft = false
@@ -443,6 +452,6 @@ struct SFSTView: View {
         generatedSummary = ""
         copiedMessage = ""
         savedMessage = ""
-        notesFieldFocused = false
+        activeField = nil
     }
 }
