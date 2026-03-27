@@ -1,8 +1,20 @@
 import SwiftUI
 
 struct StatesView: View {
-    let statutes: [StateStatute] =
-        JSONDataLoader.shared.load("states", as: [StateStatute].self) ?? []
+    let statutes: [StateStatute] = [
+        StateStatute(
+            state: "Indiana",
+            codeTitle: "Indiana Criminal Code",
+            summary: "Access Indiana criminal statutes.",
+            link: "https://iga.in.gov/laws"
+        ),
+        StateStatute(
+            state: "Illinois",
+            codeTitle: "Illinois Compiled Statutes",
+            summary: "Access Illinois statutes.",
+            link: "https://www.ilga.gov/legislation/ilcs/ilcs.asp"
+        )
+    ]
 
     var body: some View {
         List(statutes) { item in
