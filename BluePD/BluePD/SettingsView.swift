@@ -1,14 +1,19 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @AppStorage("officerName") private var officerName: String = ""
+    @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
+
     var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("General")) {
-                    Text("Blue PD Settings")
-                }
+        Form {
+            Section("Profile") {
+                TextField("Officer Name", text: $officerName)
             }
-            .navigationTitle("Settings")
+
+            Section("Appearance") {
+                Toggle("Dark Mode", isOn: $darkModeEnabled)
+            }
         }
+        .navigationTitle("Settings")
     }
 }
