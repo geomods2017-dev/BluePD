@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct PastReportsView: View {
     @State private var savedReports: [SavedSFSTReport] = []
@@ -8,11 +9,25 @@ struct PastReportsView: View {
     var body: some View {
         List {
             if savedReports.isEmpty {
-                Text("No saved SFST reports yet.")
-                    .foregroundColor(.secondary)
+                VStack(spacing: 10) {
+                    Image(systemName: "doc.text")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+
+                    Text("No saved summaries yet.")
+                        .font(.headline)
+
+                    Text("Generated SFST field note summaries will appear here.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .listRowBackground(Color.clear)
             } else {
                 ForEach(savedReports) { report in
-                    NavigationLink(destination: PastReportDetailView(report: report)) {
+                    NavigationLink(destination: SavedSummaryDetailView(report: report)) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(report.subjectName)
                                 .font(.headline)
@@ -27,7 +42,7 @@ struct PastReportsView: View {
                 .onDelete(perform: deleteReports)
             }
         }
-        .navigationTitle("Past Reports")
+        .navigationTitle("Saved Summaries")
         .onAppear {
             loadReports()
         }
@@ -65,15 +80,40 @@ struct PastReportsView: View {
     }
 }
 
-struct PastReportDetailView: View {
+struct SavedSummaryDetailView: View {
     let report: SavedSFSTReport
+    @State private var copiedMessage = ""
 
     var body: some View {
         ScrollView {
-            Text(report.reportText)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .textSelection(.enabled)
+            VStack(alignment: .leading, spacing: 16) {
+                Text(report.reportText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+
+                Button(action: {
+                    UIPasteboard.general.string = report.reportText
+                    copiedMessage = "Summary copied to clipboard."
+                }) {
+                    HStack {
+                        Image(systemName: "doc.on.doc")
+                        Text("Copy Summary")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(14)
+                }
+
+                if !copiedMessage.isEmpty {
+                    Text(copiedMessage)
+                        .foregroundColor(.green)
+                        .font(.subheadline)
+                }
+            }
+            .padding()
         }
         .navigationTitle(report.subjectName)
     }
