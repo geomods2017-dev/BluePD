@@ -3,49 +3,107 @@ import SwiftUI
 struct HomeView: View {
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                Text("Blue PD")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .padding(.top)
+            VStack(alignment: .leading, spacing: 24) {
+                headerSection
 
-                Text("Law Enforcement Quick Access")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Priority Tools")
+                        .font(.headline)
+                        .padding(.horizontal)
 
-                VStack(spacing: 16) {
                     NavigationLink(destination: MirandaView()) {
                         FeaturedHomeCard(
                             title: "Miranda Warnings",
-                            subtitle: "Quick access to advisement language",
+                            subtitle: "English and Spanish read mode",
                             systemImage: "exclamationmark.shield.fill"
                         )
                     }
+                    .buttonStyle(.plain)
 
                     NavigationLink(destination: SFSTView()) {
-                        HomeCard(title: "SFST", systemImage: "checklist")
+                        HomeCard(
+                            title: "SFST",
+                            subtitle: "Guided clues, notes, and report builder",
+                            systemImage: "checklist"
+                        )
                     }
+                    .buttonStyle(.plain)
 
                     NavigationLink(destination: PastReportsView()) {
-                        HomeCard(title: "Past Reports", systemImage: "doc.text")
+                        HomeCard(
+                            title: "Past Reports",
+                            subtitle: "Open saved SFST narratives",
+                            systemImage: "doc.text"
+                        )
                     }
+                    .buttonStyle(.plain)
+                }
+
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Reference")
+                        .font(.headline)
+                        .padding(.horizontal)
 
                     NavigationLink(destination: CaseLawView()) {
-                        HomeCard(title: "New Case Law", systemImage: "book.closed")
+                        HomeCard(
+                            title: "Case Law",
+                            subtitle: "Recent legal reference",
+                            systemImage: "book.closed"
+                        )
                     }
+                    .buttonStyle(.plain)
 
                     NavigationLink(destination: StatesView()) {
-                        HomeCard(title: "State Statutes", systemImage: "map")
+                        HomeCard(
+                            title: "State Statutes",
+                            subtitle: "Open official state code sites",
+                            systemImage: "map"
+                        )
                     }
+                    .buttonStyle(.plain)
+                }
+
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Utilities")
+                        .font(.headline)
+                        .padding(.horizontal)
 
                     NavigationLink(destination: EvidenceView()) {
-                        HomeCard(title: "Evidence", systemImage: "camera")
+                        HomeCard(
+                            title: "Evidence",
+                            subtitle: "Photo capture and reference",
+                            systemImage: "camera"
+                        )
                     }
+                    .buttonStyle(.plain)
+
+                    NavigationLink(destination: SettingsView()) {
+                        HomeCard(
+                            title: "Settings",
+                            subtitle: "Officer profile and app options",
+                            systemImage: "gearshape"
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
-                .padding()
             }
+            .padding(.vertical)
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("Home")
+    }
+
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Blue PD")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+
+            Text("Law Enforcement Quick Access")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal)
     }
 }
 
@@ -59,7 +117,7 @@ struct FeaturedHomeCard: View {
             ZStack {
                 Circle()
                     .fill(Color.white.opacity(0.18))
-                    .frame(width: 54, height: 54)
+                    .frame(width: 56, height: 56)
 
                 Image(systemName: systemImage)
                     .font(.system(size: 24, weight: .semibold))
@@ -92,21 +150,36 @@ struct FeaturedHomeCard: View {
         )
         .cornerRadius(18)
         .shadow(radius: 6)
+        .padding(.horizontal)
     }
 }
 
 struct HomeCard: View {
     let title: String
+    let subtitle: String
     let systemImage: String
 
     var body: some View {
-        HStack {
-            Image(systemName: systemImage)
-                .font(.title2)
-                .frame(width: 35)
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.blue.opacity(0.12))
+                    .frame(width: 44, height: 44)
 
-            Text(title)
-                .font(.headline)
+                Image(systemName: systemImage)
+                    .font(.title3)
+                    .foregroundColor(.blue)
+            }
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
 
             Spacer()
 
@@ -114,7 +187,8 @@ struct HomeCard: View {
                 .foregroundColor(.gray)
         }
         .padding()
-        .background(Color.blue.opacity(0.12))
-        .cornerRadius(14)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(16)
+        .padding(.horizontal)
     }
 }
