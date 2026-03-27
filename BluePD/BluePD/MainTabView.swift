@@ -11,6 +11,13 @@ struct MainTabView: View {
             }
 
             NavigationView {
+                SFSTView()
+            }
+            .tabItem {
+                Label("SFST", systemImage: "checklist")
+            }
+
+            NavigationView {
                 CaseLawView()
             }
             .tabItem {
