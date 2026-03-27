@@ -11,6 +11,7 @@ struct MirandaView: View {
 
     @State private var selectedLanguage: MirandaLanguage = .english
     @State private var copiedMessage = ""
+    @State private var largeTextMode = false
 
     private let englishMirandaWarning = """
 You have the right to remain silent.
@@ -55,13 +56,22 @@ Puede decidir en cualquier momento ejercer estos derechos y no responder pregunt
                 }
                 .pickerStyle(.segmented)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Label("Miranda Warning", systemImage: "exclamationmark.shield.fill")
-                        .font(.title2)
-                        .fontWeight(.bold)
+                Toggle("Large Read Mode", isOn: $largeTextMode)
+
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Image(systemName: "exclamationmark.shield.fill")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+
+                        Text("Miranda Warning")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                    }
 
                     Text(activeWarning)
-                        .font(.body)
+                        .font(largeTextMode ? .title2 : .body)
+                        .lineSpacing(largeTextMode ? 10 : 5)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -69,11 +79,11 @@ Puede decidir en cualquier momento ejercer estos derechos y no responder pregunt
                 .background(Color.blue.opacity(0.12))
                 .cornerRadius(18)
 
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Officer Reminder")
                         .font(.headline)
 
-                    Text("Read the warning clearly, confirm understanding, and document the subject’s response.")
+                    Text("Read the warning clearly, confirm the subject understands, and document the response.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
