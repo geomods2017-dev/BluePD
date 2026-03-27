@@ -15,10 +15,13 @@ struct HomeView: View {
 
                 VStack(spacing: 16) {
                     NavigationLink(destination: MirandaView()) {
-                        HomeCard(title: "Miranda Warnings", systemImage: "exclamationmark.shield")
+                        FeaturedHomeCard(
+                            title: "Miranda Warnings",
+                            subtitle: "Quick access to advisement language",
+                            systemImage: "exclamationmark.shield.fill"
+                        )
                     }
 
-                    // ✅ ADDED SFST HERE
                     NavigationLink(destination: SFSTView()) {
                         HomeCard(title: "SFST", systemImage: "checklist")
                     }
@@ -39,6 +42,52 @@ struct HomeView: View {
             }
         }
         .navigationTitle("Home")
+    }
+}
+
+struct FeaturedHomeCard: View {
+    let title: String
+    let subtitle: String
+    let systemImage: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.18))
+                    .frame(width: 54, height: 54)
+
+                Image(systemName: systemImage)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.9))
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right.circle.fill")
+                .font(.title2)
+                .foregroundColor(.white.opacity(0.9))
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.blue, Color.indigo],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(18)
+        .shadow(radius: 6)
     }
 }
 
