@@ -23,6 +23,7 @@ struct SFSTView: View {
     @State private var olsFootDown = false
 
     @State private var officerNotes = ""
+    @State private var generatedSummary = ""
 
     var hgnCount: Int {
         [
@@ -98,12 +99,94 @@ struct SFSTView: View {
             }
 
             Section {
+                Button("Generate Report Summary") {
+                    generatedSummary = buildSummary()
+                }
+
                 Button("Reset SFST Form", role: .destructive) {
                     resetForm()
                 }
             }
+
+            if !generatedSummary.isEmpty {
+                Section("Generated Narrative") {
+                    Text(generatedSummary)
+                        .textSelection(.enabled)
+                }
+            }
         }
         .navigationTitle("SFST")
+    }
+
+    private func buildSummary() -> String {
+        let hgnClues = selectedHGNClues()
+        let watClues = selectedWATClues()
+        let olsClues = selectedOLSClues()
+
+        var summary = "Standardized Field Sobriety Tests were administered and the following clues were observed. "
+
+        summary += "On HGN, \(hgnCount) of 6 clues were observed"
+        if !hgnClues.isEmpty {
+            summary += ": " + hgnClues.joined(separator: ", ")
+        }
+        summary += ". "
+
+        summary += "On Walk-and-Turn, \(watCount) of 8 clues were observed"
+        if !watClues.isEmpty {
+            summary += ": " + watClues.joined(separator: ", ")
+        }
+        summary += ". "
+
+        summary += "On One-Leg Stand, \(olsCount) of 4 clues were observed"
+        if !olsClues.isEmpty {
+            summary += ": " + olsClues.joined(separator: ", ")
+        }
+        summary += "."
+
+        if !officerNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            summary += " Additional notes: \(officerNotes.trimmingCharacters(in: .whitespacesAndNewlines))."
+        }
+
+        return summary
+    }
+
+    private func selectedHGNClues() -> [String] {
+        var clues: [String] = []
+
+        if hgnSmoothPursuitLeft { clues.append("lack of smooth pursuit in left eye") }
+        if hgnSmoothPursuitRight { clues.append("lack of smooth pursuit in right eye") }
+        if hgnMaxDeviationLeft { clues.append("distinct and sustained nystagmus at maximum deviation in left eye") }
+        if hgnMaxDeviationRight { clues.append("distinct and sustained nystagmus at maximum deviation in right eye") }
+        if hgnOnset45Left { clues.append("onset of nystagmus prior to 45 degrees in left eye") }
+        if hgnOnset45Right { clues.append("onset of nystagmus prior to 45 degrees in right eye") }
+
+        return clues
+    }
+
+    private func selectedWATClues() -> [String] {
+        var clues: [String] = []
+
+        if watCannotBalance { clues.append("could not keep balance during instructions") }
+        if watStartsTooSoon { clues.append("started too soon") }
+        if watStopsWalking { clues.append("stopped while walking") }
+        if watMissesHeelToToe { clues.append("missed heel-to-toe") }
+        if watStepsOffLine { clues.append("stepped off line") }
+        if watUsesArms { clues.append("used arms for balance") }
+        if watImproperTurn { clues.append("made an improper turn") }
+        if watWrongStepCount { clues.append("took an incorrect number of steps") }
+
+        return clues
+    }
+
+    private func selectedOLSClues() -> [String] {
+        var clues: [String] = []
+
+        if olsSways { clues.append("swayed while balancing") }
+        if olsUsesArms { clues.append("used arms for balance") }
+        if olsHops { clues.append("hopped") }
+        if olsFootDown { clues.append("put foot down") }
+
+        return clues
     }
 
     private func resetForm() {
@@ -129,5 +212,6 @@ struct SFSTView: View {
         olsFootDown = false
 
         officerNotes = ""
+        generatedSummary = ""
     }
 }
