@@ -1,6 +1,18 @@
 import SwiftUI
+import UIKit
 
 struct SFSTView: View {
+    @State private var subjectName = ""
+    @State private var incidentDate = ""
+    @State private var incidentTime = ""
+    @State private var location = ""
+    @State private var roadSurface = ""
+    @State private var lighting = ""
+    @State private var weather = ""
+    @State private var footwear = ""
+    @State private var medicalConditions = ""
+    @State private var officerNotes = ""
+
     @State private var hgnSmoothPursuitLeft = false
     @State private var hgnSmoothPursuitRight = false
     @State private var hgnMaxDeviationLeft = false
@@ -22,8 +34,8 @@ struct SFSTView: View {
     @State private var olsHops = false
     @State private var olsFootDown = false
 
-    @State private var officerNotes = ""
     @State private var generatedSummary = ""
+    @State private var copiedMessage = ""
 
     var hgnCount: Int {
         [
@@ -60,16 +72,52 @@ struct SFSTView: View {
 
     var body: some View {
         Form {
-            Section("HGN — Total Clues: \(hgnCount)/6") {
-                Toggle("Lack of Smooth Pursuit — Left Eye", isOn: $hgnSmoothPursuitLeft)
-                Toggle("Lack of Smooth Pursuit — Right Eye", isOn: $hgnSmoothPursuitRight)
-                Toggle("Distinct and Sustained Nystagmus at Max Deviation — Left Eye", isOn: $hgnMaxDeviationLeft)
-                Toggle("Distinct and Sustained Nystagmus at Max Deviation — Right Eye", isOn: $hgnMaxDeviationRight)
-                Toggle("Onset Prior to 45 Degrees — Left Eye", isOn: $hgnOnset45Left)
-                Toggle("Onset Prior to 45 Degrees — Right Eye", isOn: $hgnOnset45Right)
+            Section("Subject / Incident Information") {
+                TextField("Subject Name", text: $subjectName)
+                TextField("Date", text: $incidentDate)
+                TextField("Time", text: $incidentTime)
+                TextField("Location", text: $location)
             }
 
-            Section("Walk-and-Turn — Total Clues: \(watCount)/8") {
+            Section("Scene Conditions") {
+                TextField("Road / Surface Condition", text: $roadSurface)
+                TextField("Lighting", text: $lighting)
+                TextField("Weather", text: $weather)
+                TextField("Footwear", text: $footwear)
+                TextField("Medical / Physical Limitations", text: $medicalConditions)
+            }
+
+            Section("HGN Instructions") {
+                Text("• Confirm the subject understands instructions.")
+                Text("• Check for equal tracking and equal pupil size.")
+                Text("• Use a stimulus approximately 12–15 inches from the face and slightly above eye level.")
+                Text("• Instruct the subject to follow the stimulus with the eyes only and keep the head still.")
+                Text("• Observe each eye for the standardized clues.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            Section("HGN Clues — Total: \(hgnCount)/6") {
+                Toggle("Lack of Smooth Pursuit — Left Eye", isOn: $hgnSmoothPursuitLeft)
+                Toggle("Lack of Smooth Pursuit — Right Eye", isOn: $hgnSmoothPursuitRight)
+                Toggle("Distinct and Sustained Nystagmus at Maximum Deviation — Left Eye", isOn: $hgnMaxDeviationLeft)
+                Toggle("Distinct and Sustained Nystagmus at Maximum Deviation — Right Eye", isOn: $hgnMaxDeviationRight)
+                Toggle("Onset of Nystagmus Prior to 45 Degrees — Left Eye", isOn: $hgnOnset45Left)
+                Toggle("Onset of Nystagmus Prior to 45 Degrees — Right Eye", isOn: $hgnOnset45Right)
+            }
+
+            Section("Walk-and-Turn Instructions") {
+                Text("• Place the left foot on the line.")
+                Text("• Place the right foot in front of the left foot, heel-to-toe.")
+                Text("• Keep arms at sides and maintain that position while instructions are given.")
+                Text("• Do not begin until told to start.")
+                Text("• Take 9 heel-to-toe steps, turn using a series of small steps, and take 9 heel-to-toe steps back.")
+                Text("• Count steps out loud and watch the feet.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            Section("Walk-and-Turn Clues — Total: \(watCount)/8") {
                 Toggle("Cannot Keep Balance During Instructions", isOn: $watCannotBalance)
                 Toggle("Starts Too Soon", isOn: $watStartsTooSoon)
                 Toggle("Stops While Walking", isOn: $watStopsWalking)
@@ -80,7 +128,17 @@ struct SFSTView: View {
                 Toggle("Incorrect Number of Steps", isOn: $watWrongStepCount)
             }
 
-            Section("One-Leg Stand — Total Clues: \(olsCount)/4") {
+            Section("One-Leg Stand Instructions") {
+                Text("• Stand with feet together and arms at sides.")
+                Text("• Raise one foot approximately 6 inches off the ground.")
+                Text("• Keep the raised foot parallel to the ground.")
+                Text("• Look at the raised foot and count out loud as instructed.")
+                Text("• Continue until told to stop.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+
+            Section("One-Leg Stand Clues — Total: \(olsCount)/4") {
                 Toggle("Sways While Balancing", isOn: $olsSways)
                 Toggle("Uses Arms for Balance", isOn: $olsUsesArms)
                 Toggle("Hops", isOn: $olsHops)
@@ -89,18 +147,26 @@ struct SFSTView: View {
 
             Section("Officer Notes") {
                 TextEditor(text: $officerNotes)
-                    .frame(minHeight: 120)
+                    .frame(minHeight: 140)
             }
 
-            Section("Quick Summary") {
-                Text("HGN: \(hgnCount) clue(s)")
-                Text("Walk-and-Turn: \(watCount) clue(s)")
-                Text("One-Leg Stand: \(olsCount) clue(s)")
+            Section("Quick Totals") {
+                Text("HGN: \(hgnCount) / 6")
+                Text("Walk-and-Turn: \(watCount) / 8")
+                Text("One-Leg Stand: \(olsCount) / 4")
             }
 
             Section {
-                Button("Generate Report Summary") {
+                Button("Generate Full Report") {
                     generatedSummary = buildSummary()
+                    copiedMessage = ""
+                }
+
+                if !generatedSummary.isEmpty {
+                    Button("Copy Report") {
+                        UIPasteboard.general.string = generatedSummary
+                        copiedMessage = "Report copied to clipboard."
+                    }
                 }
 
                 Button("Reset SFST Form", role: .destructive) {
@@ -108,10 +174,18 @@ struct SFSTView: View {
                 }
             }
 
+            if !copiedMessage.isEmpty {
+                Section {
+                    Text(copiedMessage)
+                        .foregroundColor(.green)
+                }
+            }
+
             if !generatedSummary.isEmpty {
-                Section("Generated Narrative") {
+                Section("Generated Report") {
                     Text(generatedSummary)
                         .textSelection(.enabled)
+                        .font(.body)
                 }
             }
         }
@@ -119,46 +193,59 @@ struct SFSTView: View {
     }
 
     private func buildSummary() -> String {
-        let hgnClues = selectedHGNClues()
-        let watClues = selectedWATClues()
-        let olsClues = selectedOLSClues()
+        let subjectText = subjectName.isEmpty ? "the subject" : subjectName
 
-        var summary = "Standardized Field Sobriety Tests were administered and the following clues were observed. "
+        let header = """
+        On \(valueOrPlaceholder(incidentDate)), at approximately \(valueOrPlaceholder(incidentTime)), I administered Standardized Field Sobriety Tests to \(subjectText) at \(valueOrPlaceholder(location)).
+        """
 
-        summary += "On HGN, \(hgnCount) of 6 clues were observed"
-        if !hgnClues.isEmpty {
-            summary += ": " + hgnClues.joined(separator: ", ")
+        let conditions = """
+        The tests were conducted under the following conditions: surface: \(valueOrPlaceholder(roadSurface)); lighting: \(valueOrPlaceholder(lighting)); weather: \(valueOrPlaceholder(weather)); footwear: \(valueOrPlaceholder(footwear)); medical or physical limitations noted: \(valueOrPlaceholder(medicalConditions)).
+        """
+
+        let hgnParagraph = """
+        Horizontal Gaze Nystagmus (HGN) was explained and demonstrated as appropriate. A total of \(hgnCount) of 6 clues were observed. Observed clues: \(clueSentence(from: selectedHGNClues())).
+        """
+
+        let watParagraph = """
+        Walk-and-Turn was explained and demonstrated as appropriate. A total of \(watCount) of 8 clues were observed. Observed clues: \(clueSentence(from: selectedWATClues())).
+        """
+
+        let olsParagraph = """
+        One-Leg Stand was explained and demonstrated as appropriate. A total of \(olsCount) of 4 clues were observed. Observed clues: \(clueSentence(from: selectedOLSClues())).
+        """
+
+        let notesParagraph: String
+        if officerNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            notesParagraph = "No additional officer notes were entered."
+        } else {
+            notesParagraph = "Additional observations and notes: \(officerNotes.trimmingCharacters(in: .whitespacesAndNewlines))."
         }
-        summary += ". "
 
-        summary += "On Walk-and-Turn, \(watCount) of 8 clues were observed"
-        if !watClues.isEmpty {
-            summary += ": " + watClues.joined(separator: ", ")
-        }
-        summary += ". "
+        let conclusion = """
+        Based on the subject's performance on the standardized field sobriety tests, the above observations were documented for report and evidentiary purposes.
+        """
 
-        summary += "On One-Leg Stand, \(olsCount) of 4 clues were observed"
-        if !olsClues.isEmpty {
-            summary += ": " + olsClues.joined(separator: ", ")
-        }
-        summary += "."
-
-        if !officerNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            summary += " Additional notes: \(officerNotes.trimmingCharacters(in: .whitespacesAndNewlines))."
-        }
-
-        return summary
+        return [
+            header,
+            conditions,
+            hgnParagraph,
+            watParagraph,
+            olsParagraph,
+            notesParagraph,
+            conclusion
+        ].joined(separator: "\n\n")
     }
 
     private func selectedHGNClues() -> [String] {
         var clues: [String] = []
 
-        if hgnSmoothPursuitLeft { clues.append("lack of smooth pursuit in left eye") }
-        if hgnSmoothPursuitRight { clues.append("lack of smooth pursuit in right eye") }
-        if hgnMaxDeviationLeft { clues.append("distinct and sustained nystagmus at maximum deviation in left eye") }
-        if hgnMaxDeviationRight { clues.append("distinct and sustained nystagmus at maximum deviation in right eye") }
-        if hgnOnset45Left { clues.append("onset of nystagmus prior to 45 degrees in left eye") }
-        if hgnOnset45Right { clues.append("onset of nystagmus prior to 45 degrees in right eye") }
+        if hgnSmoothPursuitLeft { clues.append("lack of smooth pursuit in the left eye") }
+        if hgnSmoothPursuitRight { clues.append("lack of smooth pursuit in the right eye") }
+        if hgnMaxDeviationLeft { clues.append("distinct and sustained nystagmus at maximum deviation in the left eye") }
+        if hgnMaxDeviationRight { clues.append("distinct and sustained nystagmus at maximum deviation in the right eye") }
+        if hgnOnset45Left { clues.append("onset of nystagmus prior to 45 degrees in the left eye") }
+        if hgnOnset45Right { clues.append("onset of nystagmus prior to 45 degrees in the right eye") }
 
         return clues
     }
@@ -166,7 +253,7 @@ struct SFSTView: View {
     private func selectedWATClues() -> [String] {
         var clues: [String] = []
 
-        if watCannotBalance { clues.append("could not keep balance during instructions") }
+        if watCannotBalance { clues.append("could not keep balance during the instruction stage") }
         if watStartsTooSoon { clues.append("started too soon") }
         if watStopsWalking { clues.append("stopped while walking") }
         if watMissesHeelToToe { clues.append("missed heel-to-toe") }
@@ -189,7 +276,31 @@ struct SFSTView: View {
         return clues
     }
 
+    private func clueSentence(from clues: [String]) -> String {
+        if clues.isEmpty {
+            return "no standardized clues were marked"
+        } else {
+            return clues.joined(separator: ", ")
+        }
+    }
+
+    private func valueOrPlaceholder(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "not entered" : trimmed
+    }
+
     private func resetForm() {
+        subjectName = ""
+        incidentDate = ""
+        incidentTime = ""
+        location = ""
+        roadSurface = ""
+        lighting = ""
+        weather = ""
+        footwear = ""
+        medicalConditions = ""
+        officerNotes = ""
+
         hgnSmoothPursuitLeft = false
         hgnSmoothPursuitRight = false
         hgnMaxDeviationLeft = false
@@ -211,7 +322,7 @@ struct SFSTView: View {
         olsHops = false
         olsFootDown = false
 
-        officerNotes = ""
         generatedSummary = ""
+        copiedMessage = ""
     }
 }
