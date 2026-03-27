@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct StateStatuteItem: Identifiable {
     let id = UUID()
@@ -12,25 +13,28 @@ struct StatesView: View {
     let statutes: [StateStatuteItem] = [
         StateStatuteItem(
             state: "Indiana",
-            codeTitle: "Indiana Criminal Code",
-            summary: "Access Indiana criminal statutes.",
-            link: "https://iga.in.gov/laws"
+            codeTitle: "Indiana Code",
+            summary: "Open the official Indiana Code website.",
+            link: "https://iga.in.gov/laws/2025/ic/titles/1"
         ),
         StateStatuteItem(
             state: "Illinois",
             codeTitle: "Illinois Compiled Statutes",
-            summary: "Access Illinois statutes.",
+            summary: "Open the official Illinois statutes website.",
             link: "https://www.ilga.gov/legislation/ilcs/ilcs.asp"
         )
     ]
 
     var body: some View {
         List(statutes) { item in
-            if let url = URL(string: item.link) {
-                Link(destination: url) {
+            Button(action: {
+                openLink(item.link)
+            }) {
+                HStack {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(item.state)
                             .font(.headline)
+                            .foregroundColor(.primary)
 
                         Text(item.codeTitle)
                             .font(.subheadline)
@@ -38,11 +42,23 @@ struct StatesView: View {
 
                         Text(item.summary)
                             .font(.body)
+                            .foregroundColor(.primary)
                     }
-                    .padding(.vertical, 6)
+
+                    Spacer()
+
+                    Image(systemName: "arrow.up.right.square")
+                        .foregroundColor(.blue)
                 }
+                .padding(.vertical, 6)
             }
+            .buttonStyle(.plain)
         }
         .navigationTitle("States")
+    }
+
+    private func openLink(_ link: String) {
+        guard let url = URL(string: link) else { return }
+        UIApplication.shared.open(url)
     }
 }
