@@ -18,6 +18,8 @@
 		A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */; };
 		A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */; };
 		A1B2C3E91E1F2A3B4C5D6E7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */; };
+		A1B2C3EB1E1F2A3B4C5D6E7F /* SavedSFSTReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3EC1E1F2A3B4C5D6E7F /* SavedSFSTReport.swift */; };
+		A1B2C3ED1E1F2A3B4C5D6E7A /* PastReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3EE1E1F2A3B4C5D6E7A /* PastReportsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +35,8 @@
 		A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvidenceView.swift; sourceTree = "<group>"; };
 		A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1B2C3EC1E1F2A3B4C5D6E7F /* SavedSFSTReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedSFSTReport.swift; sourceTree = "<group>"; };
+		A1B2C3EE1E1F2A3B4C5D6E7A /* PastReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastReportsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +65,8 @@
 				A1B2C3D81E1F2A3B4C5D6E7F /* ContentView.swift */,
 				A1B2C3DA1E1F2A3B4C5D6E7F /* HomeView.swift */,
 				A1B2C3DC1E1F2A3B4C5D6E7F /* SFSTView.swift */,
+				A1B2C3EC1E1F2A3B4C5D6E7F /* SavedSFSTReport.swift */,
+				A1B2C3EE1E1F2A3B4C5D6E7A /* PastReportsView.swift */,
 				A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */,
 				A1B2C3E01E1F2A3B4C5D6E7F /* MirandaView.swift */,
 				A1B2C3E21E1F2A3B4C5D6E7F /* CaseLawView.swift */,
@@ -154,6 +160,8 @@
 				A1B2C3D71E1F2A3B4C5D6E7F /* ContentView.swift in Sources */,
 				A1B2C3D91E1F2A3B4C5D6E7F /* HomeView.swift in Sources */,
 				A1B2C3DB1E1F2A3B4C5D6E7F /* SFSTView.swift in Sources */,
+				A1B2C3EB1E1F2A3B4C5D6E7F /* SavedSFSTReport.swift in Sources */,
+				A1B2C3ED1E1F2A3B4C5D6E7A /* PastReportsView.swift in Sources */,
 				A1B2C3DD1E1F2A3B4C5D6E7F /* MainTabView.swift in Sources */,
 				A1B2C3DF1E1F2A3B4C5D6E7F /* MirandaView.swift in Sources */,
 				A1B2C3E11E1F2A3B4C5D6E7F /* CaseLawView.swift in Sources */,
