@@ -36,8 +36,11 @@ struct SFSTView: View {
 
     @State private var generatedSummary = ""
     @State private var copiedMessage = ""
+    @State private var savedMessage = ""
 
     @FocusState private var notesFieldFocused: Bool
+
+    private let reportsStorageKey = "saved_sfst_reports"
 
     var hgnCount: Int {
         [
@@ -175,12 +178,20 @@ struct SFSTView: View {
                     notesFieldFocused = false
                     generatedSummary = buildSummary()
                     copiedMessage = ""
+                    savedMessage = ""
                 }
 
                 if !generatedSummary.isEmpty {
                     Button("Copy Report") {
                         UIPasteboard.general.string = generatedSummary
                         copiedMessage = "Report copied to clipboard."
+                        savedMessage = ""
+                        notesFieldFocused = false
+                    }
+
+                    Button("Save Report") {
+                        saveCurrentReport()
+                        copiedMessage = ""
                         notesFieldFocused = false
                     }
                 }
@@ -197,6 +208,13 @@ struct SFSTView: View {
             if !copiedMessage.isEmpty {
                 Section {
                     Text(copiedMessage)
+                        .foregroundColor(.green)
+                }
+            }
+
+            if !savedMessage.isEmpty {
+                Section {
+                    Text(savedMessage)
                         .foregroundColor(.green)
                 }
             }
@@ -264,6 +282,39 @@ struct SFSTView: View {
             notesParagraph,
             conclusion
         ].joined(separator: "\n\n")
+    }
+
+    private func saveCurrentReport() {
+        guard !generatedSummary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+
+        let trimmedName = subjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let report = SavedSFSTReport(
+            subjectName: trimmedName.isEmpty ? "Unnamed Subject" : trimmedName,
+            reportText: generatedSummary
+        )
+
+        var existingReports = loadReports()
+        existingReports.insert(report, at: 0)
+
+        do {
+            let data = try JSONEncoder().encode(existingReports)
+            UserDefaults.standard.set(data, forKey: reportsStorageKey)
+            savedMessage = "Report saved."
+        } catch {
+            savedMessage = "Could not save report."
+        }
+    }
+
+    private func loadReports() -> [SavedSFSTReport] {
+        guard let data = UserDefaults.standard.data(forKey: reportsStorageKey) else {
+            return []
+        }
+
+        do {
+            return try JSONDecoder().decode([SavedSFSTReport].self, from: data)
+        } catch {
+            return []
+        }
     }
 
     private func selectedHGNClues() -> [String] {
@@ -367,6 +418,7 @@ struct SFSTView: View {
 
         generatedSummary = ""
         copiedMessage = ""
+        savedMessage = ""
         notesFieldFocused = false
     }
 }
