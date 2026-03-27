@@ -3,25 +3,12 @@ import SwiftUI
 struct MainTabView: View {
     var body: some View {
         TabView {
+
             NavigationView {
                 HomeView()
             }
             .tabItem {
                 Label("Home", systemImage: "house")
-            }
-
-            NavigationView {
-                SFSTView()
-            }
-            .tabItem {
-                Label("SFST", systemImage: "checklist")
-            }
-
-            NavigationView {
-                PastReportsView()
-            }
-            .tabItem {
-                Label("Reports", systemImage: "doc.text")
             }
 
             NavigationView {
@@ -36,6 +23,20 @@ struct MainTabView: View {
             }
             .tabItem {
                 Label("States", systemImage: "map")
+            }
+
+            NavigationView {
+                SFSTView()
+            }
+            .tabItem {
+                Label("SFST", systemImage: "checkmark.shield")
+            }
+
+            NavigationView {
+                PastReportsView()
+            }
+            .tabItem {
+                Label("Summaries", systemImage: "doc.text")
             }
 
             NavigationView {
