@@ -3,8 +3,8 @@ import UIKit
 
 struct SFSTView: View {
     @State private var subjectName = ""
-    @State private var incidentDate = ""
-    @State private var incidentTime = ""
+    @State private var incidentDate = Date()
+    @State private var incidentTime = Date()
     @State private var location = ""
     @State private var roadSurface = ""
     @State private var lighting = ""
@@ -36,6 +36,8 @@ struct SFSTView: View {
 
     @State private var generatedSummary = ""
     @State private var copiedMessage = ""
+
+    @FocusState private var notesFieldFocused: Bool
 
     var hgnCount: Int {
         [
@@ -74,8 +76,19 @@ struct SFSTView: View {
         Form {
             Section("Subject / Incident Information") {
                 TextField("Subject Name", text: $subjectName)
-                TextField("Date", text: $incidentDate)
-                TextField("Time", text: $incidentTime)
+
+                DatePicker(
+                    "Incident Date",
+                    selection: $incidentDate,
+                    displayedComponents: [.date]
+                )
+
+                DatePicker(
+                    "Incident Time",
+                    selection: $incidentTime,
+                    displayedComponents: [.hourAndMinute]
+                )
+
                 TextField("Location", text: $location)
             }
 
@@ -148,6 +161,7 @@ struct SFSTView: View {
             Section("Officer Notes") {
                 TextEditor(text: $officerNotes)
                     .frame(minHeight: 140)
+                    .focused($notesFieldFocused)
             }
 
             Section("Quick Totals") {
@@ -158,6 +172,7 @@ struct SFSTView: View {
 
             Section {
                 Button("Generate Full Report") {
+                    notesFieldFocused = false
                     generatedSummary = buildSummary()
                     copiedMessage = ""
                 }
@@ -166,7 +181,12 @@ struct SFSTView: View {
                     Button("Copy Report") {
                         UIPasteboard.general.string = generatedSummary
                         copiedMessage = "Report copied to clipboard."
+                        notesFieldFocused = false
                     }
+                }
+
+                Button("Dismiss Keyboard") {
+                    notesFieldFocused = false
                 }
 
                 Button("Reset SFST Form", role: .destructive) {
@@ -190,13 +210,22 @@ struct SFSTView: View {
             }
         }
         .navigationTitle("SFST")
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    notesFieldFocused = false
+                }
+            }
+        }
     }
 
     private func buildSummary() -> String {
-        let subjectText = subjectName.isEmpty ? "the subject" : subjectName
+        let subjectText = subjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "the subject" : subjectName.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let header = """
-        On \(valueOrPlaceholder(incidentDate)), at approximately \(valueOrPlaceholder(incidentTime)), I administered Standardized Field Sobriety Tests to \(subjectText) at \(valueOrPlaceholder(location)).
+        On \(formattedDate(incidentDate)), at approximately \(formattedTime(incidentTime)), I administered Standardized Field Sobriety Tests to \(subjectText) at \(valueOrPlaceholder(location)).
         """
 
         let conditions = """
@@ -289,10 +318,24 @@ struct SFSTView: View {
         return trimmed.isEmpty ? "not entered" : trimmed
     }
 
+    private func formattedDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .long
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
+
+    private func formattedTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+
     private func resetForm() {
         subjectName = ""
-        incidentDate = ""
-        incidentTime = ""
+        incidentDate = Date()
+        incidentTime = Date()
         location = ""
         roadSurface = ""
         lighting = ""
@@ -324,5 +367,6 @@ struct SFSTView: View {
 
         generatedSummary = ""
         copiedMessage = ""
+        notesFieldFocused = false
     }
 }
