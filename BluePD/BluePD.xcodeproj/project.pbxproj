@@ -8,9 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		A1B2C3D51E1F2A3B4C5D6E7F /* BluePDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D61E1F2A3B4C5D6E7F /* BluePDApp.swift */; };
-		A1B2C3D71E1F2A3B4C5D6E7F /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D81E1F2A3B4C5D6E7F /* SessionStore.swift */; };
-		A1B2C3D91E1F2A3B4C5D6E7F /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DA1E1F2A3B4C5D6E7F /* RootView.swift */; };
-		A1B2C3DB1E1F2A3B4C5D6E7F /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DC1E1F2A3B4C5D6E7F /* LoginView.swift */; };
+		A1B2C3D71E1F2A3B4C5D6E7F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D81E1F2A3B4C5D6E7F /* ContentView.swift */; };
+		A1B2C3D91E1F2A3B4C5D6E7F /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DA1E1F2A3B4C5D6E7F /* HomeView.swift */; };
 		A1B2C3DD1E1F2A3B4C5D6E7F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */; };
 		A1B2C3DF1E1F2A3B4C5D6E7F /* MirandaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E01E1F2A3B4C5D6E7F /* MirandaView.swift */; };
 		A1B2C3E11E1F2A3B4C5D6E7F /* CaseLawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E21E1F2A3B4C5D6E7F /* CaseLawView.swift */; };
@@ -18,19 +17,13 @@
 		A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */; };
 		A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */; };
 		A1B2C3E91E1F2A3B4C5D6E7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */; };
-		A1B2C4011E1F2A3B4C5D6E7F /* CaseLawDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4021E1F2A3B4C5D6E7F /* CaseLawDetailView.swift */; };
-		A1B2C4031E1F2A3B4C5D6E7F /* StateModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4041E1F2A3B4C5D6E7F /* StateModels.swift */; };
-		A1B2C4051E1F2A3B4C5D6E7F /* StateCategoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4061E1F2A3B4C5D6E7F /* StateCategoryView.swift */; };
-		A1B2C4071E1F2A3B4C5D6E7F /* StateStatuteListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4081E1F2A3B4C5D6E7F /* StateStatuteListView.swift */; };
-		A1B2C4091E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C40A1E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A1B2C3D21E1F2A3B4C5D6E7F /* BluePD.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BluePD.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1B2C3D61E1F2A3B4C5D6E7F /* BluePDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluePDApp.swift; sourceTree = "<group>"; };
-		A1B2C3D81E1F2A3B4C5D6E7F /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
-		A1B2C3DA1E1F2A3B4C5D6E7F /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		A1B2C3DC1E1F2A3B4C5D6E7F /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		A1B2C3D81E1F2A3B4C5D6E7F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1B2C3DA1E1F2A3B4C5D6E7F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		A1B2C3E01E1F2A3B4C5D6E7F /* MirandaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirandaView.swift; sourceTree = "<group>"; };
 		A1B2C3E21E1F2A3B4C5D6E7F /* CaseLawView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseLawView.swift; sourceTree = "<group>"; };
@@ -38,11 +31,6 @@
 		A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvidenceView.swift; sourceTree = "<group>"; };
 		A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A1B2C4021E1F2A3B4C5D6E7F /* CaseLawDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseLawDetailView.swift; sourceTree = "<group>"; };
-		A1B2C4041E1F2A3B4C5D6E7F /* StateModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateModels.swift; sourceTree = "<group>"; };
-		A1B2C4061E1F2A3B4C5D6E7F /* StateCategoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateCategoryView.swift; sourceTree = "<group>"; };
-		A1B2C4081E1F2A3B4C5D6E7F /* StateStatuteListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateStatuteListView.swift; sourceTree = "<group>"; };
-		A1B2C40A1E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StateStatuteDetailView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,18 +56,12 @@
 			isa = PBXGroup;
 			children = (
 				A1B2C3D61E1F2A3B4C5D6E7F /* BluePDApp.swift */,
-				A1B2C3D81E1F2A3B4C5D6E7F /* SessionStore.swift */,
-				A1B2C3DA1E1F2A3B4C5D6E7F /* RootView.swift */,
-				A1B2C3DC1E1F2A3B4C5D6E7F /* LoginView.swift */,
+				A1B2C3D81E1F2A3B4C5D6E7F /* ContentView.swift */,
+				A1B2C3DA1E1F2A3B4C5D6E7F /* HomeView.swift */,
 				A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */,
 				A1B2C3E01E1F2A3B4C5D6E7F /* MirandaView.swift */,
 				A1B2C3E21E1F2A3B4C5D6E7F /* CaseLawView.swift */,
-				A1B2C4021E1F2A3B4C5D6E7F /* CaseLawDetailView.swift */,
 				A1B2C3E41E1F2A3B4C5D6E7F /* StatesView.swift */,
-				A1B2C4041E1F2A3B4C5D6E7F /* StateModels.swift */,
-				A1B2C4061E1F2A3B4C5D6E7F /* StateCategoryView.swift */,
-				A1B2C4081E1F2A3B4C5D6E7F /* StateStatuteListView.swift */,
-				A1B2C40A1E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift */,
 				A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */,
 				A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */,
 				A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */,
@@ -166,18 +148,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				A1B2C3D51E1F2A3B4C5D6E7F /* BluePDApp.swift in Sources */,
-				A1B2C3D71E1F2A3B4C5D6E7F /* SessionStore.swift in Sources */,
-				A1B2C3D91E1F2A3B4C5D6E7F /* RootView.swift in Sources */,
-				A1B2C3DB1E1F2A3B4C5D6E7F /* LoginView.swift in Sources */,
+				A1B2C3D71E1F2A3B4C5D6E7F /* ContentView.swift in Sources */,
+				A1B2C3D91E1F2A3B4C5D6E7F /* HomeView.swift in Sources */,
 				A1B2C3DD1E1F2A3B4C5D6E7F /* MainTabView.swift in Sources */,
 				A1B2C3DF1E1F2A3B4C5D6E7F /* MirandaView.swift in Sources */,
 				A1B2C3E11E1F2A3B4C5D6E7F /* CaseLawView.swift in Sources */,
-				A1B2C4011E1F2A3B4C5D6E7F /* CaseLawDetailView.swift in Sources */,
 				A1B2C3E31E1F2A3B4C5D6E7F /* StatesView.swift in Sources */,
-				A1B2C4031E1F2A3B4C5D6E7F /* StateModels.swift in Sources */,
-				A1B2C4051E1F2A3B4C5D6E7F /* StateCategoryView.swift in Sources */,
-				A1B2C4071E1F2A3B4C5D6E7F /* StateStatuteListView.swift in Sources */,
-				A1B2C4091E1F2A3B4C5D6E7F /* StateStatuteDetailView.swift in Sources */,
 				A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */,
 				A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */,
 			);
@@ -295,7 +271,7 @@
 				CURRENT_PROJECT_VERSION = 100;
 				DEVELOPMENT_TEAM = TP65F453BM;
 				GENERATE_INFOPLIST_FILE = NO;
-                INFOPLIST_FILE = BluePD/Info.plist;
+				INFOPLIST_FILE = BluePD/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BluePD;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "BluePD uses your photo library to attach evidence images.";
@@ -325,7 +301,7 @@
 				CURRENT_PROJECT_VERSION = 100;
 				DEVELOPMENT_TEAM = TP65F453BM;
 				GENERATE_INFOPLIST_FILE = NO;
-                INFOPLIST_FILE = BluePD/Info.plist;
+				INFOPLIST_FILE = BluePD/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = BluePD;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "BluePD uses your photo library to attach evidence images.";
