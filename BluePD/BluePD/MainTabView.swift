@@ -3,30 +3,40 @@ import SwiftUI
 struct MainTabView: View {
     var body: some View {
         TabView {
-            MirandaView()
-                .tabItem {
-                    Label("Miranda", systemImage: "quote.bubble")
-                }
+            NavigationView {
+                HomeView()
+            }
+            .tabItem {
+                Label("Home", systemImage: "house")
+            }
 
-            CaseLawView()
-                .tabItem {
-                    Label("Case Law", systemImage: "doc.text.magnifyingglass")
-                }
+            NavigationView {
+                CaseLawView()
+            }
+            .tabItem {
+                Label("Case Law", systemImage: "book.closed")
+            }
 
-            StatesView()
-                .tabItem {
-                    Label("States", systemImage: "building.columns")
-                }
+            NavigationView {
+                StatesView()
+            }
+            .tabItem {
+                Label("States", systemImage: "map")
+            }
 
-            EvidenceView()
-                .tabItem {
-                    Label("Evidence", systemImage: "camera")
-                }
+            NavigationView {
+                EvidenceView()
+            }
+            .tabItem {
+                Label("Evidence", systemImage: "camera")
+            }
 
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape")
-                }
+            NavigationView {
+                SettingsView()
+            }
+            .tabItem {
+                Label("Settings", systemImage: "gearshape")
+            }
         }
     }
 }
