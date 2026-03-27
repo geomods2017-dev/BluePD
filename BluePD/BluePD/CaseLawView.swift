@@ -1,8 +1,15 @@
 import SwiftUI
 
 struct CaseLawView: View {
-    let cases: [CaseLawItem] =
-        JSONDataLoader.shared.load("caselaw", as: [CaseLawItem].self) ?? []
+    let cases: [CaseLawItem] = [
+        CaseLawItem(
+            title: "Terry v. Ohio",
+            court: "U.S. Supreme Court",
+            date: "1968",
+            summary: "Established stop and frisk based on reasonable suspicion.",
+            citation: "392 U.S. 1"
+        )
+    ]
 
     var body: some View {
         List(cases) { item in
