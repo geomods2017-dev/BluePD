@@ -2,6 +2,10 @@ import SwiftUI
 import UIKit
 
 struct SFSTView: View {
+    @AppStorage("officerName") private var officerName: String = ""
+    @AppStorage("badgeNumber") private var badgeNumber: String = ""
+    @AppStorage("agencyName") private var agencyName: String = ""
+
     @State private var subjectName = ""
     @State private var incidentDate = Date()
     @State private var incidentTime = Date()
@@ -240,10 +244,14 @@ struct SFSTView: View {
     }
 
     private func buildSummary() -> String {
-        let subjectText = subjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "the subject" : subjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let subjectText = subjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "the subject"
+            : subjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let officerIdentity = officerLine()
 
         let header = """
-        On \(formattedDate(incidentDate)), at approximately \(formattedTime(incidentTime)), I administered Standardized Field Sobriety Tests to \(subjectText) at \(valueOrPlaceholder(location)).
+        On \(formattedDate(incidentDate)), at approximately \(formattedTime(incidentTime)), \(officerIdentity) administered Standardized Field Sobriety Tests to \(subjectText) at \(valueOrPlaceholder(location)).
         """
 
         let conditions = """
@@ -314,6 +322,22 @@ struct SFSTView: View {
             return try JSONDecoder().decode([SavedSFSTReport].self, from: data)
         } catch {
             return []
+        }
+    }
+
+    private func officerLine() -> String {
+        let trimmedOfficerName = officerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedBadgeNumber = badgeNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedAgencyName = agencyName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !trimmedOfficerName.isEmpty && !trimmedBadgeNumber.isEmpty && !trimmedAgencyName.isEmpty {
+            return "Officer \(trimmedOfficerName), badge \(trimmedBadgeNumber), of \(trimmedAgencyName)"
+        } else if !trimmedOfficerName.isEmpty && !trimmedBadgeNumber.isEmpty {
+            return "Officer \(trimmedOfficerName), badge \(trimmedBadgeNumber)"
+        } else if !trimmedOfficerName.isEmpty {
+            return "Officer \(trimmedOfficerName)"
+        } else {
+            return "the reporting officer"
         }
     }
 
