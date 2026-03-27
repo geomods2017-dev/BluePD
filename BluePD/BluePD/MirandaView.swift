@@ -1,8 +1,12 @@
 import SwiftUI
 
 struct MirandaView: View {
-    let warnings: [MirandaWarning] =
-        JSONDataLoader.shared.load("miranda", as: [MirandaWarning].self) ?? []
+    let warnings: [MirandaWarning] = [
+        MirandaWarning(
+            title: "Standard Miranda Warning",
+            text: "You have the right to remain silent. Anything you say can and will be used against you in a court of law. You have the right to an attorney. If you cannot afford one, one will be appointed for you."
+        )
+    ]
 
     var body: some View {
         List(warnings) { item in
