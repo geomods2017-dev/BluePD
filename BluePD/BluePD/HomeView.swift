@@ -26,6 +26,10 @@ struct HomeView: View {
                         HomeCard(title: "SFST", systemImage: "checklist")
                     }
 
+                    NavigationLink(destination: PastReportsView()) {
+                        HomeCard(title: "Past Reports", systemImage: "doc.text")
+                    }
+
                     NavigationLink(destination: CaseLawView()) {
                         HomeCard(title: "New Case Law", systemImage: "book.closed")
                     }
