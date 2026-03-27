@@ -18,6 +18,11 @@ struct HomeView: View {
                         HomeCard(title: "Miranda Warnings", systemImage: "exclamationmark.shield")
                     }
 
+                    // ✅ ADDED SFST HERE
+                    NavigationLink(destination: SFSTView()) {
+                        HomeCard(title: "SFST", systemImage: "checklist")
+                    }
+
                     NavigationLink(destination: CaseLawView()) {
                         HomeCard(title: "New Case Law", systemImage: "book.closed")
                     }
