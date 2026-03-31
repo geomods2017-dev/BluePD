@@ -4,7 +4,15 @@ struct SettingsView: View {
     @AppStorage("officerName") private var officerName: String = ""
     @AppStorage("badgeNumber") private var badgeNumber: String = ""
     @AppStorage("agencyName") private var agencyName: String = ""
+    @AppStorage("officerRank") private var officerRank: String = ""
+    @AppStorage("officerUnit") private var officerUnit: String = ""
+    @AppStorage("defaultState") private var defaultState: String = "Indiana"
+    @AppStorage("autoFillOfficerInfo") private var autoFillOfficerInfo: Bool = true
     @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
+
+    private let states = [
+        "Indiana", "Illinois", "Michigan", "Ohio", "Kentucky", "Tennessee", "Florida", "Texas", "California", "New York"
+    ]
 
     var body: some View {
         ScrollView {
@@ -33,6 +41,87 @@ struct SettingsView: View {
                             text: $agencyName,
                             systemImage: "building.2.fill"
                         )
+
+                        SettingsInputField(
+                            title: "Rank / Title",
+                            text: $officerRank,
+                            systemImage: "chevron.up.square.fill"
+                        )
+
+                        SettingsInputField(
+                            title: "Unit",
+                            text: $officerUnit,
+                            systemImage: "shield.fill"
+                        )
+                    }
+                }
+
+                settingsSectionCard(
+                    title: "Defaults",
+                    systemImage: "slider.horizontal.3"
+                ) {
+                    VStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label {
+                                Text("Default State")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.78))
+                            } icon: {
+                                Image(systemName: "map.fill")
+                                    .foregroundColor(.blue)
+                            }
+
+                            Picker("Default State", selection: $defaultState) {
+                                ForEach(states, id: \.self) { state in
+                                    Text(state).tag(state)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .tint(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(Color.white.opacity(0.05))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                            )
+                        }
+
+                        HStack(spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(Color.blue.opacity(0.14))
+                                    .frame(width: 46, height: 46)
+
+                                Image(systemName: "doc.text.fill")
+                                    .foregroundColor(.blue)
+                                    .font(.headline)
+                            }
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Auto-Fill Officer Info")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+
+                                Text("Include stored officer details in generated summaries.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.68))
+                            }
+
+                            Spacer()
+
+                            Toggle("", isOn: $autoFillOfficerInfo)
+                                .labelsHidden()
+                                .tint(.blue)
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color.white.opacity(0.05))
+                        )
                     }
                 }
 
@@ -56,7 +145,7 @@ struct SettingsView: View {
                                 .font(.headline)
                                 .foregroundColor(.white)
 
-                            Text("Save a visual preference for later use.")
+                            Text("Stores a visual preference for future use.")
                                 .font(.subheadline)
                                 .foregroundColor(.white.opacity(0.68))
                         }
@@ -183,7 +272,7 @@ struct SettingsView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
 
-                    Text("Manage officer information and app preferences.")
+                    Text("Manage officer information and default app preferences.")
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.72))
                 }
@@ -191,7 +280,7 @@ struct SettingsView: View {
                 Spacer()
             }
 
-            Text("These fields can be used later for auto-filled summaries, report details, and other field tools.")
+            Text("Stored officer details can be inserted into summaries and future report workflows.")
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.72))
                 .fixedSize(horizontal: false, vertical: true)
