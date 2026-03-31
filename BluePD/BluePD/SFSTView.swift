@@ -313,7 +313,6 @@ struct SFSTView: View {
         }
         .navigationTitle("SFST")
         .scrollDismissesKeyboard(.interactively)
-        .listSectionSpacing(.compact)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
