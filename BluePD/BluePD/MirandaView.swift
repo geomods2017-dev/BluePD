@@ -1,117 +1,191 @@
 import SwiftUI
-import UIKit
 
 struct MirandaView: View {
-    enum MirandaLanguage: String, CaseIterable, Identifiable {
-        case english = "English"
-        case spanish = "Spanish"
+    @State private var selectedLanguage: Language = .english
+    @State private var subjectResponse: String = ""
+    @State private var showCopied = false
 
-        var id: String { rawValue }
-    }
-
-    @State private var selectedLanguage: MirandaLanguage = .english
-    @State private var copiedMessage = ""
-    @State private var largeTextMode = false
-
-    private let englishMirandaWarning = """
-You have the right to remain silent.
-
-Anything you say can and will be used against you in a court of law.
-
-You have the right to talk to a lawyer and have him or her present with you while you are being questioned.
-
-If you cannot afford to hire a lawyer, one will be appointed to represent you before any questioning, if you wish.
-
-You can decide at any time to exercise these rights and not answer any questions or make any statements.
-"""
-
-    private let spanishMirandaWarning = """
-Tiene el derecho de permanecer en silencio.
-
-Cualquier cosa que diga puede y será usada en su contra en un tribunal de justicia.
-
-Tiene el derecho de hablar con un abogado y de tenerlo presente con usted mientras está siendo interrogado.
-
-Si no puede pagar un abogado, se le nombrará uno para representarlo antes de cualquier interrogatorio, si así lo desea.
-
-Puede decidir en cualquier momento ejercer estos derechos y no responder preguntas ni hacer declaraciones.
-"""
-
-    private var activeWarning: String {
-        switch selectedLanguage {
-        case .english:
-            return englishMirandaWarning
-        case .spanish:
-            return spanishMirandaWarning
-        }
+    enum Language {
+        case english
+        case spanish
     }
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Picker("Language", selection: $selectedLanguage) {
-                    ForEach(MirandaLanguage.allCases) { language in
-                        Text(language.rawValue).tag(language)
-                    }
-                }
-                .pickerStyle(.segmented)
+            VStack(spacing: 18) {
 
-                Toggle("Large Read Mode", isOn: $largeTextMode)
+                headerCard
 
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        Image(systemName: "exclamationmark.shield.fill")
-                            .font(.title2)
-                            .foregroundColor(.blue)
+                languageToggle
 
-                        Text("Miranda Warning")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                    }
+                mirandaCard
 
-                    Text(activeWarning)
-                        .font(largeTextMode ? .title2 : .body)
-                        .lineSpacing(largeTextMode ? 10 : 5)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .padding()
-                .background(Color.blue.opacity(0.12))
-                .cornerRadius(18)
+                acknowledgmentSection
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Officer Reminder")
-                        .font(.headline)
+                actionButtons
 
-                    Text("Read the warning clearly, confirm the subject understands, and document the response.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
-
-                Button(action: {
-                    UIPasteboard.general.string = activeWarning
-                    copiedMessage = "\(selectedLanguage.rawValue) Miranda warning copied."
-                }) {
-                    HStack {
-                        Image(systemName: "doc.on.doc")
-                        Text("Copy \(selectedLanguage.rawValue) Warning")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(14)
-                }
-
-                if !copiedMessage.isEmpty {
-                    Text(copiedMessage)
-                        .foregroundColor(.green)
-                        .font(.subheadline)
+                if showCopied {
+                    Text("Copied to clipboard")
+                        .font(.caption)
+                        .foregroundStyle(.green)
                 }
             }
             .padding()
         }
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(red: 7/255, green: 12/255, blue: 24/255),
+                    Color(red: 13/255, green: 23/255, blue: 40/255)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
+        )
         .navigationTitle("Miranda")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    // MARK: UI Sections
+
+    private var headerCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Miranda Warning")
+                .font(.title2)
+                .bold()
+                .foregroundColor(.white)
+
+            Text("Read clearly and confirm understanding.")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.7))
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.06))
+        )
+    }
+
+    private var languageToggle: some View {
+        HStack {
+            Button(action: { selectedLanguage = .english }) {
+                Text("English")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(selectedLanguage == .english ? Color.blue : Color.white.opacity(0.08))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+
+            Button(action: { selectedLanguage = .spanish }) {
+                Text("Spanish")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(selectedLanguage == .spanish ? Color.blue : Color.white.opacity(0.08))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+        }
+    }
+
+    private var mirandaCard: some View {
+        Text(currentMirandaText)
+            .font(.title3)
+            .foregroundColor(.white)
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color.white.opacity(0.05))
+            )
+    }
+
+    private var acknowledgmentSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Acknowledgment")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text(currentAcknowledgmentQuestion)
+                .foregroundColor(.white.opacity(0.85))
+
+            TextField("Subject response (e.g. Yes, No, Nods head)", text: $subjectResponse)
+                .padding()
+                .background(Color.white.opacity(0.08))
+                .cornerRadius(12)
+                .foregroundColor(.white)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.06))
+        )
+    }
+
+    private var actionButtons: some View {
+        VStack(spacing: 10) {
+            Button("Copy Miranda + Response") {
+                UIPasteboard.general.string = buildOutput()
+                showCopied = true
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(12)
+
+            Button("Clear Response") {
+                subjectResponse = ""
+                showCopied = false
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.white.opacity(0.08))
+            .foregroundColor(.white)
+            .cornerRadius(12)
+        }
+    }
+
+    // MARK: Logic
+
+    private var currentMirandaText: String {
+        switch selectedLanguage {
+        case .english:
+            return """
+You have the right to remain silent.
+Anything you say can and will be used against you in a court of law.
+You have the right to talk to a lawyer and have them present with you while you are being questioned.
+If you cannot afford a lawyer, one will be appointed to represent you before any questioning if you wish.
+"""
+        case .spanish:
+            return """
+Tiene el derecho de permanecer en silencio.
+Cualquier cosa que diga puede y será usada en su contra en una corte de ley.
+Tiene el derecho de hablar con un abogado y tenerlo presente durante el interrogatorio.
+Si no puede pagar un abogado, se le asignará uno antes de cualquier interrogatorio si así lo desea.
+"""
+        }
+    }
+
+    private var currentAcknowledgmentQuestion: String {
+        switch selectedLanguage {
+        case .english:
+            return "Do you understand your rights as I have read them to you?"
+        case .spanish:
+            return "¿Entiende los derechos que le he leído?"
+        }
+    }
+
+    private func buildOutput() -> String {
+        return """
+Miranda Warning Given:
+\(currentMirandaText)
+
+Acknowledgment:
+\(currentAcknowledgmentQuestion)
+
+Response:
+\(subjectResponse.isEmpty ? "No response documented" : subjectResponse)
+"""
     }
 }
