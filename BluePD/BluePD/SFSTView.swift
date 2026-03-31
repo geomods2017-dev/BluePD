@@ -14,6 +14,17 @@ struct SFSTView: View {
     @State private var subjectStatements = ""
     @State private var officerNotes = ""
 
+    // HGN pre-test / medical screening
+    @State private var hgnRestingNystagmusObserved = false
+    @State private var hgnEqualTrackingConfirmed = false
+    @State private var hgnEqualPupilSizeConfirmed = false
+
+    @State private var hgnHeadInjuryQuestion = ""
+    @State private var hgnEyeConditionQuestion = ""
+    @State private var hgnVisionCorrectionQuestion = ""
+    @State private var hgnMedicationQuestion = ""
+
+    // HGN clues
     @State private var hgnSmoothPursuitLeft = false
     @State private var hgnSmoothPursuitRight = false
     @State private var hgnMaxDeviationLeft = false
@@ -21,6 +32,7 @@ struct SFSTView: View {
     @State private var hgnOnset45Left = false
     @State private var hgnOnset45Right = false
 
+    // Walk-and-Turn clues
     @State private var watCannotBalance = false
     @State private var watStartsTooSoon = false
     @State private var watStopsWalking = false
@@ -30,6 +42,7 @@ struct SFSTView: View {
     @State private var watImproperTurn = false
     @State private var watWrongStepCount = false
 
+    // One-Leg Stand clues
     @State private var olsSways = false
     @State private var olsUsesArms = false
     @State private var olsHops = false
@@ -47,6 +60,10 @@ struct SFSTView: View {
     enum ActiveField: Hashable {
         case subjectStatements
         case officerNotes
+        case hgnHeadInjuryQuestion
+        case hgnEyeConditionQuestion
+        case hgnVisionCorrectionQuestion
+        case hgnMedicationQuestion
     }
 
     var hgnCount: Int {
@@ -110,14 +127,42 @@ struct SFSTView: View {
                 TextField("Medical / Physical Limitations", text: $medicalConditions)
             }
 
-            Section("HGN Instructions") {
+            Section("HGN Officer Setup") {
                 Text("• Confirm the subject understands instructions.")
-                Text("• Check for equal tracking and equal pupil size.")
-                Text("• Use a stimulus approximately 12–15 inches from the face and slightly above eye level.")
-                Text("• Instruct the subject to follow the stimulus with the eyes only and keep the head still.")
-                Text("• Observe each eye for the standardized clues.")
+                Text("• Remove distractions when practical.")
+                Text("• Position the stimulus approximately 12–15 inches from the subject’s face.")
+                Text("• Hold the stimulus slightly above eye level.")
+                Text("• Tell the subject to keep the head still and follow the stimulus with the eyes only.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("HGN Timing Guide") {
+                Text("• Lack of Smooth Pursuit: move from center to side in approximately 2 seconds, then return in approximately 2 seconds.")
+                Text("• Maximum Deviation: move to maximum deviation and hold for at least 4 seconds.")
+                Text("• Onset Prior to 45°: move slowly from center to side in approximately 4 seconds.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("HGN Pre-Test Checks") {
+                Toggle("Equal Tracking Confirmed", isOn: $hgnEqualTrackingConfirmed)
+                Toggle("Equal Pupil Size Confirmed", isOn: $hgnEqualPupilSizeConfirmed)
+                Toggle("Resting Nystagmus Observed", isOn: $hgnRestingNystagmusObserved)
+            }
+
+            Section("HGN Quick Medical Questions") {
+                TextField("Head injury / recent trauma?", text: $hgnHeadInjuryQuestion)
+                    .focused($activeField, equals: .hgnHeadInjuryQuestion)
+
+                TextField("Eye conditions / vision problems?", text: $hgnEyeConditionQuestion)
+                    .focused($activeField, equals: .hgnEyeConditionQuestion)
+
+                TextField("Contacts or glasses?", text: $hgnVisionCorrectionQuestion)
+                    .focused($activeField, equals: .hgnVisionCorrectionQuestion)
+
+                TextField("Medications affecting eyes / balance?", text: $hgnMedicationQuestion)
+                    .focused($activeField, equals: .hgnMedicationQuestion)
             }
 
             Section("HGN Clues — Total: \(hgnCount)/6") {
@@ -127,6 +172,16 @@ struct SFSTView: View {
                 Toggle("Distinct and Sustained Nystagmus at Maximum Deviation — Right Eye", isOn: $hgnMaxDeviationRight)
                 Toggle("Onset of Nystagmus Prior to 45 Degrees — Left Eye", isOn: $hgnOnset45Left)
                 Toggle("Onset of Nystagmus Prior to 45 Degrees — Right Eye", isOn: $hgnOnset45Right)
+            }
+
+            Section("HGN Officer Reminders") {
+                Text("• Keep stimulus speed consistent.")
+                Text("• Hold maximum deviation at least 4 seconds.")
+                Text("• Check both eyes equally.")
+                Text("• Note any medical, eye, or head injury concerns.")
+                Text("• Document unusual responses or inability to complete.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Walk-and-Turn Instructions") {
@@ -277,6 +332,17 @@ Footwear: \(valueOrPlaceholder(footwear))
 Medical / Physical Limitations: \(valueOrPlaceholder(medicalConditions))
 """
 
+        let hgnPretestBlock = """
+HGN Pre-Test:
+Equal Tracking Confirmed: \(yesNo(hgnEqualTrackingConfirmed))
+Equal Pupil Size Confirmed: \(yesNo(hgnEqualPupilSizeConfirmed))
+Resting Nystagmus Observed: \(yesNo(hgnRestingNystagmusObserved))
+Head Injury / Recent Trauma: \(valueOrPlaceholder(hgnHeadInjuryQuestion))
+Eye Conditions / Vision Problems: \(valueOrPlaceholder(hgnEyeConditionQuestion))
+Contacts or Glasses: \(valueOrPlaceholder(hgnVisionCorrectionQuestion))
+Medications Affecting Eyes / Balance: \(valueOrPlaceholder(hgnMedicationQuestion))
+"""
+
         let hgnBlock = """
 HGN (\(hgnCount)/6):
 \(bulletList(from: selectedHGNClues()))
@@ -304,6 +370,7 @@ Officer Notes:
 
         return [
             infoBlock,
+            hgnPretestBlock,
             hgnBlock,
             watBlock,
             olsBlock,
@@ -401,6 +468,10 @@ Officer Notes:
         return trimmed.isEmpty ? "Not entered" : trimmed
     }
 
+    private func yesNo(_ value: Bool) -> String {
+        value ? "Yes" : "No"
+    }
+
     private func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
@@ -427,6 +498,15 @@ Officer Notes:
         medicalConditions = ""
         subjectStatements = ""
         officerNotes = ""
+
+        hgnRestingNystagmusObserved = false
+        hgnEqualTrackingConfirmed = false
+        hgnEqualPupilSizeConfirmed = false
+
+        hgnHeadInjuryQuestion = ""
+        hgnEyeConditionQuestion = ""
+        hgnVisionCorrectionQuestion = ""
+        hgnMedicationQuestion = ""
 
         hgnSmoothPursuitLeft = false
         hgnSmoothPursuitRight = false
