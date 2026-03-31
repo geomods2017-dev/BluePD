@@ -2,6 +2,13 @@ import SwiftUI
 import UIKit
 
 struct SFSTView: View {
+    @AppStorage("officerName") private var officerName: String = ""
+    @AppStorage("badgeNumber") private var badgeNumber: String = ""
+    @AppStorage("agencyName") private var agencyName: String = ""
+    @AppStorage("officerRank") private var officerRank: String = ""
+    @AppStorage("officerUnit") private var officerUnit: String = ""
+    @AppStorage("autoFillOfficerInfo") private var autoFillOfficerInfo: Bool = true
+
     @State private var subjectName = ""
     @State private var incidentDate = Date()
     @State private var incidentTime = Date()
@@ -14,7 +21,10 @@ struct SFSTView: View {
     @State private var subjectStatements = ""
     @State private var officerNotes = ""
 
-    // HGN pre-test / medical screening
+    @State private var hgnExpanded = true
+    @State private var watExpanded = true
+    @State private var olsExpanded = true
+
     @State private var hgnRestingNystagmusObserved = false
     @State private var hgnEqualTrackingConfirmed = false
     @State private var hgnEqualPupilSizeConfirmed = false
@@ -24,7 +34,6 @@ struct SFSTView: View {
     @State private var hgnVisionCorrectionQuestion = ""
     @State private var hgnMedicationQuestion = ""
 
-    // HGN clues
     @State private var hgnSmoothPursuitLeft = false
     @State private var hgnSmoothPursuitRight = false
     @State private var hgnMaxDeviationLeft = false
@@ -32,7 +41,6 @@ struct SFSTView: View {
     @State private var hgnOnset45Left = false
     @State private var hgnOnset45Right = false
 
-    // Walk-and-Turn clues
     @State private var watCannotBalance = false
     @State private var watStartsTooSoon = false
     @State private var watStopsWalking = false
@@ -42,7 +50,6 @@ struct SFSTView: View {
     @State private var watImproperTurn = false
     @State private var watWrongStepCount = false
 
-    // One-Leg Stand clues
     @State private var olsSways = false
     @State private var olsUsesArms = false
     @State private var olsHops = false
@@ -101,6 +108,10 @@ struct SFSTView: View {
 
     var body: some View {
         Form {
+            Section {
+                headerCard
+            }
+
             Section("Subject / Incident Information") {
                 TextField("Subject Name", text: $subjectName)
 
@@ -127,116 +138,147 @@ struct SFSTView: View {
                 TextField("Medical / Physical Limitations", text: $medicalConditions)
             }
 
-            Section("HGN Quick Guide") {
-                SFSTInfoCard(
-                    title: "Officer Setup",
-                    icon: "eye",
-                    rows: [
-                        "Confirm the subject understands instructions.",
-                        "Remove distractions when practical.",
-                        "Position the stimulus approximately 12–15 inches from the subject’s face.",
-                        "Hold the stimulus slightly above eye level.",
-                        "Tell the subject to keep the head still and follow the stimulus with the eyes only."
-                    ]
-                )
+            Section {
+                DisclosureGroup(isExpanded: $hgnExpanded) {
+                    VStack(spacing: 12) {
+                        SFSTInfoCard(
+                            title: "Officer Setup",
+                            icon: "eye",
+                            rows: [
+                                "Confirm the subject understands instructions.",
+                                "Remove distractions when practical.",
+                                "Position the stimulus approximately 12–15 inches from the subject’s face.",
+                                "Hold the stimulus slightly above eye level.",
+                                "Tell the subject to keep the head still and follow the stimulus with the eyes only."
+                            ]
+                        )
 
-                SFSTTimingCard(
-                    title: "Lack of Smooth Pursuit",
-                    time: "2",
-                    detail: "Move from center to side in about 2 seconds, then return in about 2 seconds."
-                )
+                        SFSTTimingCard(
+                            title: "Lack of Smooth Pursuit",
+                            time: "2",
+                            detail: "Move from center to side in about 2 seconds, then return in about 2 seconds."
+                        )
 
-                SFSTTimingCard(
-                    title: "Maximum Deviation",
-                    time: "4",
-                    detail: "Move to maximum deviation and hold for at least 4 seconds."
-                )
+                        SFSTTimingCard(
+                            title: "Maximum Deviation",
+                            time: "4",
+                            detail: "Move to maximum deviation and hold for at least 4 seconds."
+                        )
 
-                SFSTTimingCard(
-                    title: "Onset Prior to 45°",
-                    time: "4",
-                    detail: "Move slowly from center to side in about 4 seconds."
-                )
+                        SFSTTimingCard(
+                            title: "Onset Prior to 45°",
+                            time: "4",
+                            detail: "Move slowly from center to side in about 4 seconds."
+                        )
 
-                SFSTInfoCard(
-                    title: "Officer Reminders",
-                    icon: "checkmark.shield",
-                    rows: [
-                        "Keep stimulus speed consistent.",
-                        "Hold maximum deviation at least 4 seconds.",
-                        "Check both eyes equally.",
-                        "Note any medical, eye, or head injury concerns.",
-                        "Document unusual responses or inability to complete."
-                    ]
-                )
+                        SFSTInfoCard(
+                            title: "Officer Reminders",
+                            icon: "checkmark.shield",
+                            rows: [
+                                "Keep stimulus speed consistent.",
+                                "Hold maximum deviation at least 4 seconds.",
+                                "Check both eyes equally.",
+                                "Note any medical, eye, or head injury concerns.",
+                                "Document unusual responses or inability to complete."
+                            ]
+                        )
+
+                        Toggle("Equal Tracking Confirmed", isOn: $hgnEqualTrackingConfirmed)
+                        Toggle("Equal Pupil Size Confirmed", isOn: $hgnEqualPupilSizeConfirmed)
+                        Toggle("Resting Nystagmus Observed", isOn: $hgnRestingNystagmusObserved)
+
+                        TextField("Head injury / recent trauma?", text: $hgnHeadInjuryQuestion)
+                            .focused($activeField, equals: .hgnHeadInjuryQuestion)
+
+                        TextField("Eye conditions / vision problems?", text: $hgnEyeConditionQuestion)
+                            .focused($activeField, equals: .hgnEyeConditionQuestion)
+
+                        TextField("Contacts or glasses?", text: $hgnVisionCorrectionQuestion)
+                            .focused($activeField, equals: .hgnVisionCorrectionQuestion)
+
+                        TextField("Medications affecting eyes / balance?", text: $hgnMedicationQuestion)
+                            .focused($activeField, equals: .hgnMedicationQuestion)
+
+                        Toggle("Lack of Smooth Pursuit — Left Eye", isOn: $hgnSmoothPursuitLeft)
+                        Toggle("Lack of Smooth Pursuit — Right Eye", isOn: $hgnSmoothPursuitRight)
+                        Toggle("Distinct and Sustained Nystagmus at Maximum Deviation — Left Eye", isOn: $hgnMaxDeviationLeft)
+                        Toggle("Distinct and Sustained Nystagmus at Maximum Deviation — Right Eye", isOn: $hgnMaxDeviationRight)
+                        Toggle("Onset of Nystagmus Prior to 45 Degrees — Left Eye", isOn: $hgnOnset45Left)
+                        Toggle("Onset of Nystagmus Prior to 45 Degrees — Right Eye", isOn: $hgnOnset45Right)
+                    }
+                    .padding(.top, 8)
+                } label: {
+                    sectionHeader(
+                        title: "HGN",
+                        subtitle: "\(hgnCount) / 6 clues",
+                        systemImage: "eye.fill"
+                    )
+                }
             }
 
-            Section("HGN Pre-Test Checks") {
-                Toggle("Equal Tracking Confirmed", isOn: $hgnEqualTrackingConfirmed)
-                Toggle("Equal Pupil Size Confirmed", isOn: $hgnEqualPupilSizeConfirmed)
-                Toggle("Resting Nystagmus Observed", isOn: $hgnRestingNystagmusObserved)
+            Section {
+                DisclosureGroup(isExpanded: $watExpanded) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        SFSTInfoCard(
+                            title: "Walk-and-Turn Instructions",
+                            icon: "figure.walk",
+                            rows: [
+                                "Place the left foot on the line.",
+                                "Place the right foot in front of the left foot, heel-to-toe.",
+                                "Keep arms at sides while instructions are given.",
+                                "Do not begin until told to start.",
+                                "Take 9 heel-to-toe steps, turn using a series of small steps, and take 9 heel-to-toe steps back.",
+                                "Count steps out loud and watch the feet."
+                            ]
+                        )
+
+                        Toggle("Cannot Keep Balance During Instructions", isOn: $watCannotBalance)
+                        Toggle("Starts Too Soon", isOn: $watStartsTooSoon)
+                        Toggle("Stops While Walking", isOn: $watStopsWalking)
+                        Toggle("Misses Heel-to-Toe", isOn: $watMissesHeelToToe)
+                        Toggle("Steps Off Line", isOn: $watStepsOffLine)
+                        Toggle("Uses Arms for Balance", isOn: $watUsesArms)
+                        Toggle("Improper Turn", isOn: $watImproperTurn)
+                        Toggle("Incorrect Number of Steps", isOn: $watWrongStepCount)
+                    }
+                    .padding(.top, 8)
+                } label: {
+                    sectionHeader(
+                        title: "Walk-and-Turn",
+                        subtitle: "\(watCount) / 8 clues",
+                        systemImage: "figure.walk.motion"
+                    )
+                }
             }
 
-            Section("HGN Quick Medical Questions") {
-                TextField("Head injury / recent trauma?", text: $hgnHeadInjuryQuestion)
-                    .focused($activeField, equals: .hgnHeadInjuryQuestion)
+            Section {
+                DisclosureGroup(isExpanded: $olsExpanded) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        SFSTInfoCard(
+                            title: "One-Leg Stand Instructions",
+                            icon: "figure.stand",
+                            rows: [
+                                "Stand with feet together and arms at sides.",
+                                "Raise one foot approximately 6 inches off the ground.",
+                                "Keep the raised foot parallel to the ground.",
+                                "Look at the raised foot and count out loud as instructed.",
+                                "Continue until told to stop."
+                            ]
+                        )
 
-                TextField("Eye conditions / vision problems?", text: $hgnEyeConditionQuestion)
-                    .focused($activeField, equals: .hgnEyeConditionQuestion)
-
-                TextField("Contacts or glasses?", text: $hgnVisionCorrectionQuestion)
-                    .focused($activeField, equals: .hgnVisionCorrectionQuestion)
-
-                TextField("Medications affecting eyes / balance?", text: $hgnMedicationQuestion)
-                    .focused($activeField, equals: .hgnMedicationQuestion)
-            }
-
-            Section("HGN Clues — Total: \(hgnCount)/6") {
-                Toggle("Lack of Smooth Pursuit — Left Eye", isOn: $hgnSmoothPursuitLeft)
-                Toggle("Lack of Smooth Pursuit — Right Eye", isOn: $hgnSmoothPursuitRight)
-                Toggle("Distinct and Sustained Nystagmus at Maximum Deviation — Left Eye", isOn: $hgnMaxDeviationLeft)
-                Toggle("Distinct and Sustained Nystagmus at Maximum Deviation — Right Eye", isOn: $hgnMaxDeviationRight)
-                Toggle("Onset of Nystagmus Prior to 45 Degrees — Left Eye", isOn: $hgnOnset45Left)
-                Toggle("Onset of Nystagmus Prior to 45 Degrees — Right Eye", isOn: $hgnOnset45Right)
-            }
-
-            Section("Walk-and-Turn Instructions") {
-                Text("• Place the left foot on the line.")
-                Text("• Place the right foot in front of the left foot, heel-to-toe.")
-                Text("• Keep arms at sides and maintain that position while instructions are given.")
-                Text("• Do not begin until told to start.")
-                Text("• Take 9 heel-to-toe steps, turn using a series of small steps, and take 9 heel-to-toe steps back.")
-                Text("• Count steps out loud and watch the feet.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("Walk-and-Turn Clues — Total: \(watCount)/8") {
-                Toggle("Cannot Keep Balance During Instructions", isOn: $watCannotBalance)
-                Toggle("Starts Too Soon", isOn: $watStartsTooSoon)
-                Toggle("Stops While Walking", isOn: $watStopsWalking)
-                Toggle("Misses Heel-to-Toe", isOn: $watMissesHeelToToe)
-                Toggle("Steps Off Line", isOn: $watStepsOffLine)
-                Toggle("Uses Arms for Balance", isOn: $watUsesArms)
-                Toggle("Improper Turn", isOn: $watImproperTurn)
-                Toggle("Incorrect Number of Steps", isOn: $watWrongStepCount)
-            }
-
-            Section("One-Leg Stand Instructions") {
-                Text("• Stand with feet together and arms at sides.")
-                Text("• Raise one foot approximately 6 inches off the ground.")
-                Text("• Keep the raised foot parallel to the ground.")
-                Text("• Look at the raised foot and count out loud as instructed.")
-                Text("• Continue until told to stop.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("One-Leg Stand Clues — Total: \(olsCount)/4") {
-                Toggle("Sways While Balancing", isOn: $olsSways)
-                Toggle("Uses Arms for Balance", isOn: $olsUsesArms)
-                Toggle("Hops", isOn: $olsHops)
-                Toggle("Puts Foot Down", isOn: $olsFootDown)
+                        Toggle("Sways While Balancing", isOn: $olsSways)
+                        Toggle("Uses Arms for Balance", isOn: $olsUsesArms)
+                        Toggle("Hops", isOn: $olsHops)
+                        Toggle("Puts Foot Down", isOn: $olsFootDown)
+                    }
+                    .padding(.top, 8)
+                } label: {
+                    sectionHeader(
+                        title: "One-Leg Stand",
+                        subtitle: "\(olsCount) / 4 clues",
+                        systemImage: "figure.stand.line.dotted.figure.stand"
+                    )
+                }
             }
 
             Section("Subject Statements") {
@@ -331,10 +373,86 @@ struct SFSTView: View {
         }
     }
 
+    private var headerCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "checkmark.shield.fill")
+                    .foregroundStyle(.blue)
+                Text("SFST Field Worksheet")
+                    .font(.headline)
+            }
+
+            Text("Roadside reference, clue tracking, and quick summary generation.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            if autoFillOfficerInfo && hasOfficerInfo {
+                Divider()
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Officer Info Auto-Fill Enabled")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+
+                    Text(compactOfficerLine)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private func sectionHeader(title: String, subtitle: String, systemImage: String) -> some View {
+        HStack {
+            Label(title, systemImage: systemImage)
+                .font(.headline)
+
+            Spacer()
+
+            Text(subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var hasOfficerInfo: Bool {
+        !officerName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !badgeNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !agencyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !officerRank.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+        !officerUnit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var compactOfficerLine: String {
+        [
+            officerRank.trimmingCharacters(in: .whitespacesAndNewlines),
+            officerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        ]
+        .filter { !$0.isEmpty }
+        .joined(separator: " ")
+        + (badgeNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : " • Badge \(badgeNumber.trimmingCharacters(in: .whitespacesAndNewlines))")
+        + (agencyName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : " • \(agencyName.trimmingCharacters(in: .whitespacesAndNewlines))")
+        + (officerUnit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : " • \(officerUnit.trimmingCharacters(in: .whitespacesAndNewlines))")
+    }
+
     private func buildSummary() -> String {
         let subjectText = subjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             ? "Not entered"
             : subjectName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let officerBlock: String = {
+            guard autoFillOfficerInfo && hasOfficerInfo else { return "" }
+
+            return """
+Officer Information:
+Officer: \(valueOrPlaceholder(officerName))
+Rank / Title: \(valueOrPlaceholder(officerRank))
+Badge Number: \(valueOrPlaceholder(badgeNumber))
+Agency: \(valueOrPlaceholder(agencyName))
+Unit: \(valueOrPlaceholder(officerUnit))
+"""
+        }()
 
         let infoBlock = """
 Subject: \(subjectText)
@@ -385,6 +503,7 @@ Officer Notes:
 """
 
         return [
+            officerBlock,
             infoBlock,
             hgnPretestBlock,
             hgnBlock,
@@ -392,7 +511,9 @@ Officer Notes:
             olsBlock,
             subjectStatementBlock,
             notesBlock
-        ].joined(separator: "\n\n")
+        ]
+        .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        .joined(separator: "\n\n")
     }
 
     private func saveCurrentReport() {
@@ -514,6 +635,10 @@ Officer Notes:
         medicalConditions = ""
         subjectStatements = ""
         officerNotes = ""
+
+        hgnExpanded = true
+        watExpanded = true
+        olsExpanded = true
 
         hgnRestingNystagmusObserved = false
         hgnEqualTrackingConfirmed = false
