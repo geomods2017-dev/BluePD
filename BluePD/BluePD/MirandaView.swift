@@ -1,9 +1,13 @@
 import SwiftUI
+import UIKit
 
 struct MirandaView: View {
     @State private var selectedLanguage: Language = .english
     @State private var subjectResponse: String = ""
     @State private var showCopied = false
+
+    @State private var showPirtle = false
+    @State private var pirtleResponse: String = ""
 
     enum Language {
         case english
@@ -13,14 +17,16 @@ struct MirandaView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-
                 headerCard
-
                 languageToggle
-
                 mirandaCard
-
                 acknowledgmentSection
+                pirtleToggleCard
+
+                if showPirtle {
+                    pirtleCard
+                    pirtleAcknowledgmentSection
+                }
 
                 actionButtons
 
@@ -47,8 +53,6 @@ struct MirandaView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    // MARK: UI Sections
-
     private var headerCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Miranda Warning")
@@ -56,7 +60,7 @@ struct MirandaView: View {
                 .bold()
                 .foregroundColor(.white)
 
-            Text("Read clearly and confirm understanding.")
+            Text("Read clearly, confirm understanding, and document the response.")
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.7))
         }
@@ -90,14 +94,20 @@ struct MirandaView: View {
     }
 
     private var mirandaCard: some View {
-        Text(currentMirandaText)
-            .font(.title3)
-            .foregroundColor(.white)
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(Color.white.opacity(0.05))
-            )
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Miranda")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text(currentMirandaText)
+                .font(.title3)
+                .foregroundColor(.white)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.05))
+        )
     }
 
     private var acknowledgmentSection: some View {
@@ -122,9 +132,85 @@ struct MirandaView: View {
         )
     }
 
+    private var pirtleToggleCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Indiana Pirtle Advisement")
+                        .font(.headline)
+                        .foregroundColor(.white)
+
+                    Text("Use when requesting consent to search in Indiana in a custodial setting where Pirtle applies.")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.7))
+                }
+
+                Spacer()
+
+                Toggle("", isOn: $showPirtle)
+                    .labelsHidden()
+                    .tint(.blue)
+            }
+
+            if showPirtle {
+                Text("Enabled")
+                    .font(.caption)
+                    .foregroundStyle(.green)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.06))
+        )
+    }
+
+    private var pirtleCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Indiana Pirtle Advisement")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text(currentPirtleText)
+                .font(.title3)
+                .foregroundColor(.white)
+
+            Text("Confirm current Indiana law, agency policy, and prosecutor guidance before operational use.")
+                .font(.caption)
+                .foregroundColor(.white.opacity(0.65))
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.05))
+        )
+    }
+
+    private var pirtleAcknowledgmentSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Pirtle Acknowledgment")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text(currentPirtleQuestion)
+                .foregroundColor(.white.opacity(0.85))
+
+            TextField("Subject response (e.g. Yes, No, Wants attorney, Refuses)", text: $pirtleResponse)
+                .padding()
+                .background(Color.white.opacity(0.08))
+                .cornerRadius(12)
+                .foregroundColor(.white)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.06))
+        )
+    }
+
     private var actionButtons: some View {
         VStack(spacing: 10) {
-            Button("Copy Miranda + Response") {
+            Button("Copy Warning(s) + Response") {
                 UIPasteboard.general.string = buildOutput()
                 showCopied = true
             }
@@ -134,8 +220,9 @@ struct MirandaView: View {
             .foregroundColor(.white)
             .cornerRadius(12)
 
-            Button("Clear Response") {
+            Button("Clear Responses") {
                 subjectResponse = ""
+                pirtleResponse = ""
                 showCopied = false
             }
             .frame(maxWidth: .infinity)
@@ -145,8 +232,6 @@ struct MirandaView: View {
             .cornerRadius(12)
         }
     }
-
-    // MARK: Logic
 
     private var currentMirandaText: String {
         switch selectedLanguage {
@@ -176,16 +261,58 @@ Si no puede pagar un abogado, se le asignará uno antes de cualquier interrogato
         }
     }
 
+    private var currentPirtleText: String {
+        switch selectedLanguage {
+        case .english:
+            return """
+You have the right to require that a search warrant be obtained before any search of your residence, vehicle, or other property covered by law.
+You have the right to refuse consent to such a search.
+You have the right to consult with an attorney before deciding whether to give consent to such a search.
+"""
+        case .spanish:
+            return """
+Usted tiene el derecho de exigir que se obtenga una orden de registro antes de cualquier registro de su residencia, vehículo u otra propiedad cubierta por la ley.
+Usted tiene el derecho de negarse a dar su consentimiento para dicho registro.
+Usted tiene el derecho de consultar con un abogado antes de decidir si dará su consentimiento para dicho registro.
+"""
+        }
+    }
+
+    private var currentPirtleQuestion: String {
+        switch selectedLanguage {
+        case .english:
+            return "Do you understand these rights regarding consent to search?"
+        case .spanish:
+            return "¿Entiende estos derechos con respecto al consentimiento para registrar?"
+        }
+    }
+
     private func buildOutput() -> String {
-        return """
+        var output = """
 Miranda Warning Given:
 \(currentMirandaText)
 
-Acknowledgment:
+Miranda Acknowledgment:
 \(currentAcknowledgmentQuestion)
 
 Response:
 \(subjectResponse.isEmpty ? "No response documented" : subjectResponse)
 """
+
+        if showPirtle {
+            output += """
+
+Indiana Pirtle Advisement Given:
+\(currentPirtleText)
+
+Pirtle Acknowledgment:
+\(currentPirtleQuestion)
+
+Response:
+\(pirtleResponse.isEmpty ? "No response documented" : pirtleResponse)
+"""
+        }
+
+        return output
     }
 }
