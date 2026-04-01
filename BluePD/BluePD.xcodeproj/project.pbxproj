@@ -10,6 +10,8 @@
 		A1B2C3D51E1F2A3B4C5D6E7F /* BluePDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D61E1F2A3B4C5D6E7F /* BluePDApp.swift */; };
 		A1B2C3D71E1F2A3B4C5D6E7F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D81E1F2A3B4C5D6E7F /* ContentView.swift */; };
 		A1B2C4091E1F2A3B4C5D6E7F /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C40A1E1F2A3B4C5D6E7F /* LoginView.swift */; };
+		A1B2C40B1E1F2A3B4C5D6E7F /* BluePDTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C40C1E1F2A3B4C5D6E7F /* BluePDTheme.swift */; };
+		A1B2C40D1E1F2A3B4C5D6E7F /* BluePDComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C40E1E1F2A3B4C5D6E7F /* BluePDComponents.swift */; };
 		A1B2C3D91E1F2A3B4C5D6E7F /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DA1E1F2A3B4C5D6E7F /* HomeView.swift */; };
 		A1B2C3DB1E1F2A3B4C5D6E7F /* SFSTView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DC1E1F2A3B4C5D6E7F /* SFSTView.swift */; };
 		A1B2C3DD1E1F2A3B4C5D6E7F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */; };
@@ -30,6 +32,8 @@
 		A1B2C3D61E1F2A3B4C5D6E7F /* BluePDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluePDApp.swift; sourceTree = "<group>"; };
 		A1B2C3D81E1F2A3B4C5D6E7F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1B2C40A1E1F2A3B4C5D6E7F /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		A1B2C40C1E1F2A3B4C5D6E7F /* BluePDTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluePDTheme.swift; sourceTree = "<group>"; };
+		A1B2C40E1E1F2A3B4C5D6E7F /* BluePDComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluePDComponents.swift; sourceTree = "<group>"; };
 		A1B2C3DA1E1F2A3B4C5D6E7F /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		A1B2C3DC1E1F2A3B4C5D6E7F /* SFSTView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFSTView.swift; sourceTree = "<group>"; };
 		A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
@@ -70,6 +74,8 @@
 				A1B2C3D61E1F2A3B4C5D6E7F /* BluePDApp.swift */,
 				A1B2C3D81E1F2A3B4C5D6E7F /* ContentView.swift */,
 				A1B2C40A1E1F2A3B4C5D6E7F /* LoginView.swift */,
+				A1B2C40C1E1F2A3B4C5D6E7F /* BluePDTheme.swift */,
+				A1B2C40E1E1F2A3B4C5D6E7F /* BluePDComponents.swift */,
 				A1B2C3DA1E1F2A3B4C5D6E7F /* HomeView.swift */,
 				A1B2C3DC1E1F2A3B4C5D6E7F /* SFSTView.swift */,
 				A1B2C4021E1F2A3B4C5D6E7F /* SavedSFSTReport.swift */,
@@ -168,6 +174,8 @@
 				A1B2C3D51E1F2A3B4C5D6E7F /* BluePDApp.swift in Sources */,
 				A1B2C3D71E1F2A3B4C5D6E7F /* ContentView.swift in Sources */,
 				A1B2C4091E1F2A3B4C5D6E7F /* LoginView.swift in Sources */,
+				A1B2C40B1E1F2A3B4C5D6E7F /* BluePDTheme.swift in Sources */,
+				A1B2C40D1E1F2A3B4C5D6E7F /* BluePDComponents.swift in Sources */,
 				A1B2C3D91E1F2A3B4C5D6E7F /* HomeView.swift in Sources */,
 				A1B2C3DB1E1F2A3B4C5D6E7F /* SFSTView.swift in Sources */,
 				A1B2C4011E1F2A3B4C5D6E7F /* SavedSFSTReport.swift in Sources */,
