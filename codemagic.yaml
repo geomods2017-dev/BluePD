@@ -22,7 +22,7 @@ workflows:
       - name: Set build version
         script: |
           BUILD_NUM=$(($PROJECT_BUILD_NUMBER + 101))
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 3.0" BluePD/BluePD/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 3.1" BluePD/BluePD/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" BluePD/BluePD/Info.plist
           echo "Using build number: $BUILD_NUM"
 
