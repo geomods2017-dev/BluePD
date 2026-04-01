@@ -39,7 +39,7 @@ struct EvidenceView: View {
         )
         .navigationTitle("Evidence")
         .navigationBarTitleDisplayMode(.inline)
-        .onChange(of: selectedItems) { _, newItems in
+        .onChange(of: selectedItems) { newItems in
             loadSelectedImages(from: newItems)
         }
     }
