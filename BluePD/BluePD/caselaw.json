@@ -1,0 +1,82 @@
+[
+  {
+    "id": "1",
+    "title": "State v. Carter",
+    "date": "2026-03-25",
+    "category": "Traffic Stops",
+    "summary": "Court ruled that extending a traffic stop without additional reasonable suspicion violates the Fourth Amendment.",
+    "impact": "Officers must clearly articulate new factors before prolonging a stop beyond its original purpose."
+  },
+  {
+    "id": "2",
+    "title": "People v. Ramirez",
+    "date": "2026-03-22",
+    "category": "Search & Seizure",
+    "summary": "Vehicle search based solely on nervous behavior was deemed insufficient for probable cause.",
+    "impact": "Nervousness alone cannot justify a warrantless vehicle search."
+  },
+  {
+    "id": "3",
+    "title": "U.S. v. Holloway",
+    "date": "2026-03-20",
+    "category": "Interviews & Miranda",
+    "summary": "Statements made prior to Miranda warnings were suppressed due to custodial interrogation conditions.",
+    "impact": "Miranda warnings must be given before questioning when a subject is not free to leave."
+  },
+  {
+    "id": "4",
+    "title": "State v. Nguyen",
+    "date": "2026-03-18",
+    "category": "DUI / SFST",
+    "summary": "Court upheld SFST results when administered in compliance with standardized procedures.",
+    "impact": "Proper SFST administration strengthens DUI prosecution and admissibility."
+  },
+  {
+    "id": "5",
+    "title": "People v. Dawson",
+    "date": "2026-03-15",
+    "category": "Use of Force",
+    "summary": "Use of force was found reasonable based on totality of circumstances and immediate threat assessment.",
+    "impact": "Officers must document perceived threat and decision-making factors clearly."
+  },
+  {
+    "id": "6",
+    "title": "U.S. v. Bennett",
+    "date": "2026-03-12",
+    "category": "Search Warrants",
+    "summary": "Search warrant invalidated due to lack of sufficient probable cause in the affidavit.",
+    "impact": "Affidavits must establish a clear nexus between suspected crime and location searched."
+  },
+  {
+    "id": "7",
+    "title": "State v. Collins",
+    "date": "2026-03-10",
+    "category": "Vehicle Searches",
+    "summary": "Inventory search upheld when conducted according to department policy.",
+    "impact": "Following standardized inventory procedures protects evidence from suppression."
+  },
+  {
+    "id": "8",
+    "title": "People v. Alvarez",
+    "date": "2026-03-08",
+    "category": "Probable Cause",
+    "summary": "Anonymous tip alone was insufficient to establish probable cause without corroboration.",
+    "impact": "Independent verification is required before acting on anonymous information."
+  },
+  {
+    "id": "9",
+    "title": "U.S. v. Daniels",
+    "date": "2026-03-05",
+    "category": "Detention",
+    "summary": "Temporary detention was ruled lawful based on specific and articulable facts.",
+    "impact": "Reasonable suspicion must be based on observable, documented behavior."
+  },
+  {
+    "id": "10",
+    "title": "State v. Brooks",
+    "date": "2026-03-02",
+    "category": "Search & Seizure",
+    "summary": "Evidence suppressed after unlawful entry into a residence without exigent circumstances.",
+    "impact": "Warrantless home entry requires clear exigency or consent."
+  }
+]
