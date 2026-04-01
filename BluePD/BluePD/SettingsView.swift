@@ -9,8 +9,6 @@ struct SettingsView: View {
     @AppStorage("defaultState") private var defaultState: String = "Indiana"
     @AppStorage("autoFillOfficerInfo") private var autoFillOfficerInfo: Bool = true
     @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
-
-    @AppStorage("userPIN") private var userPIN: String = ""
     @AppStorage("useFaceID") private var useFaceID: Bool = true
 
     @State private var currentPIN: String = ""
@@ -99,37 +97,11 @@ struct SettingsView: View {
                             )
                         }
 
-                        HStack(spacing: 14) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(Color.blue.opacity(0.14))
-                                    .frame(width: 46, height: 46)
-
-                                Image(systemName: "doc.text.fill")
-                                    .foregroundColor(.blue)
-                                    .font(.headline)
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Auto-Fill Officer Info")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-
-                                Text("Include stored officer details in generated summaries.")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.68))
-                            }
-
-                            Spacer()
-
-                            Toggle("", isOn: $autoFillOfficerInfo)
-                                .labelsHidden()
-                                .tint(.blue)
-                        }
-                        .padding(14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.white.opacity(0.05))
+                        settingsToggleRow(
+                            title: "Auto-Fill Officer Info",
+                            subtitle: "Include stored officer details in generated summaries.",
+                            systemImage: "doc.text.fill",
+                            isOn: $autoFillOfficerInfo
                         )
                     }
                 }
@@ -139,37 +111,11 @@ struct SettingsView: View {
                     systemImage: "lock.shield.fill"
                 ) {
                     VStack(spacing: 12) {
-                        HStack(spacing: 14) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(Color.blue.opacity(0.14))
-                                    .frame(width: 46, height: 46)
-
-                                Image(systemName: "faceid")
-                                    .foregroundColor(.blue)
-                                    .font(.headline)
-                            }
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Enable Face ID")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-
-                                Text("Allow biometric unlock when available.")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.68))
-                            }
-
-                            Spacer()
-
-                            Toggle("", isOn: $useFaceID)
-                                .labelsHidden()
-                                .tint(.blue)
-                        }
-                        .padding(14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.white.opacity(0.05))
+                        settingsToggleRow(
+                            title: "Enable Face ID",
+                            subtitle: "Allow biometric unlock when available.",
+                            systemImage: "faceid",
+                            isOn: $useFaceID
                         )
 
                         SecureSettingsField(
@@ -219,37 +165,11 @@ struct SettingsView: View {
                     title: "Appearance",
                     systemImage: "circle.lefthalf.filled"
                 ) {
-                    HStack(spacing: 14) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(Color.blue.opacity(0.14))
-                                .frame(width: 46, height: 46)
-
-                            Image(systemName: darkModeEnabled ? "moon.fill" : "sun.max.fill")
-                                .foregroundColor(.blue)
-                                .font(.headline)
-                        }
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Dark Mode")
-                                .font(.headline)
-                                .foregroundColor(.white)
-
-                            Text("Stores a visual preference for future use.")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.68))
-                        }
-
-                        Spacer()
-
-                        Toggle("", isOn: $darkModeEnabled)
-                            .labelsHidden()
-                            .tint(.blue)
-                    }
-                    .padding(14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.white.opacity(0.05))
+                    settingsToggleRow(
+                        title: "Dark Mode",
+                        subtitle: "Stores a visual preference for future use.",
+                        systemImage: darkModeEnabled ? "moon.fill" : "sun.max.fill",
+                        isOn: $darkModeEnabled
                     )
                 }
 
@@ -387,15 +307,55 @@ struct SettingsView: View {
         )
     }
 
+    private func settingsToggleRow(
+        title: String,
+        subtitle: String,
+        systemImage: String,
+        isOn: Binding<Bool>
+    ) -> some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.blue.opacity(0.14))
+                    .frame(width: 46, height: 46)
+
+                Image(systemName: systemImage)
+                    .foregroundColor(.blue)
+                    .font(.headline)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.68))
+            }
+
+            Spacer()
+
+            Toggle("", isOn: isOn)
+                .labelsHidden()
+                .tint(.blue)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
+    }
+
     private func changePIN() {
         showSecurityMessage = true
 
-        if userPIN.isEmpty {
+        guard let savedPIN = KeychainManager.getPIN() else {
             securityMessage = "No current PIN is stored."
             return
         }
 
-        if currentPIN != userPIN {
+        if currentPIN != savedPIN {
             securityMessage = "Current PIN is incorrect."
             return
         }
@@ -415,12 +375,16 @@ struct SettingsView: View {
             return
         }
 
-        userPIN = newPIN
-        securityMessage = "PIN updated successfully."
+        let didSave = KeychainManager.savePIN(newPIN)
 
-        currentPIN = ""
-        newPIN = ""
-        confirmNewPIN = ""
+        if didSave {
+            securityMessage = "PIN updated successfully."
+            currentPIN = ""
+            newPIN = ""
+            confirmNewPIN = ""
+        } else {
+            securityMessage = "Unable to update the PIN."
+        }
     }
 }
 
@@ -473,9 +437,10 @@ struct SecureSettingsField: View {
                     .foregroundColor(.blue)
             }
 
-            SecureField(title, text: $text)
+            TextField(title, text: $text)
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
+                .multilineTextAlignment(.center)
                 .foregroundColor(.white)
                 .padding(14)
                 .background(
@@ -486,6 +451,20 @@ struct SecureSettingsField: View {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
+                .onChange(of: text) { newValue in
+                    let filtered = newValue.filter { $0.isNumber }
+                    if filtered.count > 6 {
+                        text = String(filtered.prefix(6))
+                    } else {
+                        text = filtered
+                    }
+                }
         }
+    }
+}
+
+#Preview {
+    NavigationStack {
+        SettingsView()
     }
 }
