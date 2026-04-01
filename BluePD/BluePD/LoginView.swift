@@ -23,6 +23,10 @@ struct LoginView: View {
             } else {
                 ZStack {
                     backgroundView
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            hideKeyboard()
+                        }
 
                     VStack(spacing: 24) {
                         Spacer(minLength: 20)
@@ -303,6 +307,7 @@ struct LoginView: View {
     }
 
     private func savePIN() {
+        hideKeyboard()
         showError = false
         errorMessage = ""
 
@@ -335,6 +340,7 @@ struct LoginView: View {
     }
 
     private func unlockWithPIN() {
+        hideKeyboard()
         showError = false
         errorMessage = ""
 
@@ -349,6 +355,8 @@ struct LoginView: View {
     }
 
     private func authenticateWithFaceID() {
+        hideKeyboard()
+
         let context = LAContext()
         var error: NSError?
 
@@ -426,6 +434,14 @@ struct PINField: View {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
                         .stroke(Color.white.opacity(0.08), lineWidth: 1)
                 )
+                .toolbar {
+                    ToolbarItemGroup(placement: .keyboard) {
+                        Spacer()
+                        Button("Done") {
+                            hideKeyboard()
+                        }
+                    }
+                }
                 .onChange(of: text) { newValue in
                     let filtered = newValue.filter { $0.isNumber }
                     if filtered.count > maxLength {
@@ -437,6 +453,19 @@ struct PINField: View {
         }
     }
 }
+
+#if canImport(UIKit)
+extension View {
+    func hideKeyboard() {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
+    }
+}
+#endif
 
 #Preview {
     LoginView()
