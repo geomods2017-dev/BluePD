@@ -40,7 +40,32 @@ struct SFSTView: View {
     @State private var oneLegStandInstructionStage = ""
     @State private var oneLegStandBalanceStage = ""
 
-    @State private var showSavedBanner = false
+    @State private var showingSaveAlert = false
+    @State private var saveAlertTitle = ""
+    @State private var saveAlertMessage = ""
+
+    @State private var showingResetAlert = false
+
+    @FocusState private var focusedField: Field?
+
+    enum Field: Hashable {
+        case subjectName
+        case location
+        case roadSurface
+        case lighting
+        case weather
+        case footwear
+        case medicalConditions
+        case subjectStatements
+        case headInjuryQuestion
+        case eyeConditionQuestion
+        case visionCorrectionQuestion
+        case walkTurnInstructionStage
+        case walkTurnWalkingStage
+        case oneLegStandInstructionStage
+        case oneLegStandBalanceStage
+        case officerNotes
+    }
 
     var body: some View {
         ScrollView {
@@ -52,7 +77,9 @@ struct SFSTView: View {
                         StyledTextField(
                             title: "Subject Name",
                             text: $subjectName,
-                            systemImage: "person.fill"
+                            systemImage: "person.fill",
+                            focusedField: $focusedField,
+                            equals: .subjectName
                         )
 
                         HStack(spacing: 12) {
@@ -74,7 +101,9 @@ struct SFSTView: View {
                         StyledTextField(
                             title: "Location",
                             text: $location,
-                            systemImage: "mappin.and.ellipse"
+                            systemImage: "mappin.and.ellipse",
+                            focusedField: $focusedField,
+                            equals: .location
                         )
                     }
                 }
@@ -84,25 +113,33 @@ struct SFSTView: View {
                         StyledTextField(
                             title: "Road Surface",
                             text: $roadSurface,
-                            systemImage: "road.lanes"
+                            systemImage: "road.lanes",
+                            focusedField: $focusedField,
+                            equals: .roadSurface
                         )
 
                         StyledTextField(
                             title: "Lighting",
                             text: $lighting,
-                            systemImage: "lightbulb.fill"
+                            systemImage: "lightbulb.fill",
+                            focusedField: $focusedField,
+                            equals: .lighting
                         )
 
                         StyledTextField(
                             title: "Weather",
                             text: $weather,
-                            systemImage: "cloud.fill"
+                            systemImage: "cloud.fill",
+                            focusedField: $focusedField,
+                            equals: .weather
                         )
 
                         StyledTextField(
                             title: "Footwear",
                             text: $footwear,
-                            systemImage: "shoeprints.fill"
+                            systemImage: "shoeprints.fill",
+                            focusedField: $focusedField,
+                            equals: .footwear
                         )
                     }
                 }
@@ -113,14 +150,18 @@ struct SFSTView: View {
                             title: "Medical Conditions",
                             text: $medicalConditions,
                             systemImage: "heart.text.square.fill",
-                            minHeight: 100
+                            minHeight: 100,
+                            focusedField: $focusedField,
+                            equals: .medicalConditions
                         )
 
                         StyledTextEditor(
                             title: "Subject Statements",
                             text: $subjectStatements,
                             systemImage: "quote.bubble.fill",
-                            minHeight: 120
+                            minHeight: 120,
+                            focusedField: $focusedField,
+                            equals: .subjectStatements
                         )
                     }
                 }
@@ -149,21 +190,27 @@ struct SFSTView: View {
                         )
 
                         StyledTextField(
-                            title: "Head Injury Question",
+                            title: "Head Injury Question / Response",
                             text: $hgnHeadInjuryQuestion,
-                            systemImage: "bandage.fill"
+                            systemImage: "bandage.fill",
+                            focusedField: $focusedField,
+                            equals: .headInjuryQuestion
                         )
 
                         StyledTextField(
-                            title: "Eye Condition Question",
+                            title: "Eye Condition Question / Response",
                             text: $hgnEyeConditionQuestion,
-                            systemImage: "eye.fill"
+                            systemImage: "eye.fill",
+                            focusedField: $focusedField,
+                            equals: .eyeConditionQuestion
                         )
 
                         StyledTextField(
-                            title: "Vision Correction Question",
+                            title: "Vision Correction Question / Response",
                             text: $hgnVisionCorrectionQuestion,
-                            systemImage: "eyeglasses"
+                            systemImage: "eyeglasses",
+                            focusedField: $focusedField,
+                            equals: .visionCorrectionQuestion
                         )
                     }
                 }
@@ -187,41 +234,67 @@ struct SFSTView: View {
                                 clueBinding("Onset of Nystagmus Prior to 45°", $hgnRightOnsetPriorTo45)
                             ]
                         )
+
+                        summaryStatCard(
+                            title: "Total HGN Clues",
+                            value: "\(totalHGNClues)/6",
+                            systemImage: "waveform.path.ecg"
+                        )
                     }
                 }
 
                 sectionCard(title: "Walk and Turn", systemImage: "figure.walk") {
                     VStack(spacing: 12) {
+                        instructionButtonRow(
+                            buttonTitle: "Restore Walk-and-Turn Instructions",
+                            systemImage: "arrow.clockwise",
+                            action: insertWalkTurnInstructions
+                        )
+
                         StyledTextEditor(
                             title: "Instruction Stage",
                             text: $walkTurnInstructionStage,
                             systemImage: "list.clipboard.fill",
-                            minHeight: 110
+                            minHeight: 170,
+                            focusedField: $focusedField,
+                            equals: .walkTurnInstructionStage
                         )
 
                         StyledTextEditor(
-                            title: "Walking Stage",
+                            title: "Walking Stage / Observations",
                             text: $walkTurnWalkingStage,
                             systemImage: "figure.walk.motion",
-                            minHeight: 110
+                            minHeight: 150,
+                            focusedField: $focusedField,
+                            equals: .walkTurnWalkingStage
                         )
                     }
                 }
 
                 sectionCard(title: "One Leg Stand", systemImage: "figure.stand") {
                     VStack(spacing: 12) {
+                        instructionButtonRow(
+                            buttonTitle: "Restore One-Leg-Stand Instructions",
+                            systemImage: "arrow.clockwise",
+                            action: insertOneLegStandInstructions
+                        )
+
                         StyledTextEditor(
                             title: "Instruction Stage",
                             text: $oneLegStandInstructionStage,
                             systemImage: "checklist",
-                            minHeight: 110
+                            minHeight: 170,
+                            focusedField: $focusedField,
+                            equals: .oneLegStandInstructionStage
                         )
 
                         StyledTextEditor(
-                            title: "Balance Stage",
+                            title: "Balance Stage / Observations",
                             text: $oneLegStandBalanceStage,
                             systemImage: "figure.balance",
-                            minHeight: 110
+                            minHeight: 150,
+                            focusedField: $focusedField,
+                            equals: .oneLegStandBalanceStage
                         )
                     }
                 }
@@ -236,32 +309,39 @@ struct SFSTView: View {
                             title: "Officer Notes",
                             text: $officerNotes,
                             systemImage: "square.and.pencil",
-                            minHeight: 150
+                            minHeight: 150,
+                            focusedField: $focusedField,
+                            equals: .officerNotes
                         )
                     }
                 }
 
+                sectionCard(title: "Generated Narrative", systemImage: "doc.text.fill") {
+                    Text(generatedNarrative)
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.88))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color.white.opacity(0.05))
+                        )
+                }
+
                 VStack(spacing: 12) {
                     Button(action: saveReport) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "tray.and.arrow.down.fill")
-                            Text("Save SFST Report")
-                                .fontWeight(.semibold)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                .fill(Color.blue)
+                        actionButtonLabel(
+                            title: "Save SFST Report",
+                            systemImage: "tray.and.arrow.down.fill"
                         )
-                        .foregroundColor(.white)
                     }
 
-                    if showSavedBanner {
-                        Text("Report saved successfully.")
-                            .font(.subheadline)
-                            .foregroundColor(.green)
-                            .frame(maxWidth: .infinity, alignment: .center)
+                    Button(action: resetForm) {
+                        actionButtonLabel(
+                            title: "Clear Form",
+                            systemImage: "trash.fill",
+                            fillColor: .red
+                        )
                     }
                 }
             }
@@ -269,6 +349,7 @@ struct SFSTView: View {
             .padding(.top, 12)
             .padding(.bottom, 28)
         }
+        .scrollDismissesKeyboard(.interactively)
         .background(
             LinearGradient(
                 colors: [
@@ -283,6 +364,34 @@ struct SFSTView: View {
         )
         .navigationTitle("SFST Report")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    dismissKeyboard()
+                }
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            dismissKeyboard()
+        }
+        .onAppear {
+            loadDefaultInstructionsIfNeeded()
+        }
+        .alert(saveAlertTitle, isPresented: $showingSaveAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(saveAlertMessage)
+        }
+        .alert("Clear this report?", isPresented: $showingResetAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Clear", role: .destructive) {
+                clearAllFields()
+            }
+        } message: {
+            Text("This will remove all entered SFST information from the screen.")
+        }
     }
 
     private var headerCard: some View {
@@ -304,7 +413,7 @@ struct SFSTView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
 
-                    Text("Document subject observations, test clues, and field notes.")
+                    Text("Document observations, clues, divided-attention testing, and officer notes.")
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.72))
                 }
@@ -312,7 +421,7 @@ struct SFSTView: View {
                 Spacer()
             }
 
-            Text("Use this form to organize conditions, HGN observations, divided attention testing, and officer notes in one report.")
+            Text("Restores built-in instructions, fixes keyboard issues, and saves report files locally.")
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.72))
                 .fixedSize(horizontal: false, vertical: true)
@@ -399,6 +508,66 @@ struct SFSTView: View {
         )
     }
 
+    private func instructionButtonRow(
+        buttonTitle: String,
+        systemImage: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                Text(buttonTitle)
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.blue.opacity(0.14))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.blue.opacity(0.24), lineWidth: 1)
+            )
+        }
+        .foregroundColor(.blue)
+    }
+
+    private func actionButtonLabel(
+        title: String,
+        systemImage: String,
+        fillColor: Color = .blue
+    ) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: systemImage)
+            Text(title)
+                .fontWeight(.semibold)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(fillColor)
+        )
+        .foregroundColor(.white)
+    }
+
+    private func summaryStatCard(title: String, value: String, systemImage: String) -> some View {
+        HStack {
+            Label(title, systemImage: systemImage)
+                .foregroundColor(.white.opacity(0.82))
+            Spacer()
+            Text(value)
+                .font(.headline)
+                .foregroundColor(.white)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
+    }
+
     private func clueBinding(_ title: String, _ binding: Binding<Bool>) -> ClueItem {
         ClueItem(title: title, isOn: binding)
     }
@@ -425,13 +594,356 @@ struct SFSTView: View {
         )
     }
 
-    private func saveReport() {
-        showSavedBanner = true
+    private var totalHGNClues: Int {
+        [
+            hgnLeftLackOfSmoothPursuit,
+            hgnLeftDistinctNystagmus,
+            hgnLeftOnsetPriorTo45,
+            hgnRightLackOfSmoothPursuit,
+            hgnRightDistinctNystagmus,
+            hgnRightOnsetPriorTo45
+        ].filter { $0 }.count
+    }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            showSavedBanner = false
+    private var combinedIncidentDateTime: Date {
+        let calendar = Calendar.current
+        let dateParts = calendar.dateComponents([.year, .month, .day], from: incidentDate)
+        let timeParts = calendar.dateComponents([.hour, .minute], from: incidentTime)
+
+        var combined = DateComponents()
+        combined.year = dateParts.year
+        combined.month = dateParts.month
+        combined.day = dateParts.day
+        combined.hour = timeParts.hour
+        combined.minute = timeParts.minute
+
+        return calendar.date(from: combined) ?? Date()
+    }
+
+    private var generatedNarrative: String {
+        let dateText = Self.reportDateFormatter.string(from: combinedIncidentDateTime)
+        let subject = subjectName.trimmedOrFallback("the subject")
+        let locationText = location.trimmedOrFallback("an unspecified location")
+        let road = roadSurface.trimmedOrFallback("not documented")
+        let light = lighting.trimmedOrFallback("not documented")
+        let weatherText = weather.trimmedOrFallback("not documented")
+        let shoeText = footwear.trimmedOrFallback("not documented")
+
+        return """
+        On \(dateText), SFST observations were documented for \(subject) at \(locationText). Scene conditions included road surface: \(road), lighting: \(light), weather: \(weatherText), and footwear: \(shoeText).
+
+        HGN pre-test screening noted resting nystagmus observed: \(yesNo(hgnRestingNystagmusObserved)), equal tracking confirmed: \(yesNo(hgnEqualTrackingConfirmed)), and equal pupil size confirmed: \(yesNo(hgnEqualPupilSizeConfirmed)). Total HGN clues observed: \(totalHGNClues) of 6.
+
+        Walk-and-Turn observations: \(walkTurnWalkingStage.trimmedOrFallback("No walk-and-turn observations entered."))
+
+        One-Leg-Stand observations: \(oneLegStandBalanceStage.trimmedOrFallback("No one-leg-stand observations entered."))
+
+        Subject statements: \(subjectStatements.trimmedOrFallback("None documented."))
+
+        Medical conditions or considerations: \(medicalConditions.trimmedOrFallback("None documented."))
+
+        Officer notes: \(officerNotes.trimmedOrFallback("None documented."))
+        """
+    }
+
+    private func yesNo(_ value: Bool) -> String {
+        value ? "Yes" : "No"
+    }
+
+    private func dismissKeyboard() {
+        focusedField = nil
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+    }
+
+    private func loadDefaultInstructionsIfNeeded() {
+        if walkTurnInstructionStage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            insertWalkTurnInstructions()
+        }
+
+        if oneLegStandInstructionStage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            insertOneLegStandInstructions()
         }
     }
+
+    private func insertWalkTurnInstructions() {
+        walkTurnInstructionStage = """
+        • Place your left foot on the line and your right foot in front of it, heel-to-toe.
+        • Keep your arms at your sides and remain in this position while instructions are given.
+        • Do not start until told to begin.
+        • When told to begin, take 9 heel-to-toe steps on the line.
+        • On the 9th step, keep your front foot on the line and turn using a series of small steps.
+        • Return with 9 heel-to-toe steps.
+        • Count the steps out loud.
+        • Watch your feet while walking.
+        • Keep your arms at your sides.
+        • Do not stop once you begin until the test is completed.
+        """
+    }
+
+    private func insertOneLegStandInstructions() {
+        oneLegStandInstructionStage = """
+        • Stand with your feet together and your arms at your sides.
+        • Do not begin until told to do so.
+        • When told to begin, raise one foot approximately six inches off the ground, keeping the raised foot parallel to the ground.
+        • Keep both legs straight and look at the raised foot.
+        • Count out loud in the following manner: one thousand one, one thousand two, one thousand three, and so on until told to stop.
+        • Keep your arms at your sides during the test.
+        """
+    }
+
+    private func saveReport() {
+        dismissKeyboard()
+
+        let report = SFSTReport(
+            id: UUID(),
+            createdAt: Date(),
+            subjectName: subjectName,
+            incidentDate: incidentDate,
+            incidentTime: incidentTime,
+            location: location,
+            roadSurface: roadSurface,
+            lighting: lighting,
+            weather: weather,
+            footwear: footwear,
+            medicalConditions: medicalConditions,
+            subjectStatements: subjectStatements,
+            officerNotes: officerNotes,
+            officerName: officerName,
+            badgeNumber: badgeNumber,
+            agencyName: agencyName,
+            officerRank: officerRank,
+            officerUnit: officerUnit,
+            autoFillOfficerInfo: autoFillOfficerInfo,
+            hgnRestingNystagmusObserved: hgnRestingNystagmusObserved,
+            hgnEqualTrackingConfirmed: hgnEqualTrackingConfirmed,
+            hgnEqualPupilSizeConfirmed: hgnEqualPupilSizeConfirmed,
+            hgnHeadInjuryQuestion: hgnHeadInjuryQuestion,
+            hgnEyeConditionQuestion: hgnEyeConditionQuestion,
+            hgnVisionCorrectionQuestion: hgnVisionCorrectionQuestion,
+            hgnLeftLackOfSmoothPursuit: hgnLeftLackOfSmoothPursuit,
+            hgnLeftDistinctNystagmus: hgnLeftDistinctNystagmus,
+            hgnLeftOnsetPriorTo45: hgnLeftOnsetPriorTo45,
+            hgnRightLackOfSmoothPursuit: hgnRightLackOfSmoothPursuit,
+            hgnRightDistinctNystagmus: hgnRightDistinctNystagmus,
+            hgnRightOnsetPriorTo45: hgnRightOnsetPriorTo45,
+            walkTurnInstructionStage: walkTurnInstructionStage,
+            walkTurnWalkingStage: walkTurnWalkingStage,
+            oneLegStandInstructionStage: oneLegStandInstructionStage,
+            oneLegStandBalanceStage: oneLegStandBalanceStage,
+            generatedNarrative: generatedNarrative
+        )
+
+        do {
+            let baseFileName = buildFileName()
+            let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+
+            let jsonURL = documentsURL.appendingPathComponent("\(baseFileName).json")
+            let textURL = documentsURL.appendingPathComponent("\(baseFileName).txt")
+
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            encoder.dateEncodingStrategy = .iso8601
+
+            let jsonData = try encoder.encode(report)
+            try jsonData.write(to: jsonURL, options: .atomic)
+
+            let textData = reportText(report).data(using: .utf8) ?? Data()
+            try textData.write(to: textURL, options: .atomic)
+
+            saveAlertTitle = "Report Saved"
+            saveAlertMessage = "Saved \(baseFileName).json and \(baseFileName).txt to the app’s Documents folder."
+            showingSaveAlert = true
+        } catch {
+            saveAlertTitle = "Save Failed"
+            saveAlertMessage = error.localizedDescription
+            showingSaveAlert = true
+        }
+    }
+
+    private func reportText(_ report: SFSTReport) -> String {
+        """
+        SFST REPORT
+        ==============================
+
+        Subject Name: \(report.subjectName.trimmedOrFallback("Not entered"))
+        Incident Date/Time: \(Self.reportDateFormatter.string(from: combinedIncidentDateTime))
+        Location: \(report.location.trimmedOrFallback("Not entered"))
+
+        SCENE CONDITIONS
+        ------------------------------
+        Road Surface: \(report.roadSurface.trimmedOrFallback("Not entered"))
+        Lighting: \(report.lighting.trimmedOrFallback("Not entered"))
+        Weather: \(report.weather.trimmedOrFallback("Not entered"))
+        Footwear: \(report.footwear.trimmedOrFallback("Not entered"))
+
+        MEDICAL / STATEMENTS
+        ------------------------------
+        Medical Conditions: \(report.medicalConditions.trimmedOrFallback("None documented"))
+        Subject Statements: \(report.subjectStatements.trimmedOrFallback("None documented"))
+
+        HGN PRE-TEST SCREENING
+        ------------------------------
+        Resting Nystagmus Observed: \(yesNo(report.hgnRestingNystagmusObserved))
+        Equal Tracking Confirmed: \(yesNo(report.hgnEqualTrackingConfirmed))
+        Equal Pupil Size Confirmed: \(yesNo(report.hgnEqualPupilSizeConfirmed))
+        Head Injury Question / Response: \(report.hgnHeadInjuryQuestion.trimmedOrFallback("Not documented"))
+        Eye Condition Question / Response: \(report.hgnEyeConditionQuestion.trimmedOrFallback("Not documented"))
+        Vision Correction Question / Response: \(report.hgnVisionCorrectionQuestion.trimmedOrFallback("Not documented"))
+
+        HGN CLUES
+        ------------------------------
+        Left Eye - Lack of Smooth Pursuit: \(yesNo(report.hgnLeftLackOfSmoothPursuit))
+        Left Eye - Distinct Nystagmus at Maximum Deviation: \(yesNo(report.hgnLeftDistinctNystagmus))
+        Left Eye - Onset Prior to 45°: \(yesNo(report.hgnLeftOnsetPriorTo45))
+        Right Eye - Lack of Smooth Pursuit: \(yesNo(report.hgnRightLackOfSmoothPursuit))
+        Right Eye - Distinct Nystagmus at Maximum Deviation: \(yesNo(report.hgnRightDistinctNystagmus))
+        Right Eye - Onset Prior to 45°: \(yesNo(report.hgnRightOnsetPriorTo45))
+        Total HGN Clues: \(totalHGNClues) / 6
+
+        WALK AND TURN
+        ------------------------------
+        Instruction Stage:
+        \(report.walkTurnInstructionStage.trimmedOrFallback("Not documented"))
+
+        Walking Stage / Observations:
+        \(report.walkTurnWalkingStage.trimmedOrFallback("Not documented"))
+
+        ONE LEG STAND
+        ------------------------------
+        Instruction Stage:
+        \(report.oneLegStandInstructionStage.trimmedOrFallback("Not documented"))
+
+        Balance Stage / Observations:
+        \(report.oneLegStandBalanceStage.trimmedOrFallback("Not documented"))
+
+        OFFICER INFORMATION
+        ------------------------------
+        Officer: \(report.officerName.trimmedOrFallback("Not entered"))
+        Badge Number: \(report.badgeNumber.trimmedOrFallback("Not entered"))
+        Agency: \(report.agencyName.trimmedOrFallback("Not entered"))
+        Rank: \(report.officerRank.trimmedOrFallback("Not entered"))
+        Unit: \(report.officerUnit.trimmedOrFallback("Not entered"))
+        Auto Fill Enabled: \(yesNo(report.autoFillOfficerInfo))
+
+        OFFICER NOTES
+        ------------------------------
+        \(report.officerNotes.trimmedOrFallback("None documented"))
+
+        GENERATED NARRATIVE
+        ------------------------------
+        \(report.generatedNarrative)
+        """
+    }
+
+    private func buildFileName() -> String {
+        let cleanSubject = subjectName
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: " ", with: "_")
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+
+        let subjectPart = cleanSubject.isEmpty ? "UnknownSubject" : cleanSubject
+        let timeStamp = Self.fileDateFormatter.string(from: combinedIncidentDateTime)
+        return "SFST_\(subjectPart)_\(timeStamp)"
+    }
+
+    private func resetForm() {
+        dismissKeyboard()
+        showingResetAlert = true
+    }
+
+    private func clearAllFields() {
+        subjectName = ""
+        incidentDate = Date()
+        incidentTime = Date()
+        location = ""
+        roadSurface = ""
+        lighting = ""
+        weather = ""
+        footwear = ""
+        medicalConditions = ""
+        subjectStatements = ""
+        officerNotes = ""
+
+        hgnRestingNystagmusObserved = false
+        hgnEqualTrackingConfirmed = false
+        hgnEqualPupilSizeConfirmed = false
+        hgnHeadInjuryQuestion = ""
+        hgnEyeConditionQuestion = ""
+        hgnVisionCorrectionQuestion = ""
+
+        hgnLeftLackOfSmoothPursuit = false
+        hgnLeftDistinctNystagmus = false
+        hgnLeftOnsetPriorTo45 = false
+        hgnRightLackOfSmoothPursuit = false
+        hgnRightDistinctNystagmus = false
+        hgnRightOnsetPriorTo45 = false
+
+        walkTurnInstructionStage = ""
+        walkTurnWalkingStage = ""
+        oneLegStandInstructionStage = ""
+        oneLegStandBalanceStage = ""
+
+        loadDefaultInstructionsIfNeeded()
+    }
+
+    private static let reportDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    private static let fileDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HHmm"
+        return formatter
+    }()
+}
+
+private struct SFSTReport: Codable {
+    let id: UUID
+    let createdAt: Date
+
+    let subjectName: String
+    let incidentDate: Date
+    let incidentTime: Date
+    let location: String
+    let roadSurface: String
+    let lighting: String
+    let weather: String
+    let footwear: String
+    let medicalConditions: String
+    let subjectStatements: String
+    let officerNotes: String
+
+    let officerName: String
+    let badgeNumber: String
+    let agencyName: String
+    let officerRank: String
+    let officerUnit: String
+    let autoFillOfficerInfo: Bool
+
+    let hgnRestingNystagmusObserved: Bool
+    let hgnEqualTrackingConfirmed: Bool
+    let hgnEqualPupilSizeConfirmed: Bool
+    let hgnHeadInjuryQuestion: String
+    let hgnEyeConditionQuestion: String
+    let hgnVisionCorrectionQuestion: String
+
+    let hgnLeftLackOfSmoothPursuit: Bool
+    let hgnLeftDistinctNystagmus: Bool
+    let hgnLeftOnsetPriorTo45: Bool
+    let hgnRightLackOfSmoothPursuit: Bool
+    let hgnRightDistinctNystagmus: Bool
+    let hgnRightOnsetPriorTo45: Bool
+
+    let walkTurnInstructionStage: String
+    let walkTurnWalkingStage: String
+    let oneLegStandInstructionStage: String
+    let oneLegStandBalanceStage: String
+
+    let generatedNarrative: String
 }
 
 private struct ClueItem: Identifiable {
@@ -440,10 +952,19 @@ private struct ClueItem: Identifiable {
     let isOn: Binding<Bool>
 }
 
+private extension String {
+    func trimmedOrFallback(_ fallback: String) -> String {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? fallback : trimmed
+    }
+}
+
 struct StyledTextField: View {
     let title: String
     @Binding var text: String
     let systemImage: String
+    let focusedField: FocusState<SFSTView.Field?>.Binding
+    let equals: SFSTView.Field
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -456,8 +977,11 @@ struct StyledTextField: View {
                     .foregroundColor(.blue)
             }
 
-            TextField(title, text: $text)
+            TextField(title, text: $text, axis: .vertical)
+                .focused(focusedField, equals: equals)
+                .submitLabel(.done)
                 .autocorrectionDisabled()
+                .textInputAutocapitalization(.sentences)
                 .foregroundColor(.white)
                 .padding(14)
                 .background(
@@ -477,6 +1001,8 @@ struct StyledTextEditor: View {
     @Binding var text: String
     let systemImage: String
     let minHeight: CGFloat
+    let focusedField: FocusState<SFSTView.Field?>.Binding
+    let equals: SFSTView.Field
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -489,19 +1015,30 @@ struct StyledTextEditor: View {
                     .foregroundColor(.blue)
             }
 
-            TextEditor(text: $text)
-                .scrollContentBackground(.hidden)
-                .foregroundColor(.white)
-                .frame(minHeight: minHeight)
-                .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                )
+            ZStack(alignment: .topLeading) {
+                if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text(title)
+                        .foregroundColor(.white.opacity(0.28))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 18)
+                }
+
+                TextEditor(text: $text)
+                    .focused(focusedField, equals: equals)
+                    .scrollContentBackground(.hidden)
+                    .foregroundColor(.white)
+                    .frame(minHeight: minHeight)
+                    .padding(10)
+                    .background(Color.clear)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+            )
         }
     }
 }
