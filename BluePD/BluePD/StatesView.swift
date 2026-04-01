@@ -69,9 +69,7 @@ struct StatesView: View {
             return lhs.name < rhs.name
         }
 
-        if trimmed.isEmpty {
-            return sortedStates
-        }
+        guard !trimmed.isEmpty else { return sortedStates }
 
         return sortedStates.filter {
             $0.name.localizedCaseInsensitiveContains(trimmed) ||
@@ -83,74 +81,117 @@ struct StatesView: View {
         VStack(spacing: 0) {
             headerSection
 
-            List {
-                if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && filteredStates.isEmpty {
-                    VStack(spacing: 10) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.title2)
-                            .foregroundStyle(.secondary)
-
-                        Text("No states found")
-                            .font(.headline)
-
-                        Text("Try searching by state name or abbreviation.")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .listRowBackground(Color.clear)
-                } else {
-                    ForEach(filteredStates) { state in
-                        Button {
-                            if let url = state.url {
-                                selectedURL = IdentifiableURL(url: url)
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && filteredStates.isEmpty {
+                        emptyStateCard
+                    } else {
+                        ForEach(filteredStates) { state in
+                            Button {
+                                if let url = state.url {
+                                    selectedURL = IdentifiableURL(url: url)
+                                }
+                            } label: {
+                                StateRowCard(state: state)
                             }
-                        } label: {
-                            StateRowCard(state: state)
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
                     }
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 4)
+                .padding(.bottom, 24)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(Color(.systemGroupedBackground))
         }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("States")
+        .background(backgroundGradient.ignoresSafeArea())
+        .navigationTitle("Codes")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selectedURL) { item in
             SafariView(url: item.url)
         }
     }
 
+    private var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 7/255, green: 12/255, blue: 24/255),
+                Color(red: 13/255, green: 23/255, blue: 40/255),
+                Color(red: 18/255, green: 29/255, blue: 48/255)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Official State Code Links")
                 .font(.headline)
+                .foregroundColor(.white)
 
-            Text("Open official state statute and code sites quickly. Indiana stays pinned at the top.")
+            Text("Search by state name or abbreviation. Indiana stays pinned at the top.")
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.white.opacity(0.66))
 
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.white.opacity(0.50))
 
                 TextField("Search state or abbreviation", text: $searchText)
-                    .textInputAutocapitalization(.words)
+                    .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
+                    .foregroundColor(.white)
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.white.opacity(0.42))
+                    }
+                }
             }
-            .padding(12)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
+            )
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 14)
+    }
+
+    private var emptyStateCard: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .font(.title3)
+                .foregroundColor(.white.opacity(0.60))
+
+            Text("No states found")
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text("Try searching by full state name or abbreviation.")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.62))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+        )
     }
 }
 
@@ -158,36 +199,37 @@ struct StateRowCard: View {
     let state: StateLink
 
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(state.isPinned ? Color.blue.opacity(0.16) : Color.blue.opacity(0.10))
-                    .frame(width: 52, height: 52)
+        HStack(spacing: 12) {
+            VStack(spacing: 2) {
+                Text(state.abbreviation)
+                    .font(.subheadline)
+                    .fontWeight(.bold)
+                    .foregroundColor(.blue)
 
-                VStack(spacing: 2) {
-                    Image(systemName: state.isPinned ? "star.fill" : "map.fill")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-
-                    Text(state.abbreviation)
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
+                if state.isPinned {
+                    Image(systemName: "star.fill")
+                        .font(.caption2)
+                        .foregroundColor(.blue.opacity(0.90))
                 }
             }
+            .frame(width: 42, height: 42)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(state.isPinned ? Color.blue.opacity(0.14) : Color.blue.opacity(0.10))
+            )
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(state.name)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundColor(.white)
 
                     if state.isPinned {
                         Text("Pinned")
                             .font(.caption2)
                             .fontWeight(.semibold)
                             .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 3)
                             .background(Color.blue.opacity(0.12))
                             .foregroundColor(.blue)
                             .clipShape(Capsule())
@@ -196,17 +238,24 @@ struct StateRowCard: View {
 
                 Text("Official code / statute site")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.white.opacity(0.60))
             }
 
             Spacer()
 
             Image(systemName: "arrow.up.right.square")
-                .foregroundColor(.gray)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.white.opacity(0.34))
         }
-        .padding()
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.05), lineWidth: 1)
+        )
     }
 }
 
@@ -238,9 +287,10 @@ struct SafariView: UIViewControllerRepresentable {
     let url: URL
 
     func makeUIViewController(context: Context) -> SFSafariViewController {
-        SFSafariViewController(url: url)
+        let controller = SFSafariViewController(url: url)
+        controller.preferredControlTintColor = UIColor.systemBlue
+        return controller
     }
 
-    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
-    }
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) { }
 }
