@@ -1,10 +1,13 @@
 import SwiftUI
 import LocalAuthentication
+import Security
 
 struct LoginView: View {
-    @AppStorage("userPIN") private var userPIN: String = ""
+    @Environment(\.scenePhase) private var scenePhase
+
     @AppStorage("hasSetPIN") private var hasSetPIN: Bool = false
     @AppStorage("useFaceID") private var useFaceID: Bool = true
+    @AppStorage("lastActiveTime") private var lastActiveTime: Double = 0
 
     @State private var enteredPIN: String = ""
     @State private var newPIN: String = ""
@@ -15,6 +18,8 @@ struct LoginView: View {
     @State private var errorMessage = ""
     @State private var isAuthenticating = false
     @State private var hasAttemptedBiometricOnAppear = false
+
+    private let autoLockTimeout: Double = 60
 
     var body: some View {
         Group {
@@ -49,6 +54,12 @@ struct LoginView: View {
                     .padding(.vertical, 16)
                 }
             }
+        }
+        .onChange(of: scenePhase) { newPhase in
+            handleScenePhaseChange(newPhase)
+        }
+        .onAppear {
+            evaluateAutoLockOnLaunch()
         }
     }
 
@@ -143,7 +154,7 @@ struct LoginView: View {
             )
 
             if useFaceID {
-                Button(action: authenticateWithFaceID) {
+                Button(action: authenticateWithBiometrics) {
                     HStack(spacing: 12) {
                         Image(systemName: "faceid")
                             .font(.title3)
@@ -223,7 +234,7 @@ struct LoginView: View {
         .onAppear {
             if useFaceID && !hasAttemptedBiometricOnAppear {
                 hasAttemptedBiometricOnAppear = true
-                authenticateWithFaceID()
+                authenticateWithBiometrics()
             }
         }
     }
@@ -314,22 +325,33 @@ struct LoginView: View {
         if newPIN.isEmpty || confirmPIN.isEmpty {
             errorMessage = "Please enter and confirm your PIN."
             showError = true
+            triggerErrorHaptic()
             return
         }
 
         if newPIN != confirmPIN {
             errorMessage = "PIN entries do not match."
             showError = true
+            triggerErrorHaptic()
             return
         }
 
         if newPIN.count < 4 {
             errorMessage = "PIN must be at least 4 digits."
             showError = true
+            triggerErrorHaptic()
             return
         }
 
-        userPIN = newPIN
+        let didSave = KeychainManager.savePIN(newPIN)
+
+        guard didSave else {
+            errorMessage = "Unable to save your PIN."
+            showError = true
+            triggerErrorHaptic()
+            return
+        }
+
         hasSetPIN = true
         enteredPIN = ""
         newPIN = ""
@@ -337,6 +359,7 @@ struct LoginView: View {
         showError = false
         errorMessage = ""
         hasAttemptedBiometricOnAppear = false
+        triggerSuccessHaptic()
     }
 
     private func unlockWithPIN() {
@@ -344,17 +367,26 @@ struct LoginView: View {
         showError = false
         errorMessage = ""
 
-        if enteredPIN == userPIN {
+        guard let savedPIN = KeychainManager.getPIN() else {
+            errorMessage = "No saved PIN was found."
+            showError = true
+            triggerErrorHaptic()
+            return
+        }
+
+        if enteredPIN == savedPIN {
             isUnlocked = true
             enteredPIN = ""
+            triggerSuccessHaptic()
         } else {
             errorMessage = "Incorrect PIN."
             showError = true
             enteredPIN = ""
+            triggerErrorHaptic()
         }
     }
 
-    private func authenticateWithFaceID() {
+    private func authenticateWithBiometrics() {
         hideKeyboard()
 
         let context = LAContext()
@@ -366,17 +398,8 @@ struct LoginView: View {
 
         let reason = "Unlock BluePD"
 
-        if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-            let biometricType = context.biometryType
-
-            if biometricType != .faceID && biometricType != .touchID {
-                isAuthenticating = false
-                errorMessage = "Biometric authentication is not available on this device."
-                showError = true
-                return
-            }
-
-            context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, evalError in
+        if context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) {
+            context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evalError in
                 DispatchQueue.main.async {
                     isAuthenticating = false
 
@@ -384,6 +407,7 @@ struct LoginView: View {
                         isUnlocked = true
                         showError = false
                         errorMessage = ""
+                        triggerSuccessHaptic()
                     } else {
                         let nsError = evalError as NSError?
 
@@ -395,6 +419,7 @@ struct LoginView: View {
 
                         errorMessage = evalError?.localizedDescription ?? "Authentication failed."
                         showError = true
+                        triggerErrorHaptic()
                     }
                 }
             }
@@ -402,7 +427,42 @@ struct LoginView: View {
             isAuthenticating = false
             errorMessage = error?.localizedDescription ?? "Biometric authentication is not available."
             showError = true
+            triggerErrorHaptic()
         }
+    }
+
+    private func handleScenePhaseChange(_ phase: ScenePhase) {
+        switch phase {
+        case .inactive, .background:
+            lastActiveTime = Date().timeIntervalSince1970
+
+        case .active:
+            let now = Date().timeIntervalSince1970
+            if hasSetPIN && (now - lastActiveTime) > autoLockTimeout {
+                isUnlocked = false
+                hasAttemptedBiometricOnAppear = false
+            }
+
+        @unknown default:
+            break
+        }
+    }
+
+    private func evaluateAutoLockOnLaunch() {
+        let now = Date().timeIntervalSince1970
+        if hasSetPIN && (now - lastActiveTime) > autoLockTimeout {
+            isUnlocked = false
+        }
+    }
+
+    private func triggerSuccessHaptic() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+
+    private func triggerErrorHaptic() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.error)
     }
 }
 
@@ -451,6 +511,57 @@ struct PINField: View {
                     }
                 }
         }
+    }
+}
+
+enum KeychainManager {
+    private static let service = "com.bluepd.app"
+    private static let account = "bluepd_user_pin"
+
+    static func savePIN(_ pin: String) -> Bool {
+        let data = Data(pin.utf8)
+
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+
+        let attributes: [String: Any] = [
+            kSecValueData as String: data
+        ]
+
+        let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        if updateStatus == errSecSuccess {
+            return true
+        }
+
+        var addQuery = query
+        addQuery[kSecValueData as String] = data
+
+        let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+        return addStatus == errSecSuccess
+    }
+
+    static func getPIN() -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+
+        guard status == errSecSuccess,
+              let data = result as? Data,
+              let pin = String(data: data, encoding: .utf8) else {
+            return nil
+        }
+
+        return pin
     }
 }
 
