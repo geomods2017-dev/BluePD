@@ -3,7 +3,7 @@ import PhotosUI
 
 struct EvidenceView: View {
     @State private var selectedItems: [PhotosPickerItem] = []
-    @State private var selectedImages: [UIImage] = []
+    @State private var evidenceItems: [EvidenceRecord] = []
     @State private var evidenceNotes: String = ""
     @State private var caseReference: String = ""
 
@@ -39,6 +39,9 @@ struct EvidenceView: View {
         )
         .navigationTitle("Evidence")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            loadSavedEvidence()
+        }
         .onChange(of: selectedItems) { newItems in
             loadSelectedImages(from: newItems)
         }
@@ -101,7 +104,7 @@ struct EvidenceView: View {
 
             HStack(spacing: 12) {
                 summaryTile(
-                    title: "\(selectedImages.count)",
+                    title: "\(evidenceItems.count)",
                     subtitle: "Photos Added",
                     systemImage: "photo.on.rectangle.angled"
                 )
@@ -169,9 +172,7 @@ struct EvidenceView: View {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(
-                                style: StrokeStyle(lineWidth: 1.2, dash: [8, 6])
-                            )
+                            .stroke(style: StrokeStyle(lineWidth: 1.2, dash: [8, 6]))
                             .foregroundColor(Color.white.opacity(0.18))
                     )
                 }
@@ -204,22 +205,21 @@ struct EvidenceView: View {
 
                 Spacer()
 
-                if !selectedImages.isEmpty {
+                if !evidenceItems.isEmpty {
                     Button("Clear All") {
-                        selectedImages.removeAll()
-                        selectedItems.removeAll()
+                        clearAllEvidence()
                     }
                     .font(.subheadline)
                     .foregroundColor(.red)
                 }
             }
 
-            if selectedImages.isEmpty {
+            if evidenceItems.isEmpty {
                 emptyStateView
             } else {
                 LazyVGrid(columns: gridColumns, spacing: 12) {
-                    ForEach(Array(selectedImages.enumerated()), id: \.offset) { index, image in
-                        evidenceImageCard(image: image, index: index)
+                    ForEach(Array(evidenceItems.enumerated()), id: \.element.id) { index, item in
+                        evidenceImageCard(item: item, index: index)
                     }
                 }
             }
@@ -330,15 +330,25 @@ struct EvidenceView: View {
         )
     }
 
-    private func evidenceImageCard(image: UIImage, index: Int) -> some View {
+    private func evidenceImageCard(item: EvidenceRecord, index: Int) -> some View {
         ZStack(alignment: .topTrailing) {
             VStack(spacing: 0) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(height: 150)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
+                if let image = item.uiImage {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 150)
+                        .frame(maxWidth: .infinity)
+                        .clipped()
+                } else {
+                    RoundedRectangle(cornerRadius: 0)
+                        .fill(Color.white.opacity(0.05))
+                        .frame(height: 150)
+                        .overlay(
+                            Image(systemName: "photo")
+                                .foregroundColor(.white.opacity(0.5))
+                        )
+                }
 
                 HStack {
                     Text("Photo \(index + 1)")
@@ -375,31 +385,99 @@ struct EvidenceView: View {
     }
 
     private func loadSelectedImages(from items: [PhotosPickerItem]) {
-        selectedImages.removeAll()
-
         Task {
-            var loadedImages: [UIImage] = []
-
             for item in items {
                 if let data = try? await item.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
-                    loadedImages.append(image)
+                   let image = UIImage(data: data),
+                   let savedFilename = EvidenceStorage.saveImage(image) {
+                    let newRecord = EvidenceRecord(id: UUID(), filename: savedFilename)
+                    evidenceItems.append(newRecord)
                 }
             }
 
-            await MainActor.run {
-                selectedImages = loadedImages
-            }
+            EvidenceStorage.saveManifest(evidenceItems)
+            selectedItems.removeAll()
         }
     }
 
     private func removeImage(at index: Int) {
-        guard selectedImages.indices.contains(index) else { return }
-        selectedImages.remove(at: index)
+        guard evidenceItems.indices.contains(index) else { return }
 
-        if selectedItems.indices.contains(index) {
-            selectedItems.remove(at: index)
+        let item = evidenceItems[index]
+        EvidenceStorage.deleteImage(named: item.filename)
+        evidenceItems.remove(at: index)
+        EvidenceStorage.saveManifest(evidenceItems)
+    }
+
+    private func clearAllEvidence() {
+        for item in evidenceItems {
+            EvidenceStorage.deleteImage(named: item.filename)
         }
+        evidenceItems.removeAll()
+        selectedItems.removeAll()
+        EvidenceStorage.saveManifest(evidenceItems)
+    }
+
+    private func loadSavedEvidence() {
+        evidenceItems = EvidenceStorage.loadManifest()
+    }
+}
+
+struct EvidenceRecord: Codable, Identifiable {
+    let id: UUID
+    let filename: String
+
+    var uiImage: UIImage? {
+        EvidenceStorage.loadImage(named: filename)
+    }
+}
+
+enum EvidenceStorage {
+    private static let manifestFilename = "evidence_manifest.json"
+
+    static func documentsURL() -> URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+
+    static func saveImage(_ image: UIImage) -> String? {
+        let filename = UUID().uuidString + ".jpg"
+        let url = documentsURL().appendingPathComponent(filename)
+
+        guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+
+        do {
+            try data.write(to: url)
+            return filename
+        } catch {
+            return nil
+        }
+    }
+
+    static func loadImage(named filename: String) -> UIImage? {
+        let url = documentsURL().appendingPathComponent(filename)
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return UIImage(data: data)
+    }
+
+    static func deleteImage(named filename: String) {
+        let url = documentsURL().appendingPathComponent(filename)
+        try? FileManager.default.removeItem(at: url)
+    }
+
+    static func saveManifest(_ items: [EvidenceRecord]) {
+        let url = documentsURL().appendingPathComponent(manifestFilename)
+        if let data = try? JSONEncoder().encode(items) {
+            try? data.write(to: url)
+        }
+    }
+
+    static func loadManifest() -> [EvidenceRecord] {
+        let url = documentsURL().appendingPathComponent(manifestFilename)
+        guard let data = try? Data(contentsOf: url),
+              let items = try? JSONDecoder().decode([EvidenceRecord].self, from: data) else {
+            return []
+        }
+        return items
     }
 }
 
