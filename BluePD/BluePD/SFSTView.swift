@@ -193,3 +193,37 @@ Will you submit to the chemical test?
         }
     }
 }
+
+struct DropdownField: View {
+    let title: String
+    @Binding var selection: String
+    let options: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .foregroundColor(.white.opacity(0.8))
+
+            Menu {
+                ForEach(options, id: \.self) { option in
+                    Button(option) {
+                        selection = option
+                    }
+                }
+            } label: {
+                HStack {
+                    Text(selection)
+                        .foregroundColor(.white)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.down")
+                        .foregroundColor(.blue)
+                }
+                .padding(12)
+                .background(Color.white.opacity(0.05))
+                .cornerRadius(10)
+            }
+        }
+    }
+}
