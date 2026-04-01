@@ -7,6 +7,9 @@ struct EvidenceView: View {
     @State private var evidenceNotes: String = ""
     @State private var caseReference: String = ""
 
+    @FocusState private var isNotesFocused: Bool
+    @FocusState private var isCaseReferenceFocused: Bool
+
     private let gridColumns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
@@ -14,136 +17,125 @@ struct EvidenceView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 18) {
-                headerCard
-                evidenceSummaryCard
-                uploadCard
-                galleryCard
-                notesCard
+            VStack(spacing: 16) {
+                topHeader
+                overviewSection
+                addEvidenceSection
+                gallerySection
+                notesSection
             }
-            .padding(.horizontal)
-            .padding(.top, 12)
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
             .padding(.bottom, 28)
         }
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 7/255, green: 12/255, blue: 24/255),
-                    Color(red: 13/255, green: 23/255, blue: 40/255),
-                    Color(red: 18/255, green: 29/255, blue: 48/255)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        )
+        .scrollDismissesKeyboard(.interactively)
+        .background(backgroundGradient.ignoresSafeArea())
         .navigationTitle("Evidence")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    dismissKeyboard()
+                }
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            dismissKeyboard()
+        }
         .onAppear {
             loadSavedEvidence()
+            loadSavedMetadata()
         }
         .onChange(of: selectedItems) { newItems in
             loadSelectedImages(from: newItems)
         }
+        .onChange(of: caseReference) { _ in
+            saveMetadata()
+        }
+        .onChange(of: evidenceNotes) { _ in
+            saveMetadata()
+        }
     }
 
-    private var headerCard: some View {
+    private var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 7/255, green: 12/255, blue: 24/255),
+                Color(red: 13/255, green: 23/255, blue: 40/255),
+                Color(red: 18/255, green: 29/255, blue: 48/255)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    private var topHeader: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.blue.opacity(0.16))
-                        .frame(width: 58, height: 58)
+                Image(systemName: "camera.viewfinder")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(.blue)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.blue.opacity(0.14))
+                    )
 
-                    Image(systemName: "camera.viewfinder")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.blue)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text("Evidence Manager")
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
 
-                    Text("Store and review case-related images.")
+                    Text("Store and review case-related images")
                         .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.72))
+                        .foregroundColor(.white.opacity(0.68))
                 }
 
                 Spacer()
             }
 
-            Text("Use this section to attach scene photos, evidence images, and supporting visuals for later review.")
+            Text(headerSubtitle)
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.72))
-                .fixedSize(horizontal: false, vertical: true)
+                .foregroundColor(.white.opacity(0.82))
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.blue.opacity(0.18), lineWidth: 1)
-        )
+        .padding(16)
+        .background(cardBackground)
+        .overlay(cardBorder)
     }
 
-    private var evidenceSummaryCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label {
-                Text("Evidence Overview")
-                    .font(.headline)
-                    .foregroundColor(.white)
-            } icon: {
-                Image(systemName: "square.grid.2x2.fill")
-                    .foregroundColor(.blue)
-            }
+    private var overviewSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Overview")
 
             HStack(spacing: 12) {
-                summaryTile(
+                compactSummaryCard(
                     title: "\(evidenceItems.count)",
-                    subtitle: "Photos Added",
+                    subtitle: "Photos",
                     systemImage: "photo.on.rectangle.angled"
                 )
 
-                summaryTile(
-                    title: caseReference.isEmpty ? "Not Set" : caseReference,
+                compactSummaryCard(
+                    title: caseReference.trimmedOrFallback("Not Set"),
                     subtitle: "Case Ref",
                     systemImage: "doc.text.fill"
                 )
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-        )
     }
 
-    private var uploadCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label {
-                Text("Add Evidence")
-                    .font(.headline)
-                    .foregroundColor(.white)
-            } icon: {
-                Image(systemName: "plus.viewfinder")
-                    .foregroundColor(.blue)
-            }
+    private var addEvidenceSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Add Evidence")
 
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 StyledEvidenceTextField(
                     title: "Case Reference",
                     text: $caseReference,
-                    systemImage: "number.square.fill"
+                    systemImage: "number.square.fill",
+                    isFocused: $isCaseReferenceFocused
                 )
 
                 PhotosPicker(
@@ -151,57 +143,40 @@ struct EvidenceView: View {
                     maxSelectionCount: 20,
                     matching: .images
                 ) {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 10) {
                         Image(systemName: "photo.badge.plus")
-                            .font(.system(size: 34))
+                            .font(.system(size: 30, weight: .medium))
                             .foregroundColor(.blue)
 
                         Text("Select Evidence Photos")
                             .font(.headline)
                             .foregroundColor(.white)
 
-                        Text("Tap to add images from the photo library.")
+                        Text("Add photos from the library")
                             .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.68))
+                            .foregroundColor(.white.opacity(0.62))
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 28)
+                    .padding(.vertical, 24)
                     .background(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(Color.white.opacity(0.05))
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white.opacity(0.045))
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(style: StrokeStyle(lineWidth: 1.2, dash: [8, 6]))
-                            .foregroundColor(Color.white.opacity(0.18))
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(style: StrokeStyle(lineWidth: 1.1, dash: [7, 5]))
+                            .foregroundColor(Color.white.opacity(0.16))
                     )
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-        )
     }
 
-    private var galleryCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
+    private var gallerySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label {
-                    Text("Evidence Gallery")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                } icon: {
-                    Image(systemName: "photo.stack.fill")
-                        .foregroundColor(.blue)
-                }
+                sectionHeader("Gallery")
 
                 Spacer()
 
@@ -224,63 +199,83 @@ struct EvidenceView: View {
                 }
             }
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-        )
     }
 
-    private var notesCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Label {
-                Text("Evidence Notes")
-                    .font(.headline)
+    private var notesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Evidence Notes")
+
+            ZStack(alignment: .topLeading) {
+                if evidenceNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text("Add scene details, collection notes, item descriptions, or chain-of-custody reminders.")
+                        .foregroundColor(.white.opacity(0.28))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 18)
+                }
+
+                TextEditor(text: $evidenceNotes)
+                    .focused($isNotesFocused)
+                    .scrollContentBackground(.hidden)
                     .foregroundColor(.white)
-            } icon: {
-                Image(systemName: "square.and.pencil")
-                    .foregroundColor(.blue)
+                    .frame(minHeight: 150)
+                    .padding(10)
+                    .background(Color.clear)
             }
-
-            TextEditor(text: $evidenceNotes)
-                .scrollContentBackground(.hidden)
-                .foregroundColor(.white)
-                .frame(minHeight: 140)
-                .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                )
-
-            Text("Add scene details, collection notes, item descriptions, or chain-of-custody reminders.")
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.68))
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(0.045))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
+            )
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color.white.opacity(0.06))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-        )
+    }
+
+    private var headerSubtitle: String {
+        let reference = caseReference.trimmingCharacters(in: .whitespacesAndNewlines)
+        return reference.isEmpty ? "Attach and review evidence images in one place" : "Current case reference: \(reference)"
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.headline)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 2)
+    }
+
+    private func compactSummaryCard(title: String, subtitle: String, systemImage: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: systemImage)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(.blue)
+                .frame(width: 34, height: 34)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(Color.blue.opacity(0.10))
+                )
+
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.white)
+                .lineLimit(2)
+                .minimumScaleFactor(0.82)
+
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.60))
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
+        .background(innerCardBackground)
+        .overlay(innerCardBorder)
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             Image(systemName: "photo.on.rectangle.angled")
-                .font(.system(size: 34))
+                .font(.system(size: 30))
                 .foregroundColor(.blue)
 
             Text("No Evidence Added")
@@ -289,45 +284,13 @@ struct EvidenceView: View {
 
             Text("Selected photos will appear here for quick review.")
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.68))
+                .foregroundColor(.white.opacity(0.62))
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 28)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-        )
-    }
-
-    private func summaryTile(title: String, subtitle: String, systemImage: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.blue.opacity(0.14))
-                    .frame(width: 42, height: 42)
-
-                Image(systemName: systemImage)
-                    .foregroundColor(.blue)
-                    .font(.headline)
-            }
-
-            Text(title)
-                .font(.headline)
-                .foregroundColor(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.68))
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-        )
+        .background(innerCardBackground)
+        .overlay(innerCardBorder)
     }
 
     private func evidenceImageCard(item: EvidenceRecord, index: Int) -> some View {
@@ -337,16 +300,16 @@ struct EvidenceView: View {
                     Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
-                        .frame(height: 150)
+                        .frame(height: 142)
                         .frame(maxWidth: .infinity)
                         .clipped()
                 } else {
-                    RoundedRectangle(cornerRadius: 0)
+                    Rectangle()
                         .fill(Color.white.opacity(0.05))
-                        .frame(height: 150)
+                        .frame(height: 142)
                         .overlay(
                             Image(systemName: "photo")
-                                .foregroundColor(.white.opacity(0.5))
+                                .foregroundColor(.white.opacity(0.45))
                         )
                 }
 
@@ -358,18 +321,13 @@ struct EvidenceView: View {
 
                     Spacer()
                 }
-                .padding(10)
-                .background(Color.white.opacity(0.05))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 9)
+                .background(Color.white.opacity(0.04))
             }
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-            )
+            .background(innerCardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
-            )
+            .overlay(innerCardBorder)
 
             Button {
                 removeImage(at: index)
@@ -382,6 +340,32 @@ struct EvidenceView: View {
             }
             .padding(8)
         }
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(Color.white.opacity(0.055))
+    }
+
+    private var cardBorder: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+    }
+
+    private var innerCardBackground: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(Color.white.opacity(0.045))
+    }
+
+    private var innerCardBorder: some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .stroke(Color.white.opacity(0.05), lineWidth: 1)
+    }
+
+    private func dismissKeyboard() {
+        isNotesFocused = false
+        isCaseReferenceFocused = false
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private func loadSelectedImages(from items: [PhotosPickerItem]) {
@@ -413,6 +397,7 @@ struct EvidenceView: View {
         for item in evidenceItems {
             EvidenceStorage.deleteImage(named: item.filename)
         }
+
         evidenceItems.removeAll()
         selectedItems.removeAll()
         EvidenceStorage.saveManifest(evidenceItems)
@@ -420,6 +405,21 @@ struct EvidenceView: View {
 
     private func loadSavedEvidence() {
         evidenceItems = EvidenceStorage.loadManifest()
+    }
+
+    private func saveMetadata() {
+        EvidenceStorage.saveMetadata(
+            EvidenceMetadata(
+                caseReference: caseReference,
+                evidenceNotes: evidenceNotes
+            )
+        )
+    }
+
+    private func loadSavedMetadata() {
+        let metadata = EvidenceStorage.loadMetadata()
+        caseReference = metadata.caseReference
+        evidenceNotes = metadata.evidenceNotes
     }
 }
 
@@ -432,8 +432,19 @@ struct EvidenceRecord: Codable, Identifiable {
     }
 }
 
+struct EvidenceMetadata: Codable {
+    let caseReference: String
+    let evidenceNotes: String
+
+    init(caseReference: String = "", evidenceNotes: String = "") {
+        self.caseReference = caseReference
+        self.evidenceNotes = evidenceNotes
+    }
+}
+
 enum EvidenceStorage {
     private static let manifestFilename = "evidence_manifest.json"
+    private static let metadataFilename = "evidence_metadata.json"
 
     static func documentsURL() -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -479,12 +490,29 @@ enum EvidenceStorage {
         }
         return items
     }
+
+    static func saveMetadata(_ metadata: EvidenceMetadata) {
+        let url = documentsURL().appendingPathComponent(metadataFilename)
+        if let data = try? JSONEncoder().encode(metadata) {
+            try? data.write(to: url)
+        }
+    }
+
+    static func loadMetadata() -> EvidenceMetadata {
+        let url = documentsURL().appendingPathComponent(metadataFilename)
+        guard let data = try? Data(contentsOf: url),
+              let metadata = try? JSONDecoder().decode(EvidenceMetadata.self, from: data) else {
+            return EvidenceMetadata()
+        }
+        return metadata
+    }
 }
 
 struct StyledEvidenceTextField: View {
     let title: String
     @Binding var text: String
     let systemImage: String
+    let isFocused: FocusState<Bool>.Binding
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -498,7 +526,10 @@ struct StyledEvidenceTextField: View {
             }
 
             TextField(title, text: $text)
+                .focused(isFocused)
+                .submitLabel(.done)
                 .autocorrectionDisabled()
+                .textInputAutocapitalization(.characters)
                 .foregroundColor(.white)
                 .padding(14)
                 .background(
@@ -510,6 +541,13 @@ struct StyledEvidenceTextField: View {
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
         }
+    }
+}
+
+private extension String {
+    func trimmedOrFallback(_ fallback: String) -> String {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? fallback : trimmed
     }
 }
 
