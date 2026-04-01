@@ -10,6 +10,15 @@ struct SettingsView: View {
     @AppStorage("autoFillOfficerInfo") private var autoFillOfficerInfo: Bool = true
     @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
 
+    @AppStorage("userPIN") private var userPIN: String = ""
+    @AppStorage("useFaceID") private var useFaceID: Bool = true
+
+    @State private var currentPIN: String = ""
+    @State private var newPIN: String = ""
+    @State private var confirmNewPIN: String = ""
+    @State private var securityMessage: String = ""
+    @State private var showSecurityMessage: Bool = false
+
     private let states = [
         "Indiana", "Illinois", "Michigan", "Ohio", "Kentucky", "Tennessee", "Florida", "Texas", "California", "New York"
     ]
@@ -122,6 +131,87 @@ struct SettingsView: View {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(Color.white.opacity(0.05))
                         )
+                    }
+                }
+
+                settingsSectionCard(
+                    title: "Security",
+                    systemImage: "lock.shield.fill"
+                ) {
+                    VStack(spacing: 12) {
+                        HStack(spacing: 14) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(Color.blue.opacity(0.14))
+                                    .frame(width: 46, height: 46)
+
+                                Image(systemName: "faceid")
+                                    .foregroundColor(.blue)
+                                    .font(.headline)
+                            }
+
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Enable Face ID")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+
+                                Text("Allow biometric unlock when available.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.68))
+                            }
+
+                            Spacer()
+
+                            Toggle("", isOn: $useFaceID)
+                                .labelsHidden()
+                                .tint(.blue)
+                        }
+                        .padding(14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(Color.white.opacity(0.05))
+                        )
+
+                        SecureSettingsField(
+                            title: "Current PIN",
+                            text: $currentPIN,
+                            systemImage: "key.fill"
+                        )
+
+                        SecureSettingsField(
+                            title: "New PIN",
+                            text: $newPIN,
+                            systemImage: "lock.fill"
+                        )
+
+                        SecureSettingsField(
+                            title: "Confirm New PIN",
+                            text: $confirmNewPIN,
+                            systemImage: "checkmark.shield.fill"
+                        )
+
+                        Button(action: changePIN) {
+                            Text("Change PIN")
+                                .fontWeight(.semibold)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(Color.blue)
+                                )
+                                .foregroundColor(.white)
+                        }
+
+                        if showSecurityMessage {
+                            Text(securityMessage)
+                                .font(.subheadline)
+                                .foregroundColor(
+                                    securityMessage == "PIN updated successfully."
+                                    ? .green
+                                    : .red
+                                )
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
                 }
 
@@ -272,7 +362,7 @@ struct SettingsView: View {
                         .fontWeight(.bold)
                         .foregroundColor(.white)
 
-                    Text("Manage officer information and default app preferences.")
+                    Text("Manage officer information, security, and default app preferences.")
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.72))
                 }
@@ -296,6 +386,42 @@ struct SettingsView: View {
                 .stroke(Color.blue.opacity(0.18), lineWidth: 1)
         )
     }
+
+    private func changePIN() {
+        showSecurityMessage = true
+
+        if userPIN.isEmpty {
+            securityMessage = "No current PIN is stored."
+            return
+        }
+
+        if currentPIN != userPIN {
+            securityMessage = "Current PIN is incorrect."
+            return
+        }
+
+        if newPIN.isEmpty || confirmNewPIN.isEmpty {
+            securityMessage = "Please complete all PIN fields."
+            return
+        }
+
+        if newPIN != confirmNewPIN {
+            securityMessage = "New PIN entries do not match."
+            return
+        }
+
+        if newPIN.count < 4 {
+            securityMessage = "New PIN must be at least 4 digits."
+            return
+        }
+
+        userPIN = newPIN
+        securityMessage = "PIN updated successfully."
+
+        currentPIN = ""
+        newPIN = ""
+        confirmNewPIN = ""
+    }
 }
 
 struct SettingsInputField: View {
@@ -317,6 +443,39 @@ struct SettingsInputField: View {
             TextField(title, text: $text)
                 .textInputAutocapitalization(.words)
                 .autocorrectionDisabled()
+                .foregroundColor(.white)
+                .padding(14)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.white.opacity(0.05))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                )
+        }
+    }
+}
+
+struct SecureSettingsField: View {
+    let title: String
+    @Binding var text: String
+    let systemImage: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label {
+                Text(title)
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.78))
+            } icon: {
+                Image(systemName: systemImage)
+                    .foregroundColor(.blue)
+            }
+
+            SecureField(title, text: $text)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
                 .foregroundColor(.white)
                 .padding(14)
                 .background(
