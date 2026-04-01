@@ -5,20 +5,27 @@ struct MainTabView: View {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(
-            red: 10/255,
-            green: 18/255,
-            blue: 32/255,
-            alpha: 0.96
+            red: 9/255,
+            green: 16/255,
+            blue: 28/255,
+            alpha: 0.98
         )
 
-        appearance.stackedLayoutAppearance.selected.iconColor = UIColor.systemBlue
+        appearance.shadowColor = UIColor.white.withAlphaComponent(0.04)
+
+        let selectedColor = UIColor.systemBlue
+        let normalColor = UIColor.white.withAlphaComponent(0.58)
+
+        appearance.stackedLayoutAppearance.selected.iconColor = selectedColor
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
-            .foregroundColor: UIColor.systemBlue
+            .foregroundColor: selectedColor,
+            .font: UIFont.systemFont(ofSize: 11, weight: .semibold)
         ]
 
-        appearance.stackedLayoutAppearance.normal.iconColor = UIColor.white.withAlphaComponent(0.65)
+        appearance.stackedLayoutAppearance.normal.iconColor = normalColor
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
-            .foregroundColor: UIColor.white.withAlphaComponent(0.65)
+            .foregroundColor: normalColor,
+            .font: UIFont.systemFont(ofSize: 11, weight: .medium)
         ]
 
         UITabBar.appearance().standardAppearance = appearance
@@ -45,7 +52,7 @@ struct MainTabView: View {
                 StatesView()
             }
             .tabItem {
-                Label("States", systemImage: "map.fill")
+                Label("Codes", systemImage: "doc.text.fill")
             }
 
             NavigationStack {
