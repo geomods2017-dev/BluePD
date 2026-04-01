@@ -53,5 +53,8 @@
 
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>BluePD uses your photo library to attach evidence images.</string>
+
+	<key>NSFaceIDUsageDescription</key>
+	<string>BluePD uses Face ID to securely unlock the app and protect sensitive law enforcement information.</string>
 </dict>
 </plist>
