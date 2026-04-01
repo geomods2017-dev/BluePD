@@ -14,168 +14,297 @@ struct LoginView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var isAuthenticating = false
+    @State private var hasAttemptedBiometricOnAppear = false
 
     var body: some View {
         Group {
             if isUnlocked {
                 MainTabView()
-            } else if !hasSetPIN {
-                createPINView
             } else {
-                loginView
-            }
-        }
-    }
+                ZStack {
+                    backgroundView
 
-    private var createPINView: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.25),
-                    Color.black.opacity(0.95)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+                    VStack(spacing: 24) {
+                        Spacer(minLength: 20)
 
-            VStack(spacing: 20) {
-                Image(systemName: "shield.lefthalf.filled")
-                    .font(.system(size: 60))
-                    .foregroundColor(.white)
+                        brandHeader
 
-                Text("BluePD Secure Setup")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
+                        if !hasSetPIN {
+                            setupCard
+                        } else {
+                            loginCard
+                        }
 
-                Text("Create a PIN to protect app access")
-                    .foregroundColor(.white.opacity(0.85))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
+                        if showError {
+                            errorCard(message: errorMessage)
+                        }
 
-                SecureField("Create PIN", text: $newPIN)
-                    .keyboardType(.numberPad)
-                    .textContentType(.oneTimeCode)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .frame(maxWidth: 240)
-
-                SecureField("Confirm PIN", text: $confirmPIN)
-                    .keyboardType(.numberPad)
-                    .textContentType(.oneTimeCode)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .frame(maxWidth: 240)
-
-                Toggle("Enable Face ID", isOn: $useFaceID)
-                    .foregroundColor(.white)
-                    .padding(.horizontal)
-                    .frame(maxWidth: 240)
-
-                Button(action: savePIN) {
-                    Text("Save PIN")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: 240)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
-
-                if showError {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .font(.subheadline)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-            }
-            .padding()
-        }
-    }
-
-    private var loginView: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color.blue.opacity(0.25),
-                    Color.black.opacity(0.95)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
-            VStack(spacing: 24) {
-                Image(systemName: "lock.shield.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.white)
-
-                Text("BluePD Secure Login")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-
-                Text("Authenticate to continue")
-                    .foregroundColor(.white.opacity(0.8))
-
-                if useFaceID {
-                    Button(action: authenticateWithFaceID) {
-                        Label("Unlock with Face ID", systemImage: "faceid")
-                            .fontWeight(.semibold)
-                            .frame(maxWidth: 240)
-                            .padding()
-                            .background(Color.white)
-                            .foregroundColor(.black)
-                            .cornerRadius(12)
+                        Spacer(minLength: 20)
                     }
-                    .disabled(isAuthenticating)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 16)
+                }
+            }
+        }
+    }
+
+    private var backgroundView: some View {
+        LinearGradient(
+            colors: [
+                Color(red: 7/255, green: 12/255, blue: 24/255),
+                Color(red: 13/255, green: 23/255, blue: 40/255),
+                Color(red: 18/255, green: 29/255, blue: 48/255)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
+
+    private var brandHeader: some View {
+        VStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Color.blue.opacity(0.16))
+                    .frame(width: 82, height: 82)
+
+                Image(systemName: !hasSetPIN ? "shield.lefthalf.filled" : "lock.shield.fill")
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundColor(.blue)
+            }
+
+            VStack(spacing: 6) {
+                Text(!hasSetPIN ? "BluePD Secure Setup" : "BluePD Secure Login")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+
+                Text(!hasSetPIN
+                     ? "Create a secure PIN and choose whether to enable Face ID."
+                     : "Authenticate to access reports, evidence, and field tools.")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.72))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+            }
+        }
+    }
+
+    private var setupCard: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            sectionHeader(
+                title: "Create Access PIN",
+                subtitle: "This PIN will be required when biometric unlock is unavailable."
+            )
+
+            PINField(
+                title: "Create PIN",
+                text: $newPIN,
+                placeholder: "Enter PIN"
+            )
+
+            PINField(
+                title: "Confirm PIN",
+                text: $confirmPIN,
+                placeholder: "Re-enter PIN"
+            )
+
+            biometricToggleCard
+
+            Button(action: savePIN) {
+                HStack(spacing: 10) {
+                    Image(systemName: "checkmark.shield.fill")
+                    Text("Save Security Settings")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.blue)
+                )
+                .foregroundColor(.white)
+            }
+            .padding(.top, 4)
+        }
+        .padding(22)
+        .background(cardBackground)
+    }
+
+    private var loginCard: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            sectionHeader(
+                title: "Unlock BluePD",
+                subtitle: "Use Face ID or enter your PIN below."
+            )
+
+            if useFaceID {
+                Button(action: authenticateWithFaceID) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "faceid")
+                            .font(.title3)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Unlock with Face ID")
+                                .fontWeight(.semibold)
+
+                            Text("Fast secure access")
+                                .font(.caption)
+                                .foregroundColor(Color.black.opacity(0.65))
+                        }
+
+                        Spacer()
+
+                        if isAuthenticating {
+                            ProgressView()
+                                .tint(.black)
+                        } else {
+                            Image(systemName: "chevron.right")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 15)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.white)
+                    )
+                    .foregroundColor(.black)
+                }
+                .buttonStyle(.plain)
+                .disabled(isAuthenticating)
+            }
+
+            VStack(spacing: 12) {
+                HStack {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.14))
+                        .frame(height: 1)
+
+                    Text("OR ENTER PIN")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(.white.opacity(0.58))
+                        .padding(.horizontal, 6)
+
+                    Rectangle()
+                        .fill(Color.white.opacity(0.14))
+                        .frame(height: 1)
                 }
 
-                Text("or enter PIN")
-                    .foregroundColor(.white.opacity(0.7))
-                    .font(.subheadline)
-
-                SecureField("PIN", text: $enteredPIN)
-                    .keyboardType(.numberPad)
-                    .textContentType(.oneTimeCode)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .frame(maxWidth: 240)
+                PINField(
+                    title: "PIN Code",
+                    text: $enteredPIN,
+                    placeholder: "Enter PIN"
+                )
 
                 Button(action: unlockWithPIN) {
-                    Text("Unlock")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: 240)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                }
-
-                if showError {
-                    Text(errorMessage)
-                        .foregroundColor(.red)
-                        .font(.subheadline)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-            }
-            .padding()
-            .onAppear {
-                if useFaceID && !isUnlocked {
-                    authenticateWithFaceID()
+                    HStack(spacing: 10) {
+                        Image(systemName: "lock.open.fill")
+                        Text("Unlock")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.blue)
+                    )
+                    .foregroundColor(.white)
                 }
             }
         }
+        .padding(22)
+        .background(cardBackground)
+        .onAppear {
+            if useFaceID && !hasAttemptedBiometricOnAppear {
+                hasAttemptedBiometricOnAppear = true
+                authenticateWithFaceID()
+            }
+        }
+    }
+
+    private var biometricToggleCard: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.blue.opacity(0.14))
+                    .frame(width: 46, height: 46)
+
+                Image(systemName: "faceid")
+                    .foregroundColor(.blue)
+                    .font(.headline)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Enable Face ID")
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                Text("Use biometric authentication when available.")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.68))
+            }
+
+            Spacer()
+
+            Toggle("", isOn: $useFaceID)
+                .labelsHidden()
+                .tint(.blue)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.05))
+        )
+    }
+
+    private func sectionHeader(title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.68))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func errorCard(message: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.red)
+
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.red.opacity(0.12))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.red.opacity(0.24), lineWidth: 1)
+        )
+    }
+
+    private var cardBackground: some View {
+        RoundedRectangle(cornerRadius: 26, style: .continuous)
+            .fill(Color.white.opacity(0.07))
+            .overlay(
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
     }
 
     private func savePIN() {
         showError = false
+        errorMessage = ""
 
         if newPIN.isEmpty || confirmPIN.isEmpty {
             errorMessage = "Please enter and confirm your PIN."
@@ -197,17 +326,20 @@ struct LoginView: View {
 
         userPIN = newPIN
         hasSetPIN = true
+        enteredPIN = ""
         newPIN = ""
         confirmPIN = ""
-        enteredPIN = ""
         showError = false
+        errorMessage = ""
+        hasAttemptedBiometricOnAppear = false
     }
 
     private func unlockWithPIN() {
+        showError = false
+        errorMessage = ""
+
         if enteredPIN == userPIN {
             isUnlocked = true
-            showError = false
-            errorMessage = ""
             enteredPIN = ""
         } else {
             errorMessage = "Incorrect PIN."
@@ -227,6 +359,15 @@ struct LoginView: View {
         let reason = "Unlock BluePD"
 
         if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
+            let biometricType = context.biometryType
+
+            if biometricType != .faceID && biometricType != .touchID {
+                isAuthenticating = false
+                errorMessage = "Biometric authentication is not available on this device."
+                showError = true
+                return
+            }
+
             context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, evalError in
                 DispatchQueue.main.async {
                     isAuthenticating = false
@@ -236,15 +377,63 @@ struct LoginView: View {
                         showError = false
                         errorMessage = ""
                     } else {
-                        errorMessage = evalError?.localizedDescription ?? "Face ID authentication failed."
+                        let nsError = evalError as NSError?
+
+                        if nsError?.code == LAError.userCancel.rawValue ||
+                            nsError?.code == LAError.systemCancel.rawValue ||
+                            nsError?.code == LAError.appCancel.rawValue {
+                            return
+                        }
+
+                        errorMessage = evalError?.localizedDescription ?? "Authentication failed."
                         showError = true
                     }
                 }
             }
         } else {
             isAuthenticating = false
-            errorMessage = "Face ID is not available on this device."
+            errorMessage = error?.localizedDescription ?? "Biometric authentication is not available."
             showError = true
+        }
+    }
+}
+
+struct PINField: View {
+    let title: String
+    @Binding var text: String
+    let placeholder: String
+    var maxLength: Int = 6
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.78))
+
+            TextField(placeholder, text: $text)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .multilineTextAlignment(.center)
+                .font(.system(size: 24, weight: .bold, design: .monospaced))
+                .foregroundColor(.white)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.05))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .onChange(of: text) { newValue in
+                    let filtered = newValue.filter { $0.isNumber }
+                    if filtered.count > maxLength {
+                        text = String(filtered.prefix(maxLength))
+                    } else {
+                        text = filtered
+                    }
+                }
         }
     }
 }
