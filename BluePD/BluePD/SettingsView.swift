@@ -466,7 +466,7 @@ struct SecureSettingsField: View {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
-                .onChange(of: text) { _, newValue in
+                .onChange(of: text) { newValue in
                     let filtered = newValue.filter { $0.isNumber }
                     if filtered.count > 6 {
                         text = String(filtered.prefix(6))
