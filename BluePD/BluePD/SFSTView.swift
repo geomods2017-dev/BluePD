@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct SFSTView: View {
     @State private var subjectName = ""
@@ -44,6 +45,18 @@ struct SFSTView: View {
     @State private var olsPutsFootDown = false
 
     @State private var showImpliedConsent = false
+    @State private var showShareSheet = false
+    @State private var generatedReport = ""
+
+    @FocusState private var focusedField: ActiveField?
+
+    private enum ActiveField: Hashable {
+        case subjectName
+        case location
+        case medicalConditions
+        case subjectStatements
+        case officerNotes
+    }
 
     private let roadOptions = ["Dry", "Wet", "Gravel", "Uneven", "Dirt", "Other"]
     private let lightingOptions = ["Daylight", "Dark - Lit", "Dark - Unlit", "Dawn / Dusk", "Other"]
@@ -54,6 +67,7 @@ struct SFSTView: View {
         ScrollView {
             VStack(spacing: 16) {
                 Button {
+                    dismissKeyboard()
                     showImpliedConsent = true
                 } label: {
                     rowCard(
@@ -66,7 +80,12 @@ struct SFSTView: View {
 
                 sectionCard(title: "Subject & Incident", systemImage: "person.text.rectangle.fill") {
                     VStack(spacing: 12) {
-                        StyledTextField(title: "Subject Name", text: $subjectName)
+                        StyledTextField(
+                            title: "Subject Name",
+                            text: $subjectName,
+                            focusedField: $focusedField,
+                            field: .subjectName
+                        )
 
                         HStack(spacing: 12) {
                             StyledDateField(
@@ -82,7 +101,12 @@ struct SFSTView: View {
                             )
                         }
 
-                        StyledTextField(title: "Location", text: $location)
+                        StyledTextField(
+                            title: "Location",
+                            text: $location,
+                            focusedField: $focusedField,
+                            field: .location
+                        )
                     }
                 }
 
@@ -97,13 +121,41 @@ struct SFSTView: View {
 
                 sectionCard(title: "Medical & Statements", systemImage: "cross.case.fill") {
                     VStack(spacing: 12) {
-                        StyledTextEditor(title: "Medical Conditions", text: $medicalConditions, minHeight: 90)
-                        StyledTextEditor(title: "Subject Statements", text: $subjectStatements, minHeight: 110)
+                        StyledTextEditor(
+                            title: "Medical Conditions",
+                            text: $medicalConditions,
+                            minHeight: 90,
+                            focusedField: $focusedField,
+                            field: .medicalConditions
+                        )
+
+                        StyledTextEditor(
+                            title: "Subject Statements",
+                            text: $subjectStatements,
+                            minHeight: 110,
+                            focusedField: $focusedField,
+                            field: .subjectStatements
+                        )
                     }
                 }
 
                 sectionCard(title: "HGN", systemImage: "eye.fill") {
                     VStack(spacing: 12) {
+                        InstructionCard(
+                            title: "HGN Instructions / Tips",
+                            lines: [
+                                "Check for equal pupil size before beginning.",
+                                "Check for equal tracking.",
+                                "Check for resting nystagmus.",
+                                "Hold the stimulus about 12–15 inches from the subject’s face and slightly above eye level.",
+                                "Instruct the subject to keep their head still and follow the stimulus with their eyes only.",
+                                "Check lack of smooth pursuit in each eye.",
+                                "Check distinct and sustained nystagmus at maximum deviation.",
+                                "Check onset of nystagmus prior to 45 degrees.",
+                                "Document any medical issues, head injury, or eye conditions."
+                            ]
+                        )
+
                         ToggleRow(title: "Resting Nystagmus", isOn: $hgnRestingNystagmusObserved)
                         ToggleRow(title: "Equal Tracking", isOn: $hgnEqualTrackingConfirmed)
                         ToggleRow(title: "Equal Pupil Size", isOn: $hgnEqualPupilSizeConfirmed)
@@ -115,11 +167,11 @@ struct SFSTView: View {
                         .pickerStyle(.segmented)
 
                         if selectedEye == "Left" {
-                            ToggleRow(title: "Smooth Pursuit", isOn: $hgnLeftLackOfSmoothPursuit)
+                            ToggleRow(title: "Lack of Smooth Pursuit", isOn: $hgnLeftLackOfSmoothPursuit)
                             ToggleRow(title: "Distinct Nystagmus", isOn: $hgnLeftDistinctNystagmus)
                             ToggleRow(title: "Onset < 45°", isOn: $hgnLeftOnsetPriorTo45)
                         } else {
-                            ToggleRow(title: "Smooth Pursuit", isOn: $hgnRightLackOfSmoothPursuit)
+                            ToggleRow(title: "Lack of Smooth Pursuit", isOn: $hgnRightLackOfSmoothPursuit)
                             ToggleRow(title: "Distinct Nystagmus", isOn: $hgnRightDistinctNystagmus)
                             ToggleRow(title: "Onset < 45°", isOn: $hgnRightOnsetPriorTo45)
                         }
@@ -180,7 +232,13 @@ struct SFSTView: View {
                 }
 
                 sectionCard(title: "Officer Notes", systemImage: "note.text") {
-                    StyledTextEditor(title: "Notes", text: $officerNotes, minHeight: 130)
+                    StyledTextEditor(
+                        title: "Notes",
+                        text: $officerNotes,
+                        minHeight: 130,
+                        focusedField: $focusedField,
+                        field: .officerNotes
+                    )
                 }
 
                 Button(action: generateReport) {
@@ -199,6 +257,7 @@ struct SFSTView: View {
             }
             .padding()
         }
+        .scrollDismissesKeyboard(.interactively)
         .background(
             LinearGradient(
                 colors: [
@@ -210,16 +269,32 @@ struct SFSTView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
+            .onTapGesture {
+                dismissKeyboard()
+            }
         )
         .navigationTitle("SFST Report")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    dismissKeyboard()
+                }
+            }
+        }
         .sheet(isPresented: $showImpliedConsent) {
             IndianaImpliedConsentView()
+        }
+        .sheet(isPresented: $showShareSheet) {
+            ShareSheet(activityItems: [generatedReport])
         }
     }
 
     private func generateReport() {
-        let report = """
+        dismissKeyboard()
+
+        generatedReport = """
         SFST REPORT
 
         Subject: \(subjectName)
@@ -227,9 +302,43 @@ struct SFSTView: View {
         Time: \(incidentTime.formatted(date: .omitted, time: .shortened))
         Location: \(location)
 
-        HGN: \(totalHGNClues)/6
-        WAT: \(totalWATClues)/8
-        OLS: \(totalOLSClues)/4
+        SCENE CONDITIONS
+        Road Surface: \(roadSurface)
+        Lighting: \(lighting)
+        Weather: \(weather)
+        Footwear: \(footwear)
+
+        HGN PRE-TEST
+        Resting Nystagmus: \(yesNo(hgnRestingNystagmusObserved))
+        Equal Tracking: \(yesNo(hgnEqualTrackingConfirmed))
+        Equal Pupil Size: \(yesNo(hgnEqualPupilSizeConfirmed))
+
+        HGN CLUES
+        Left - Lack of Smooth Pursuit: \(yesNo(hgnLeftLackOfSmoothPursuit))
+        Left - Distinct Nystagmus: \(yesNo(hgnLeftDistinctNystagmus))
+        Left - Onset < 45°: \(yesNo(hgnLeftOnsetPriorTo45))
+        Right - Lack of Smooth Pursuit: \(yesNo(hgnRightLackOfSmoothPursuit))
+        Right - Distinct Nystagmus: \(yesNo(hgnRightDistinctNystagmus))
+        Right - Onset < 45°: \(yesNo(hgnRightOnsetPriorTo45))
+        Total HGN Clues: \(totalHGNClues)/6
+
+        WALK AND TURN
+        Cannot Balance: \(yesNo(watCannotBalance))
+        Starts Too Soon: \(yesNo(watStartsTooSoon))
+        Stops Walking: \(yesNo(watStopsWalking))
+        Misses Heel-To-Toe: \(yesNo(watMissesHeelToe))
+        Steps Off Line: \(yesNo(watStepsOffLine))
+        Uses Arms: \(yesNo(watUsesArms))
+        Improper Turn: \(yesNo(watImproperTurn))
+        Wrong Number of Steps: \(yesNo(watWrongNumberOfSteps))
+        Total WAT Clues: \(totalWATClues)/8
+
+        ONE LEG STAND
+        Sways: \(yesNo(olsSways))
+        Uses Arms: \(yesNo(olsUsesArms))
+        Hops: \(yesNo(olsHops))
+        Foot Down: \(yesNo(olsPutsFootDown))
+        Total OLS Clues: \(totalOLSClues)/4
 
         Medical Conditions:
         \(medicalConditions)
@@ -241,7 +350,16 @@ struct SFSTView: View {
         \(officerNotes)
         """
 
-        print(report)
+        showShareSheet = true
+    }
+
+    private func yesNo(_ value: Bool) -> String {
+        value ? "Yes" : "No"
+    }
+
+    private func dismissKeyboard() {
+        focusedField = nil
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
     private var totalHGNClues: Int {
@@ -322,6 +440,8 @@ struct SFSTView: View {
 struct StyledTextField: View {
     let title: String
     @Binding var text: String
+    var focusedField: FocusState<SFSTView.ActiveField?>.Binding
+    let field: SFSTView.ActiveField
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -334,6 +454,8 @@ struct StyledTextField: View {
                 .background(Color.white.opacity(0.05))
                 .cornerRadius(10)
                 .foregroundColor(.white)
+                .focused(focusedField, equals: field)
+                .submitLabel(.done)
         }
     }
 }
@@ -420,6 +542,8 @@ struct StyledTextEditor: View {
     let title: String
     @Binding var text: String
     let minHeight: CGFloat
+    var focusedField: FocusState<SFSTView.ActiveField?>.Binding
+    let field: SFSTView.ActiveField
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -434,6 +558,7 @@ struct StyledTextEditor: View {
                 .cornerRadius(10)
                 .foregroundColor(.white)
                 .scrollContentBackground(.hidden)
+                .focused(focusedField, equals: field)
         }
     }
 }
@@ -531,4 +656,14 @@ Verify agency-approved wording before field use.
             }
         }
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) { }
 }
