@@ -7,7 +7,7 @@ struct BluePDApp: App {
     var body: some Scene {
         WindowGroup {
             if isLoggedIn {
-                MainTabView()
+                ContentView()
             } else {
                 LoginView()
             }
