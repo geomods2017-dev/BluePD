@@ -5,7 +5,7 @@ final class StoreManager: ObservableObject {
     @Published var isPro = false
     @Published var products: [Product] = []
 
-    private let productID = "bluepd.pro"
+    private let productID = "com.bluepd.pro"
 
     init() {
         Task {
