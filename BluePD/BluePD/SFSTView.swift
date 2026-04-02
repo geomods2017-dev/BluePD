@@ -50,7 +50,7 @@ struct SFSTView: View {
 
     @FocusState private var focusedField: ActiveField?
 
-    private enum ActiveField: Hashable {
+    enum ActiveField: Hashable {
         case subjectName
         case location
         case medicalConditions
