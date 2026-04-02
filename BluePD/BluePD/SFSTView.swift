@@ -130,6 +130,19 @@ struct SFSTView: View {
 
                 sectionCard(title: "Walk & Turn", systemImage: "figure.walk") {
                     VStack(spacing: 10) {
+                        InstructionCard(
+                            title: "Walk-and-Turn Instructions",
+                            lines: [
+                                "Place your left foot on the line and your right foot ahead of it, heel-to-toe.",
+                                "Keep your arms at your sides.",
+                                "Do not start until told to begin.",
+                                "Take 9 heel-to-toe steps.",
+                                "Turn using a series of small steps.",
+                                "Return with 9 heel-to-toe steps.",
+                                "Count your steps out loud."
+                            ]
+                        )
+
                         ToggleRow(title: "Cannot Balance", isOn: $watCannotBalance)
                         ToggleRow(title: "Starts Too Soon", isOn: $watStartsTooSoon)
                         ToggleRow(title: "Stops Walking", isOn: $watStopsWalking)
@@ -145,6 +158,18 @@ struct SFSTView: View {
 
                 sectionCard(title: "One Leg Stand", systemImage: "figure.stand") {
                     VStack(spacing: 10) {
+                        InstructionCard(
+                            title: "One-Leg Stand Instructions",
+                            lines: [
+                                "Stand with your feet together and arms at your sides.",
+                                "Do not begin until told to begin.",
+                                "Raise one foot about six inches off the ground.",
+                                "Keep the raised foot parallel with the ground.",
+                                "Keep both legs straight.",
+                                "Look at the raised foot and count out loud until told to stop."
+                            ]
+                        )
+
                         ToggleRow(title: "Sways", isOn: $olsSways)
                         ToggleRow(title: "Uses Arms", isOn: $olsUsesArms)
                         ToggleRow(title: "Hops", isOn: $olsHops)
@@ -427,6 +452,33 @@ struct SummaryCard: View {
             Text(value)
                 .foregroundColor(.white)
                 .bold()
+        }
+        .padding()
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(12)
+    }
+}
+
+struct InstructionCard: View {
+    let title: String
+    let lines: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.white)
+
+            ForEach(lines, id: \.self) { line in
+                HStack(alignment: .top, spacing: 8) {
+                    Text("•")
+                        .foregroundColor(.blue)
+
+                    Text(line)
+                        .foregroundColor(.white.opacity(0.85))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
         .padding()
         .background(Color.white.opacity(0.05))
