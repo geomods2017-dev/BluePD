@@ -20,31 +20,54 @@ struct SettingsView: View {
     @State private var confirmNewPIN: String = ""
     @State private var securityMessage: String = ""
     @State private var showSecurityMessage: Bool = false
-
     @State private var showProfileEditor = false
+    @State private var purchaseStatusMessage: String = ""
 
     private let states = [
-        "Indiana","Illinois","Michigan","Ohio","Kentucky","Tennessee",
-        "Florida","Texas","California","New York"
+        "Indiana", "Illinois", "Michigan", "Ohio", "Kentucky",
+        "Tennessee", "Florida", "Texas", "California", "New York"
     ]
 
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-
                 headerCard
 
-                // MARK: PRO UPGRADE
                 settingsSectionCard(title: "BluePD Pro", systemImage: "star.fill") {
                     VStack(spacing: 12) {
-
                         if storeManager.isPro {
-                            Label("Pro Unlocked", systemImage: "checkmark.seal.fill")
-                                .foregroundColor(.green)
+                            HStack(spacing: 10) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .foregroundColor(.green)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Pro Unlocked")
+                                        .foregroundColor(.white)
+                                        .fontWeight(.semibold)
+
+                                    Text("Premium access is active on this account.")
+                                        .font(.caption)
+                                        .foregroundColor(.white.opacity(0.65))
+                                }
+
+                                Spacer()
+                            }
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.green.opacity(0.12))
+                            )
                         } else {
                             Button {
                                 Task {
+                                    purchaseStatusMessage = "Contacting App Store..."
                                     await storeManager.purchase()
+
+                                    if storeManager.isPro {
+                                        purchaseStatusMessage = "BluePD Pro unlocked."
+                                    } else {
+                                        purchaseStatusMessage = "Purchase not completed."
+                                    }
                                 }
                             } label: {
                                 Text("Upgrade to Pro ($4.99)")
@@ -57,26 +80,44 @@ struct SettingsView: View {
                                     )
                                     .foregroundColor(.white)
                             }
+                            .buttonStyle(.plain)
                         }
 
                         Button("Restore Purchases") {
                             Task {
+                                purchaseStatusMessage = "Restoring purchases..."
                                 await storeManager.restorePurchases()
+
+                                if storeManager.isPro {
+                                    purchaseStatusMessage = "Purchases restored."
+                                } else {
+                                    purchaseStatusMessage = "No previous Pro purchase found."
+                                }
                             }
                         }
                         .foregroundColor(.blue)
+
+                        if !purchaseStatusMessage.isEmpty {
+                            Text(purchaseStatusMessage)
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.75))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
                     }
                 }
 
-                // MARK: PROFILE (COLLAPSED)
                 settingsSectionCard(title: "Officer Profile", systemImage: "person.fill") {
                     Button {
-                        showProfileEditor.toggle()
+                        showProfileEditor = true
                     } label: {
-                        HStack {
+                        HStack(spacing: 12) {
                             Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.blue)
+
                             Text("Create / Edit Profile")
                                 .fontWeight(.semibold)
+                                .foregroundColor(.white)
+
                             Spacer()
                         }
                         .padding()
@@ -88,17 +129,27 @@ struct SettingsView: View {
                     .buttonStyle(.plain)
                 }
 
-                // MARK: DEFAULTS
                 settingsSectionCard(title: "Defaults", systemImage: "slider.horizontal.3") {
                     VStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Default State")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.65))
 
-                        Picker("Default State", selection: $defaultState) {
-                            ForEach(states, id: \.self) { state in
-                                Text(state).tag(state)
+                            Picker("Default State", selection: $defaultState) {
+                                ForEach(states, id: \.self) { state in
+                                    Text(state).tag(state)
+                                }
                             }
+                            .pickerStyle(.menu)
+                            .tint(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.white.opacity(0.05))
+                            )
                         }
-                        .pickerStyle(.menu)
-                        .tint(.white)
 
                         settingsToggleRow(
                             title: "Auto-Fill Officer Info",
@@ -109,10 +160,8 @@ struct SettingsView: View {
                     }
                 }
 
-                // MARK: SECURITY
                 settingsSectionCard(title: "Security", systemImage: "lock.shield.fill") {
                     VStack(spacing: 12) {
-
                         settingsToggleRow(
                             title: "Enable Face ID",
                             subtitle: "Use biometrics to unlock",
@@ -129,17 +178,25 @@ struct SettingsView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(RoundedRectangle(cornerRadius: 14).fill(Color.blue))
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color.blue)
+                        )
                         .foregroundColor(.white)
 
                         if showSecurityMessage {
                             Text(securityMessage)
-                                .foregroundColor(.white)
+                                .font(.caption)
+                                .foregroundColor(
+                                    securityMessage == "PIN updated."
+                                    ? .green
+                                    : .red
+                                )
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                 }
 
-                // MARK: APPEARANCE
                 settingsSectionCard(title: "Appearance", systemImage: "moon.fill") {
                     settingsToggleRow(
                         title: "Dark Mode",
@@ -149,7 +206,6 @@ struct SettingsView: View {
                     )
                 }
 
-                // MARK: LOGOUT
                 settingsSectionCard(title: "Account", systemImage: "person.crop.circle") {
                     Button {
                         isLoggedIn = false
@@ -157,9 +213,13 @@ struct SettingsView: View {
                         Text("Log Out")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(RoundedRectangle(cornerRadius: 14).fill(Color.red))
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.red)
+                            )
                             .foregroundColor(.white)
                     }
+                    .buttonStyle(.plain)
                 }
             }
             .padding()
@@ -175,6 +235,8 @@ struct SettingsView: View {
             )
             .ignoresSafeArea()
         )
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showProfileEditor) {
             ProfileEditorView(
                 officerName: $officerName,
@@ -185,8 +247,6 @@ struct SettingsView: View {
             )
         }
     }
-
-    // MARK: COMPONENTS
 
     private func settingsSectionCard<Content: View>(
         title: String,
@@ -201,7 +261,10 @@ struct SettingsView: View {
             content()
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 18).fill(Color.white.opacity(0.06)))
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.white.opacity(0.06))
+        )
     }
 
     private func settingsToggleRow(
@@ -210,17 +273,29 @@ struct SettingsView: View {
         systemImage: String,
         isOn: Binding<Bool>
     ) -> some View {
-        HStack {
-            Image(systemName: systemImage).foregroundColor(.blue)
-            VStack(alignment: .leading) {
-                Text(title).foregroundColor(.white)
-                Text(subtitle).font(.caption).foregroundColor(.white.opacity(0.6))
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .foregroundColor(.blue)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .foregroundColor(.white)
+
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.6))
             }
+
             Spacer()
-            Toggle("", isOn: isOn).labelsHidden()
+
+            Toggle("", isOn: isOn)
+                .labelsHidden()
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.white.opacity(0.05))
+        )
     }
 
     private var headerCard: some View {
@@ -232,21 +307,25 @@ struct SettingsView: View {
 
     private func changePIN() {
         if currentPIN != savedPIN {
-            securityMessage = "Incorrect PIN"
+            securityMessage = "Incorrect PIN."
+        } else if newPIN.isEmpty || confirmNewPIN.isEmpty {
+            securityMessage = "Enter and confirm a new PIN."
         } else if newPIN != confirmNewPIN {
-            securityMessage = "PIN mismatch"
+            securityMessage = "PIN mismatch."
         } else {
             savedPIN = newPIN
-            securityMessage = "PIN updated"
+            securityMessage = "PIN updated."
+            currentPIN = ""
+            newPIN = ""
+            confirmNewPIN = ""
         }
+
         showSecurityMessage = true
     }
 }
 
-// MARK: PROFILE EDITOR
-
 struct ProfileEditorView: View {
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
 
     @Binding var officerName: String
     @Binding var badgeNumber: String
@@ -265,13 +344,15 @@ struct ProfileEditorView: View {
             }
             .navigationTitle("Profile")
             .toolbar {
-                Button("Done") { dismiss() }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
             }
         }
     }
 }
-
-// MARK: SECURE FIELD
 
 struct SecureSettingsField: View {
     let title: String
@@ -279,10 +360,24 @@ struct SecureSettingsField: View {
     let systemImage: String
 
     var body: some View {
-        SecureField(title, text: $text)
-            .keyboardType(.numberPad)
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
-            .foregroundColor(.white)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .foregroundColor(.blue)
+
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.65))
+            }
+
+            SecureField(title, text: $text)
+                .keyboardType(.numberPad)
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.white.opacity(0.05))
+                )
+                .foregroundColor(.white)
+        }
     }
 }
