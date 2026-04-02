@@ -26,6 +26,7 @@
 		A1B2C4031E1F2A3B4C5D6E7F /* PastReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4041E1F2A3B4C5D6E7F /* PastReportsView.swift */; };
 		A1B2C4051E1F2A3B4C5D6E7F /* DisclaimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4061E1F2A3B4C5D6E7F /* DisclaimerView.swift */; };
 		A1B2C4071E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4081E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift */; };
+		A1B2C4111E1F2A3B4C5D6E7F /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4121E1F2A3B4C5D6E7F /* StoreManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +50,7 @@
 		A1B2C4041E1F2A3B4C5D6E7F /* PastReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastReportsView.swift; sourceTree = "<group>"; };
 		A1B2C4061E1F2A3B4C5D6E7F /* DisclaimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclaimerView.swift; sourceTree = "<group>"; };
 		A1B2C4081E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchDisclaimerView.swift; sourceTree = "<group>"; };
+		A1B2C4121E1F2A3B4C5D6E7F /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +93,7 @@
 				A1B2C3E41E1F2A3B4C5D6E7F /* StatesView.swift */,
 				A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */,
 				A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */,
+				A1B2C4121E1F2A3B4C5D6E7F /* StoreManager.swift */,
 				A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */,
 			);
 			path = BluePD;
@@ -192,6 +195,7 @@
 				A1B2C3E31E1F2A3B4C5D6E7F /* StatesView.swift in Sources */,
 				A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */,
 				A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */,
+				A1B2C4111E1F2A3B4C5D6E7F /* StoreManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
