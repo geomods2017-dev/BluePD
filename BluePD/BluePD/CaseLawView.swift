@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct CaseLawView: View {
+    private let caseLawURL = URL(string: "https://caselaw.findlaw.com/")!
+
     var body: some View {
         NavigationStack {
-            CaseLawWebView(urlString: "https://caselaw.findlaw.com/")
+            SafariWebView(url: caseLawURL)
                 .ignoresSafeArea(edges: .bottom)
                 .navigationTitle("Case Law")
                 .navigationBarTitleDisplayMode(.inline)
