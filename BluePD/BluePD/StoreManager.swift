@@ -1,28 +1,56 @@
 import StoreKit
 
 @MainActor
-class StoreManager: ObservableObject {
-
+final class StoreManager: ObservableObject {
     @Published var isPro = false
+    @Published var products: [Product] = []
+
     private let productID = "bluepd.pro"
+
+    init() {
+        Task {
+            await loadProducts()
+            await refreshPurchasedStatus()
+        }
+    }
+
+    func loadProducts() async {
+        do {
+            products = try await Product.products(for: [productID])
+        } catch {
+            print("Failed to load products: \(error)")
+        }
+    }
 
     func purchase() async {
         do {
-            let products = try await Product.products(for: [productID])
-            guard let product = products.first else { return }
+            if products.isEmpty {
+                await loadProducts()
+            }
+
+            guard let product = products.first(where: { $0.id == productID }) else {
+                print("Product not found for id: \(productID)")
+                return
+            }
 
             let result = try await product.purchase()
 
             switch result {
             case .success(let verification):
                 switch verification {
-                case .verified(_):
+                case .verified(let transaction):
                     isPro = true
-                default:
-                    break
+                    await transaction.finish()
+                case .unverified(_, let error):
+                    print("Purchase verification failed: \(error)")
                 }
-            default:
-                break
+
+            case .pending:
+                print("Purchase is pending approval.")
+            case .userCancelled:
+                print("User cancelled purchase.")
+            @unknown default:
+                print("Unknown purchase result.")
             }
         } catch {
             print("Purchase failed: \(error)")
@@ -30,11 +58,32 @@ class StoreManager: ObservableObject {
     }
 
     func restore() async {
+        do {
+            try await AppStore.sync()
+            await refreshPurchasedStatus()
+        } catch {
+            print("Restore failed: \(error)")
+        }
+    }
+
+    func restorePurchases() async {
+        await restore()
+    }
+
+    func refreshPurchasedStatus() async {
+        var hasPro = false
+
         for await result in Transaction.currentEntitlements {
-            if case .verified(let transaction) = result,
-               transaction.productID == productID {
-                isPro = true
+            switch result {
+            case .verified(let transaction):
+                if transaction.productID == productID {
+                    hasPro = true
+                }
+            case .unverified(_, let error):
+                print("Unverified entitlement: \(error)")
             }
         }
+
+        isPro = hasPro
     }
 }
