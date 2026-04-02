@@ -10,6 +10,8 @@ struct SettingsView: View {
     @AppStorage("autoFillOfficerInfo") private var autoFillOfficerInfo: Bool = true
     @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
     @AppStorage("useFaceID") private var useFaceID: Bool = true
+    @AppStorage("savedPIN") private var savedPIN: String = "1234"
+    @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
 
     @State private var currentPIN: String = ""
     @State private var newPIN: String = ""
@@ -212,6 +214,28 @@ struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                settingsSectionCard(
+                    title: "Account",
+                    systemImage: "person.crop.circle.badge.checkmark"
+                ) {
+                    Button(action: {
+                        isLoggedIn = false
+                    }) {
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("Log Out")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(Color.red.opacity(0.9))
+                        )
+                        .foregroundColor(.white)
+                    }
+                }
             }
             .padding(.horizontal)
             .padding(.top, 12)
@@ -349,11 +373,7 @@ struct SettingsView: View {
 
     private func changePIN() {
         showSecurityMessage = true
-
-        guard let savedPIN = KeychainManager.getPIN() else {
-            securityMessage = "No current PIN is stored."
-            return
-        }
+        securityMessage = ""
 
         if currentPIN != savedPIN {
             securityMessage = "Current PIN is incorrect."
@@ -375,16 +395,11 @@ struct SettingsView: View {
             return
         }
 
-        let didSave = KeychainManager.savePIN(newPIN)
-
-        if didSave {
-            securityMessage = "PIN updated successfully."
-            currentPIN = ""
-            newPIN = ""
-            confirmNewPIN = ""
-        } else {
-            securityMessage = "Unable to update the PIN."
-        }
+        savedPIN = newPIN
+        securityMessage = "PIN updated successfully."
+        currentPIN = ""
+        newPIN = ""
+        confirmNewPIN = ""
     }
 }
 
@@ -437,7 +452,7 @@ struct SecureSettingsField: View {
                     .foregroundColor(.blue)
             }
 
-            TextField(title, text: $text)
+            SecureField(title, text: $text)
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
                 .multilineTextAlignment(.center)
@@ -451,7 +466,7 @@ struct SecureSettingsField: View {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
-                .onChange(of: text) { newValue in
+                .onChange(of: text) { _, newValue in
                     let filtered = newValue.filter { $0.isNumber }
                     if filtered.count > 6 {
                         text = String(filtered.prefix(6))
