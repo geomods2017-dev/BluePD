@@ -20,88 +20,80 @@ struct SettingsView: View {
     @State private var showSecurityMessage: Bool = false
 
     private let states = [
-        "Indiana", "Illinois", "Michigan", "Ohio", "Kentucky", "Tennessee", "Florida", "Texas", "California", "New York"
+        "Indiana", "Illinois", "Michigan", "Ohio", "Kentucky",
+        "Tennessee", "Florida", "Texas", "California", "New York"
     ]
 
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
+
                 headerCard
 
-                // ✅ PROFILE ENTRY (replaces huge form)
+                // PROFILE
                 settingsSectionCard(title: "Officer Profile", systemImage: "person.crop.circle.badge.plus") {
                     NavigationLink(destination: OfficerProfileView()) {
-                        HStack(spacing: 14) {
-                            Image(systemName: "person.crop.circle.badge.plus")
-                                .foregroundColor(.blue)
-
-                            VStack(alignment: .leading) {
-                                Text("Create / Edit Profile")
-                                    .foregroundColor(.white)
-                                    .font(.headline)
-
-                                Text("Set officer info for reports")
-                                    .foregroundColor(.white.opacity(0.65))
-                                    .font(.subheadline)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.white.opacity(0.4))
-                        }
-                        .padding(14)
-                        .background(Color.white.opacity(0.05))
-                        .cornerRadius(16)
+                        row(title: "Create / Edit Profile", icon: "person.crop.circle.badge.plus")
                     }
-                    .buttonStyle(.plain)
                 }
 
+                // DEFAULTS
                 settingsSectionCard(title: "Defaults", systemImage: "slider.horizontal.3") {
                     VStack(spacing: 12) {
-
                         Picker("Default State", selection: $defaultState) {
-                            ForEach(states, id: \.self) { state in
-                                Text(state).tag(state)
-                            }
+                            ForEach(states, id: \.self) { Text($0) }
                         }
                         .pickerStyle(.menu)
-                        .tint(.white)
-                        .padding(14)
+                        .padding()
                         .background(Color.white.opacity(0.05))
-                        .cornerRadius(14)
+                        .cornerRadius(12)
 
                         settingsToggleRow(
                             title: "Auto-Fill Officer Info",
-                            subtitle: "Include officer details in reports.",
+                            subtitle: "Include details in reports",
                             systemImage: "doc.text.fill",
                             isOn: $autoFillOfficerInfo
                         )
                     }
                 }
 
+                // 🔥 NEW UPGRADE SECTION
+                settingsSectionCard(title: "Upgrade", systemImage: "star.fill") {
+                    Button(action: purchaseUpgrade) {
+                        HStack {
+                            Image(systemName: "star.fill")
+                            Text("Upgrade to Pro")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(14)
+                    }
+                }
+
+                // SECURITY
                 settingsSectionCard(title: "Security", systemImage: "lock.shield.fill") {
                     VStack(spacing: 12) {
 
                         settingsToggleRow(
-                            title: "Enable Face ID",
-                            subtitle: "Use biometric unlock",
+                            title: "Face ID",
+                            subtitle: "Enable biometric unlock",
                             systemImage: "faceid",
                             isOn: $useFaceID
                         )
 
-                        SecureSettingsField(title: "Current PIN", text: $currentPIN, systemImage: "key.fill")
-                        SecureSettingsField(title: "New PIN", text: $newPIN, systemImage: "lock.fill")
-                        SecureSettingsField(title: "Confirm PIN", text: $confirmNewPIN, systemImage: "checkmark.shield.fill")
+                        SecureSettingsField(title: "Current PIN", text: $currentPIN)
+                        SecureSettingsField(title: "New PIN", text: $newPIN)
+                        SecureSettingsField(title: "Confirm PIN", text: $confirmNewPIN)
 
-                        Button(action: changePIN) {
-                            Text("Change PIN")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(14)
-                        }
+                        Button("Change PIN", action: changePIN)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(14)
 
                         if showSecurityMessage {
                             Text(securityMessage)
@@ -110,15 +102,7 @@ struct SettingsView: View {
                     }
                 }
 
-                settingsSectionCard(title: "Appearance", systemImage: "moon.fill") {
-                    settingsToggleRow(
-                        title: "Dark Mode",
-                        subtitle: "Visual preference",
-                        systemImage: "moon.fill",
-                        isOn: $darkModeEnabled
-                    )
-                }
-
+                // ACCOUNT
                 settingsSectionCard(title: "Account", systemImage: "person.crop.circle") {
                     Button {
                         isLoggedIn = false
@@ -149,6 +133,13 @@ struct SettingsView: View {
         .navigationTitle("Settings")
     }
 
+    // MARK: - Upgrade Action
+    private func purchaseUpgrade() {
+        print("Upgrade tapped")
+        // Next step: connect StoreKit
+    }
+
+    // MARK: - UI Helpers
     private func settingsSectionCard<Content: View>(
         title: String,
         systemImage: String,
@@ -163,7 +154,19 @@ struct SettingsView: View {
         }
         .padding()
         .background(Color.white.opacity(0.05))
-        .cornerRadius(18)
+        .cornerRadius(16)
+    }
+
+    private func row(title: String, icon: String) -> some View {
+        HStack {
+            Image(systemName: icon).foregroundColor(.blue)
+            Text(title).foregroundColor(.white)
+            Spacer()
+            Image(systemName: "chevron.right").foregroundColor(.gray)
+        }
+        .padding()
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(12)
     }
 
     private func settingsToggleRow(
@@ -187,23 +190,7 @@ struct SettingsView: View {
         }
         .padding()
         .background(Color.white.opacity(0.05))
-        .cornerRadius(14)
-    }
-
-    private var headerCard: some View {
-        HStack {
-            Image(systemName: "gearshape.fill")
-                .foregroundColor(.blue)
-
-            Text("BluePD Settings")
-                .foregroundColor(.white)
-                .font(.headline)
-
-            Spacer()
-        }
-        .padding()
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(16)
+        .cornerRadius(12)
     }
 
     private func changePIN() {
@@ -224,7 +211,7 @@ struct SettingsView: View {
     }
 }
 
-// ✅ NEW PROFILE SCREEN
+// MARK: - Profile Screen
 struct OfficerProfileView: View {
     @AppStorage("officerName") private var officerName: String = ""
     @AppStorage("badgeNumber") private var badgeNumber: String = ""
@@ -241,5 +228,20 @@ struct OfficerProfileView: View {
             TextField("Unit", text: $officerUnit)
         }
         .navigationTitle("Officer Profile")
+    }
+}
+
+// MARK: - Secure Field
+struct SecureSettingsField: View {
+    let title: String
+    @Binding var text: String
+
+    var body: some View {
+        SecureField(title, text: $text)
+            .keyboardType(.numberPad)
+            .padding()
+            .background(Color.white.opacity(0.05))
+            .cornerRadius(12)
+            .foregroundColor(.white)
     }
 }
