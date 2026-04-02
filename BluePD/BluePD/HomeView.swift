@@ -11,15 +11,15 @@ struct HomeView: View {
     ]
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                topHeader
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 18) {
+                commandHeader
                 quickActionsSection
                 officerOverviewSection
                 toolsOverviewSection
             }
             .padding(.horizontal, 16)
-            .padding(.top, 10)
+            .padding(.top, 12)
             .padding(.bottom, 28)
         }
         .background(backgroundGradient.ignoresSafeArea())
@@ -30,60 +30,73 @@ struct HomeView: View {
     private var backgroundGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 7/255, green: 12/255, blue: 24/255),
-                Color(red: 13/255, green: 23/255, blue: 40/255),
-                Color(red: 18/255, green: 29/255, blue: 48/255)
+                Color(red: 3/255, green: 8/255, blue: 18/255),
+                Color(red: 7/255, green: 16/255, blue: 30/255),
+                Color(red: 12/255, green: 24/255, blue: 42/255)
             ],
             startPoint: .top,
             endPoint: .bottom
         )
     }
 
-    private var topHeader: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                Image(systemName: "shield.lefthalf.filled")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundColor(.blue)
-                    .frame(width: 44, height: 44)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.blue.opacity(0.14))
-                    )
+    private var commandHeader: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(Color.blue.opacity(0.14))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(Color.blue.opacity(0.35), lineWidth: 1)
+                        )
 
-                VStack(alignment: .leading, spacing: 2) {
+                    Image(systemName: "shield.checkered")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.blue)
+                }
+                .frame(width: 52, height: 52)
+
+                VStack(alignment: .leading, spacing: 3) {
                     Text("BluePD")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.white)
 
-                    Text("Law enforcement tools in one place")
+                    Text("Field-ready law enforcement tools")
                         .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.68))
+                        .foregroundColor(.white.opacity(0.66))
                 }
 
                 Spacer()
             }
 
-            Text(greetingLine)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.82))
+            VStack(alignment: .leading, spacing: 8) {
+                Text("ON DUTY")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .kerning(1.1)
+                    .foregroundColor(.blue.opacity(0.92))
+
+                Text(greetingLine)
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.88))
+            }
         }
-        .padding(16)
-        .background(cardBackground)
-        .overlay(cardBorder)
+        .padding(18)
+        .background(outerCardBackground)
+        .overlay(outerCardBorder)
     }
 
     private var quickActionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Quick Actions")
+            sectionHeader("Quick Access")
 
             VStack(spacing: 10) {
                 NavigationLink(destination: MirandaView()) {
                     primaryActionRow(
                         title: "Miranda Warnings",
-                        subtitle: "Fast access to Miranda guidance",
-                        systemImage: "exclamationmark.bubble.fill"
+                        subtitle: "Immediate access to warning guidance",
+                        systemImage: "text.bubble.fill"
                     )
                 }
                 .buttonStyle(.plain)
@@ -91,8 +104,8 @@ struct HomeView: View {
                 NavigationLink(destination: SFSTView()) {
                     primaryActionRow(
                         title: "SFST Report",
-                        subtitle: "Start or complete a sobriety report",
-                        systemImage: "car.fill"
+                        subtitle: "Start, review, or complete a report",
+                        systemImage: "car.side.fill"
                     )
                 }
                 .buttonStyle(.plain)
@@ -100,8 +113,8 @@ struct HomeView: View {
                 NavigationLink(destination: PastReportsView()) {
                     primaryActionRow(
                         title: "Past Reports",
-                        subtitle: "Open previously saved reports",
-                        systemImage: "clock.arrow.circlepath"
+                        subtitle: "Review previously generated reports",
+                        systemImage: "doc.text.fill"
                     )
                 }
                 .buttonStyle(.plain)
@@ -111,19 +124,19 @@ struct HomeView: View {
 
     private var officerOverviewSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Officer Overview")
+            sectionHeader("Officer Profile")
 
             LazyVGrid(columns: columns, spacing: 12) {
                 compactStatCard(
                     title: officerName.trimmedOrFallback("Not Set"),
                     subtitle: "Officer",
-                    systemImage: "person.fill"
+                    systemImage: "person.crop.rectangle.fill"
                 )
 
                 compactStatCard(
                     title: agencyName.trimmedOrFallback("Not Set"),
                     subtitle: "Agency",
-                    systemImage: "building.2.fill"
+                    systemImage: "building.columns.fill"
                 )
 
                 compactStatCard(
@@ -133,7 +146,7 @@ struct HomeView: View {
                 )
 
                 compactStatCard(
-                    title: "Secure",
+                    title: "Secured",
                     subtitle: "Access",
                     systemImage: "lock.shield.fill"
                 )
@@ -143,25 +156,25 @@ struct HomeView: View {
 
     private var toolsOverviewSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionHeader("Tools")
+            sectionHeader("Operational Tools")
 
             VStack(spacing: 10) {
                 compactToolRow(
                     title: "Case Law",
-                    subtitle: "Recent legal updates and reference material",
-                    systemImage: "books.vertical.fill"
+                    subtitle: "Recent legal updates and searchable references",
+                    systemImage: "book.closed.fill"
                 )
 
                 compactToolRow(
                     title: "State Codes",
-                    subtitle: "Criminal and traffic code references",
-                    systemImage: "map.fill"
+                    subtitle: "Traffic and criminal statute references",
+                    systemImage: "doc.text.magnifyingglass"
                 )
 
                 compactToolRow(
                     title: "Evidence",
-                    subtitle: "Store and review case-related photos",
-                    systemImage: "camera.viewfinder"
+                    subtitle: "Store and review case-related images",
+                    systemImage: "camera.fill"
                 )
             }
         }
@@ -184,32 +197,45 @@ struct HomeView: View {
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.headline)
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 2)
+        HStack {
+            Rectangle()
+                .fill(Color.blue.opacity(0.9))
+                .frame(width: 4, height: 18)
+                .cornerRadius(3)
+
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Spacer()
+        }
+        .padding(.horizontal, 2)
     }
 
     private func primaryActionRow(title: String, subtitle: String, systemImage: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.blue)
-                .frame(width: 38, height: 38)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.blue.opacity(0.12))
-                )
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.blue.opacity(0.12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(Color.blue.opacity(0.28), lineWidth: 1)
+                    )
 
-            VStack(alignment: .leading, spacing: 3) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.blue)
+            }
+            .frame(width: 42, height: 42)
+
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
                     .foregroundColor(.white)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.64))
+                    .foregroundColor(.white.opacity(0.62))
                     .lineLimit(2)
             }
 
@@ -217,7 +243,7 @@ struct HomeView: View {
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.white.opacity(0.32))
+                .foregroundColor(.white.opacity(0.30))
         }
         .padding(14)
         .background(innerCardBackground)
@@ -226,23 +252,28 @@ struct HomeView: View {
 
     private func compactToolRow(title: String, subtitle: String, systemImage: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.blue)
-                .frame(width: 34, height: 34)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.blue.opacity(0.10))
-                )
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.blue.opacity(0.10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(Color.blue.opacity(0.24), lineWidth: 1)
+                    )
 
-            VStack(alignment: .leading, spacing: 2) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.blue)
+            }
+            .frame(width: 38, height: 38)
+
+            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.headline)
                     .foregroundColor(.white)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.64))
+                    .foregroundColor(.white.opacity(0.62))
                     .lineLimit(2)
             }
 
@@ -255,49 +286,72 @@ struct HomeView: View {
 
     private func compactStatCard(title: String, subtitle: String, systemImage: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: systemImage)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.blue)
-                .frame(width: 34, height: 34)
-                .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color.blue.opacity(0.10))
-                )
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.blue.opacity(0.10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(Color.blue.opacity(0.24), lineWidth: 1)
+                    )
+
+                Image(systemName: systemImage)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.blue)
+            }
+            .frame(width: 36, height: 36)
 
             Text(title)
                 .font(.headline)
                 .foregroundColor(.white)
                 .lineLimit(2)
-                .minimumScaleFactor(0.85)
+                .minimumScaleFactor(0.82)
 
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.60))
+                .foregroundColor(.white.opacity(0.58))
         }
         .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 110, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
         .background(innerCardBackground)
         .overlay(innerCardBorder)
     }
 
-    private var cardBackground: some View {
+    private var outerCardBackground: some View {
         RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(Color.white.opacity(0.055))
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.06),
+                        Color.white.opacity(0.03)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
     }
 
-    private var cardBorder: some View {
+    private var outerCardBorder: some View {
         RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+            .stroke(Color.blue.opacity(0.18), lineWidth: 1)
     }
 
     private var innerCardBackground: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(Color.white.opacity(0.045))
+            .fill(
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(0.045),
+                        Color.white.opacity(0.03)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
     }
 
     private var innerCardBorder: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .stroke(Color.white.opacity(0.05), lineWidth: 1)
+            .stroke(Color.white.opacity(0.06), lineWidth: 1)
     }
 }
 
