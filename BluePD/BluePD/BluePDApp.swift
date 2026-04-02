@@ -2,9 +2,15 @@ import SwiftUI
 
 @main
 struct BluePDApp: App {
+    @AppStorage("isLoggedIn") private var isLoggedIn = false
+
     var body: some Scene {
         WindowGroup {
-            LoginView()
+            if isLoggedIn {
+                MainTabView()
+            } else {
+                LoginView()
+            }
         }
     }
 }
