@@ -54,23 +54,17 @@ struct SFSTView: View {
         ScrollView {
             VStack(spacing: 16) {
 
-                // Implied Consent Button
                 Button {
                     showImpliedConsent = true
                 } label: {
-                    rowCard(
-                        title: "Indiana Implied Consent",
-                        subtitle: "Open advisory card",
-                        systemImage: "doc.text.fill"
-                    )
+                    rowCard(title: "Indiana Implied Consent", subtitle: "Open advisory card", systemImage: "doc.text.fill")
                 }
-                .buttonStyle(.plain)
 
                 sectionCard(title: "Subject & Incident", systemImage: "person.text.rectangle.fill") {
                     VStack(spacing: 12) {
                         StyledTextField(title: "Subject Name", text: $subjectName)
 
-                        HStack(spacing: 12) {
+                        HStack {
                             StyledDateField(title: "Date", selection: $incidentDate, displayedComponents: .date)
                             StyledDateField(title: "Time", selection: $incidentTime, displayedComponents: .hourAndMinute)
                         }
@@ -151,87 +145,31 @@ struct SFSTView: View {
                 sectionCard(title: "Officer Notes", systemImage: "note.text") {
                     StyledTextEditor(title: "Notes", text: $officerNotes, minHeight: 130)
                 }
-
-                // ✅ Generate Report Button
-                Button(action: generateReport) {
-                    HStack {
-                        Image(systemName: "doc.text.fill")
-                        Text("Generate Report")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(14)
-                }
-                .padding(.top, 8)
             }
             .padding()
         }
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 3/255, green: 8/255, blue: 18/255),
-                    Color(red: 7/255, green: 16/255, blue: 30/255),
-                    Color(red: 12/255, green: 24/255, blue: 42/255)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            ).ignoresSafeArea()
-        )
-        .navigationTitle("SFST Report")
-        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showImpliedConsent) {
             IndianaImpliedConsentView()
         }
     }
 
-    private func generateReport() {
-        let report = """
-        SFST REPORT
-
-        Subject: \(subjectName)
-        Location: \(location)
-
-        HGN: \(totalHGNClues)/6
-        WAT: \(totalWATClues)/8
-        OLS: \(totalOLSClues)/4
-        """
-
-        print(report)
-    }
-
     private var totalHGNClues: Int {
-        [
-            hgnLeftLackOfSmoothPursuit,
-            hgnLeftDistinctNystagmus,
-            hgnLeftOnsetPriorTo45,
-            hgnRightLackOfSmoothPursuit,
-            hgnRightDistinctNystagmus,
-            hgnRightOnsetPriorTo45
-        ].filter { $0 }.count
+        [hgnLeftLackOfSmoothPursuit, hgnLeftDistinctNystagmus, hgnLeftOnsetPriorTo45,
+         hgnRightLackOfSmoothPursuit, hgnRightDistinctNystagmus, hgnRightOnsetPriorTo45].filter { $0 }.count
     }
 
     private var totalWATClues: Int {
-        [
-            watCannotBalance, watStartsTooSoon, watStopsWalking,
-            watMissesHeelToe, watStepsOffLine, watUsesArms,
-            watImproperTurn, watWrongNumberOfSteps
-        ].filter { $0 }.count
+        [watCannotBalance, watStartsTooSoon, watStopsWalking, watMissesHeelToe,
+         watStepsOffLine, watUsesArms, watImproperTurn, watWrongNumberOfSteps].filter { $0 }.count
     }
 
     private var totalOLSClues: Int {
-        [olsSways, olsUsesArms, olsHops, olsPutsFootDown]
-            .filter { $0 }.count
+        [olsSways, olsUsesArms, olsHops, olsPutsFootDown].filter { $0 }.count
     }
 
     private func sectionCard<Content: View>(title: String, systemImage: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(title, systemImage: systemImage)
-                .foregroundColor(.white)
-                .font(.headline)
-
+        VStack(alignment: .leading) {
+            Label(title, systemImage: systemImage).foregroundColor(.white)
             content()
         }
         .padding()
@@ -242,18 +180,41 @@ struct SFSTView: View {
     private func rowCard(title: String, subtitle: String, systemImage: String) -> some View {
         HStack {
             Image(systemName: systemImage)
-                .foregroundColor(.blue)
-
             VStack(alignment: .leading) {
-                Text(title).foregroundColor(.white)
-                Text(subtitle).foregroundColor(.gray)
+                Text(title)
+                Text(subtitle).font(.caption)
             }
-
             Spacer()
-            Image(systemName: "chevron.right").foregroundColor(.gray)
         }
         .padding()
         .background(Color.white.opacity(0.05))
         .cornerRadius(16)
+    }
+}
+
+/* ---------- FIXED MISSING COMPONENTS ---------- */
+
+struct SummaryCard: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(title)
+            Spacer()
+            Text(value).bold()
+        }
+        .padding()
+        .background(Color.white.opacity(0.05))
+        .cornerRadius(12)
+    }
+}
+
+struct IndianaImpliedConsentView: View {
+    var body: some View {
+        ScrollView {
+            Text("Indiana Implied Consent Advisory...")
+                .padding()
+        }
     }
 }
