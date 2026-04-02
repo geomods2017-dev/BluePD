@@ -4,24 +4,29 @@ struct MainTabView: View {
     init() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
+
+        // Darker tactical background
         appearance.backgroundColor = UIColor(
-            red: 9/255,
-            green: 16/255,
-            blue: 28/255,
+            red: 5/255,
+            green: 10/255,
+            blue: 20/255,
             alpha: 0.98
         )
 
-        appearance.shadowColor = UIColor.white.withAlphaComponent(0.04)
+        // Subtle top border
+        appearance.shadowColor = UIColor.white.withAlphaComponent(0.08)
 
         let selectedColor = UIColor.systemBlue
-        let normalColor = UIColor.white.withAlphaComponent(0.58)
+        let normalColor = UIColor.white.withAlphaComponent(0.55)
 
+        // Selected state
         appearance.stackedLayoutAppearance.selected.iconColor = selectedColor
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
             .foregroundColor: selectedColor,
             .font: UIFont.systemFont(ofSize: 11, weight: .semibold)
         ]
 
+        // Normal state
         appearance.stackedLayoutAppearance.normal.iconColor = normalColor
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
             .foregroundColor: normalColor,
@@ -34,32 +39,33 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
+
             NavigationStack {
                 HomeView()
             }
             .tabItem {
-                Label("Home", systemImage: "house.fill")
+                Label("Home", systemImage: "shield.fill")
             }
 
             NavigationStack {
                 CaseLawView()
             }
             .tabItem {
-                Label("Case Law", systemImage: "books.vertical.fill")
+                Label("Case Law", systemImage: "book.closed.fill")
             }
 
             NavigationStack {
                 StatesView()
             }
             .tabItem {
-                Label("Codes", systemImage: "doc.text.fill")
+                Label("Codes", systemImage: "doc.text.magnifyingglass")
             }
 
             NavigationStack {
                 EvidenceView()
             }
             .tabItem {
-                Label("Evidence", systemImage: "camera.viewfinder")
+                Label("Evidence", systemImage: "camera.fill")
             }
 
             NavigationStack {
@@ -70,6 +76,7 @@ struct MainTabView: View {
             }
         }
         .tint(BluePDTheme.accent)
+        .background(Color.black.ignoresSafeArea())
     }
 }
 
