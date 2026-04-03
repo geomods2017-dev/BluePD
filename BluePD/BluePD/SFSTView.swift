@@ -12,9 +12,15 @@ struct SFSTView: View {
     @State private var weather = "Clear"
     @State private var footwear = "Tennis Shoes"
 
-    @State private var medicalConditions = ""
-    @State private var subjectStatements = ""
-    @State private var officerNotes = ""
+    // Medical / subject condition quick selections
+    @State private var subjectDeniesMedicalIssues = false
+    @State private var subjectAdmitsMedicalIssues = false
+    @State private var headInjuryIndicated = false
+    @State private var eyeConditionIndicated = false
+    @State private var legOrBackProblemIndicated = false
+    @State private var subjectWearsContacts = false
+    @State private var subjectWearsGlasses = false
+    @State private var instructionsUnderstood = true
 
     @State private var hgnRestingNystagmusObserved = false
     @State private var hgnEqualTrackingConfirmed = false
@@ -45,17 +51,14 @@ struct SFSTView: View {
     @State private var olsPutsFootDown = false
 
     @State private var showImpliedConsent = false
-    @State private var showShareSheet = false
-    @State private var generatedReport = ""
+    @State private var showSavedReports = false
+    @State private var savedReports: [SFSTSavedReport] = []
 
     @FocusState private var focusedField: ActiveField?
 
     enum ActiveField: Hashable {
         case subjectName
         case location
-        case medicalConditions
-        case subjectStatements
-        case officerNotes
     }
 
     private let roadOptions = ["Dry", "Wet", "Gravel", "Uneven", "Dirt", "Other"]
@@ -66,17 +69,7 @@ struct SFSTView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                Button {
-                    dismissKeyboard()
-                    showImpliedConsent = true
-                } label: {
-                    rowCard(
-                        title: "Indiana Implied Consent",
-                        subtitle: "Open advisory card",
-                        systemImage: "doc.text.fill"
-                    )
-                }
-                .buttonStyle(.plain)
+                topActionRow
 
                 sectionCard(title: "Subject & Incident", systemImage: "person.text.rectangle.fill") {
                     VStack(spacing: 12) {
@@ -119,23 +112,25 @@ struct SFSTView: View {
                     }
                 }
 
-                sectionCard(title: "Medical & Statements", systemImage: "cross.case.fill") {
-                    VStack(spacing: 12) {
-                        StyledTextEditor(
-                            title: "Medical Conditions",
-                            text: $medicalConditions,
-                            minHeight: 90,
-                            focusedField: $focusedField,
-                            field: .medicalConditions
+                sectionCard(title: "Medical / Readiness", systemImage: "cross.case.fill") {
+                    VStack(spacing: 10) {
+                        InstructionCard(
+                            title: "Pre-Test Reminders",
+                            lines: [
+                                "Ask about injuries, medical conditions, and vision issues before beginning.",
+                                "Confirm the subject understands instructions.",
+                                "Note any condition that may affect balance, coordination, or eye movement."
+                            ]
                         )
 
-                        StyledTextEditor(
-                            title: "Subject Statements",
-                            text: $subjectStatements,
-                            minHeight: 110,
-                            focusedField: $focusedField,
-                            field: .subjectStatements
-                        )
+                        ToggleRow(title: "Subject Denies Medical Issues", isOn: $subjectDeniesMedicalIssues)
+                        ToggleRow(title: "Subject Admits Medical Issues", isOn: $subjectAdmitsMedicalIssues)
+                        ToggleRow(title: "Head Injury Indicated", isOn: $headInjuryIndicated)
+                        ToggleRow(title: "Eye Condition Indicated", isOn: $eyeConditionIndicated)
+                        ToggleRow(title: "Leg / Back Problem Indicated", isOn: $legOrBackProblemIndicated)
+                        ToggleRow(title: "Subject Wears Contacts", isOn: $subjectWearsContacts)
+                        ToggleRow(title: "Subject Wears Glasses", isOn: $subjectWearsGlasses)
+                        ToggleRow(title: "Instructions Understood", isOn: $instructionsUnderstood)
                     }
                 }
 
@@ -151,8 +146,7 @@ struct SFSTView: View {
                                 "Instruct the subject to keep their head still and follow the stimulus with their eyes only.",
                                 "Check lack of smooth pursuit in each eye.",
                                 "Check distinct and sustained nystagmus at maximum deviation.",
-                                "Check onset of nystagmus prior to 45 degrees.",
-                                "Document any medical issues, head injury, or eye conditions."
+                                "Check onset of nystagmus prior to 45 degrees."
                             ]
                         )
 
@@ -202,7 +196,7 @@ struct SFSTView: View {
                         ToggleRow(title: "Steps Off Line", isOn: $watStepsOffLine)
                         ToggleRow(title: "Uses Arms", isOn: $watUsesArms)
                         ToggleRow(title: "Improper Turn", isOn: $watImproperTurn)
-                        ToggleRow(title: "Wrong Steps", isOn: $watWrongNumberOfSteps)
+                        ToggleRow(title: "Wrong Number of Steps", isOn: $watWrongNumberOfSteps)
 
                         SummaryCard(title: "WAT Clues", value: "\(totalWATClues)/8")
                     }
@@ -225,26 +219,16 @@ struct SFSTView: View {
                         ToggleRow(title: "Sways", isOn: $olsSways)
                         ToggleRow(title: "Uses Arms", isOn: $olsUsesArms)
                         ToggleRow(title: "Hops", isOn: $olsHops)
-                        ToggleRow(title: "Foot Down", isOn: $olsPutsFootDown)
+                        ToggleRow(title: "Puts Foot Down", isOn: $olsPutsFootDown)
 
                         SummaryCard(title: "OLS Clues", value: "\(totalOLSClues)/4")
                     }
                 }
 
-                sectionCard(title: "Officer Notes", systemImage: "note.text") {
-                    StyledTextEditor(
-                        title: "Notes",
-                        text: $officerNotes,
-                        minHeight: 130,
-                        focusedField: $focusedField,
-                        field: .officerNotes
-                    )
-                }
-
-                Button(action: generateReport) {
+                Button(action: generateReportToApp) {
                     HStack {
-                        Image(systemName: "doc.text.fill")
-                        Text("Generate Report")
+                        Image(systemName: "internaldrive.fill")
+                        Text("Save Report to App")
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity)
@@ -286,27 +270,65 @@ struct SFSTView: View {
         .sheet(isPresented: $showImpliedConsent) {
             IndianaImpliedConsentView()
         }
-        .sheet(isPresented: $showShareSheet) {
-            ShareSheet(activityItems: [generatedReport])
+        .sheet(isPresented: $showSavedReports) {
+            SavedReportsView(savedReports: $savedReports)
         }
     }
 
-    private func generateReport() {
+    private var topActionRow: some View {
+        VStack(spacing: 12) {
+            Button {
+                dismissKeyboard()
+                showImpliedConsent = true
+            } label: {
+                rowCard(
+                    title: "Indiana Implied Consent",
+                    subtitle: "Open advisory card",
+                    systemImage: "doc.text.fill"
+                )
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                dismissKeyboard()
+                showSavedReports = true
+            } label: {
+                rowCard(
+                    title: "Saved Reports",
+                    subtitle: "\(savedReports.count) report\(savedReports.count == 1 ? "" : "s") in app",
+                    systemImage: "folder.fill"
+                )
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func generateReportToApp() {
         dismissKeyboard()
 
-        generatedReport = """
+        let reportBody = """
         SFST REPORT
 
-        Subject: \(subjectName)
+        Subject: \(subjectName.isEmpty ? "N/A" : subjectName)
         Date: \(incidentDate.formatted(date: .abbreviated, time: .omitted))
         Time: \(incidentTime.formatted(date: .omitted, time: .shortened))
-        Location: \(location)
+        Location: \(location.isEmpty ? "N/A" : location)
 
         SCENE CONDITIONS
         Road Surface: \(roadSurface)
         Lighting: \(lighting)
         Weather: \(weather)
         Footwear: \(footwear)
+
+        MEDICAL / READINESS
+        Subject Denies Medical Issues: \(yesNo(subjectDeniesMedicalIssues))
+        Subject Admits Medical Issues: \(yesNo(subjectAdmitsMedicalIssues))
+        Head Injury Indicated: \(yesNo(headInjuryIndicated))
+        Eye Condition Indicated: \(yesNo(eyeConditionIndicated))
+        Leg / Back Problem Indicated: \(yesNo(legOrBackProblemIndicated))
+        Subject Wears Contacts: \(yesNo(subjectWearsContacts))
+        Subject Wears Glasses: \(yesNo(subjectWearsGlasses))
+        Instructions Understood: \(yesNo(instructionsUnderstood))
 
         HGN PRE-TEST
         Resting Nystagmus: \(yesNo(hgnRestingNystagmusObserved))
@@ -337,20 +359,20 @@ struct SFSTView: View {
         Sways: \(yesNo(olsSways))
         Uses Arms: \(yesNo(olsUsesArms))
         Hops: \(yesNo(olsHops))
-        Foot Down: \(yesNo(olsPutsFootDown))
+        Puts Foot Down: \(yesNo(olsPutsFootDown))
         Total OLS Clues: \(totalOLSClues)/4
-
-        Medical Conditions:
-        \(medicalConditions)
-
-        Subject Statements:
-        \(subjectStatements)
-
-        Officer Notes:
-        \(officerNotes)
         """
 
-        showShareSheet = true
+        let reportTitle = subjectName.isEmpty ? "Unnamed Subject" : subjectName
+
+        let newReport = SFSTSavedReport(
+            title: reportTitle,
+            dateCreated: Date(),
+            reportText: reportBody
+        )
+
+        savedReports.insert(newReport, at: 0)
+        showSavedReports = true
     }
 
     private func yesNo(_ value: Bool) -> String {
@@ -417,7 +439,7 @@ struct SFSTView: View {
             Image(systemName: systemImage)
                 .foregroundColor(.blue)
 
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .foregroundColor(.white)
 
@@ -434,6 +456,128 @@ struct SFSTView: View {
         .padding()
         .background(Color.white.opacity(0.05))
         .cornerRadius(16)
+    }
+}
+
+struct SFSTSavedReport: Identifiable, Codable, Equatable {
+    let id = UUID()
+    let title: String
+    let dateCreated: Date
+    let reportText: String
+}
+
+struct SavedReportsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var savedReports: [SFSTSavedReport]
+    @State private var selectedReport: SFSTSavedReport?
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if savedReports.isEmpty {
+                    VStack(spacing: 14) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 42))
+                            .foregroundColor(.blue)
+
+                        Text("No Saved Reports")
+                            .font(.headline)
+                            .foregroundColor(.white)
+
+                        Text("Generated SFST reports will appear here.")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
+                    .padding()
+                } else {
+                    List {
+                        ForEach(savedReports) { report in
+                            Button {
+                                selectedReport = report
+                            } label: {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(report.title)
+                                        .foregroundColor(.white)
+                                        .font(.headline)
+
+                                    Text(report.dateCreated.formatted(date: .abbreviated, time: .shortened))
+                                        .foregroundColor(.gray)
+                                        .font(.caption)
+                                }
+                                .padding(.vertical, 6)
+                            }
+                            .listRowBackground(Color.white.opacity(0.05))
+                        }
+                        .onDelete { indexSet in
+                            savedReports.remove(atOffsets: indexSet)
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                }
+            }
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 3/255, green: 8/255, blue: 18/255),
+                        Color(red: 7/255, green: 16/255, blue: 30/255),
+                        Color(red: 12/255, green: 24/255, blue: 42/255)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            )
+            .navigationTitle("Saved Reports")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .sheet(item: $selectedReport) { report in
+                SavedReportDetailView(report: report)
+            }
+        }
+    }
+}
+
+struct SavedReportDetailView: View {
+    @Environment(\.dismiss) private var dismiss
+    let report: SFSTSavedReport
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text(report.reportText)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+            }
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 3/255, green: 8/255, blue: 18/255),
+                        Color(red: 7/255, green: 16/255, blue: 30/255),
+                        Color(red: 12/255, green: 24/255, blue: 42/255)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            )
+            .navigationTitle(report.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -538,31 +682,6 @@ struct ToggleRow: View {
     }
 }
 
-struct StyledTextEditor: View {
-    let title: String
-    @Binding var text: String
-    let minHeight: CGFloat
-    var focusedField: FocusState<SFSTView.ActiveField?>.Binding
-    let field: SFSTView.ActiveField
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.gray)
-
-            TextEditor(text: $text)
-                .frame(minHeight: minHeight)
-                .padding(8)
-                .background(Color.white.opacity(0.05))
-                .cornerRadius(10)
-                .foregroundColor(.white)
-                .scrollContentBackground(.hidden)
-                .focused(focusedField, equals: field)
-        }
-    }
-}
-
 struct SummaryCard: View {
     let title: String
     let value: String
@@ -656,14 +775,4 @@ Verify agency-approved wording before field use.
             }
         }
     }
-}
-
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) { }
 }
