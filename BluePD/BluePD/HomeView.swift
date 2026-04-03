@@ -5,6 +5,8 @@ struct HomeView: View {
     @AppStorage("agencyName") private var agencyName: String = ""
     @AppStorage("officerUnit") private var officerUnit: String = ""
 
+    @State private var savedReports: [SavedSFSTReport] = []
+
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
@@ -101,7 +103,7 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
 
-                NavigationLink(destination: SFSTView()) {
+                NavigationLink(destination: SFSTView(savedReports: $savedReports)) {
                     primaryActionRow(
                         title: "SFST Report",
                         subtitle: "Start, review, or complete a report",
@@ -110,10 +112,10 @@ struct HomeView: View {
                 }
                 .buttonStyle(.plain)
 
-                NavigationLink(destination: PastReportsView()) {
+                NavigationLink(destination: SavedReportsView(savedReports: $savedReports)) {
                     primaryActionRow(
                         title: "Past Reports",
-                        subtitle: "Review previously generated reports",
+                        subtitle: "Review previously saved SFST reports",
                         systemImage: "doc.text.fill"
                     )
                 }
