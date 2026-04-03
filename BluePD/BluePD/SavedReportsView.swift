@@ -22,10 +22,48 @@ struct SavedReportsView: View {
                     .ignoresSafeArea()
 
                 if savedReports.isEmpty {
-                    emptyStateView
-                        .padding()
+                    VStack(spacing: 14) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 42))
+                            .foregroundColor(.blue)
+
+                        Text("No Saved Reports")
+                            .font(.headline)
+                            .foregroundColor(.white)
+
+                        Text("Generated SFST reports will appear here.")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
                 } else {
-                    reportsListView
+                    List {
+                        ForEach(savedReports) { report in
+                            Button {
+                                selectedReport = report
+                            } label: {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(report.subjectName.isEmpty ? "Unnamed Subject" : report.subjectName)
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+
+                                    Text(report.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                .padding(.vertical, 6)
+                            }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.white.opacity(0.05))
+                        }
+                        .onDelete { offsets in
+                            savedReports.remove(atOffsets: offsets)
+                        }
+                    }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
                 }
             }
             .navigationTitle("Saved Reports")
@@ -42,54 +80,6 @@ struct SavedReportsView: View {
                 SavedReportDetailView(report: report)
             }
         }
-    }
-
-    private var emptyStateView: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 42))
-                .foregroundColor(.blue)
-
-            Text("No Saved Reports")
-                .font(.headline)
-                .foregroundColor(.white)
-
-            Text("Generated SFST reports will appear here.")
-                .font(.subheadline)
-                .foregroundColor(.gray)
-                .multilineTextAlignment(.center)
-        }
-    }
-
-    private var reportsListView: some View {
-        List {
-            ForEach(savedReports) { report in
-                Button {
-                    selectedReport = report
-                } label: {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(report.subjectName.isEmpty ? "Unnamed Subject" : report.subjectName)
-                            .font(.headline)
-                            .foregroundColor(.white)
-
-                        Text(report.createdAt.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                    }
-                    .padding(.vertical, 6)
-                }
-                .buttonStyle(.plain)
-                .listRowBackground(Color.white.opacity(0.05))
-            }
-            .onDelete(perform: deleteReports)
-        }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(Color.clear)
-    }
-
-    private func deleteReports(at offsets: IndexSet) {
-        savedReports.remove(atOffsets: offsets)
     }
 }
 
