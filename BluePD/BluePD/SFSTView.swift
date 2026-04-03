@@ -12,7 +12,6 @@ struct SFSTView: View {
     @State private var weather = "Clear"
     @State private var footwear = "Tennis Shoes"
 
-    // Medical / subject condition quick selections
     @State private var subjectDeniesMedicalIssues = false
     @State private var subjectAdmitsMedicalIssues = false
     @State private var headInjuryIndicated = false
@@ -52,7 +51,7 @@ struct SFSTView: View {
 
     @State private var showImpliedConsent = false
     @State private var showSavedReports = false
-    @State private var savedReports: [SFSTSavedReport] = []
+    @State private var savedReports: [SavedSFSTReport] = []
 
     @FocusState private var focusedField: ActiveField?
 
@@ -363,11 +362,8 @@ struct SFSTView: View {
         Total OLS Clues: \(totalOLSClues)/4
         """
 
-        let reportTitle = subjectName.isEmpty ? "Unnamed Subject" : subjectName
-
-        let newReport = SFSTSavedReport(
-            title: reportTitle,
-            dateCreated: Date(),
+        let newReport = SavedSFSTReport(
+            subjectName: subjectName.isEmpty ? "Unnamed Subject" : subjectName,
             reportText: reportBody
         )
 
@@ -456,128 +452,6 @@ struct SFSTView: View {
         .padding()
         .background(Color.white.opacity(0.05))
         .cornerRadius(16)
-    }
-}
-
-struct SFSTSavedReport: Identifiable, Codable, Equatable {
-    let id = UUID()
-    let title: String
-    let dateCreated: Date
-    let reportText: String
-}
-
-struct SavedReportsView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Binding var savedReports: [SFSTSavedReport]
-    @State private var selectedReport: SFSTSavedReport?
-
-    var body: some View {
-        NavigationStack {
-            Group {
-                if savedReports.isEmpty {
-                    VStack(spacing: 14) {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.system(size: 42))
-                            .foregroundColor(.blue)
-
-                        Text("No Saved Reports")
-                            .font(.headline)
-                            .foregroundColor(.white)
-
-                        Text("Generated SFST reports will appear here.")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    .padding()
-                } else {
-                    List {
-                        ForEach(savedReports) { report in
-                            Button {
-                                selectedReport = report
-                            } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(report.title)
-                                        .foregroundColor(.white)
-                                        .font(.headline)
-
-                                    Text(report.dateCreated.formatted(date: .abbreviated, time: .shortened))
-                                        .foregroundColor(.gray)
-                                        .font(.caption)
-                                }
-                                .padding(.vertical, 6)
-                            }
-                            .listRowBackground(Color.white.opacity(0.05))
-                        }
-                        .onDelete { indexSet in
-                            savedReports.remove(atOffsets: indexSet)
-                        }
-                    }
-                    .scrollContentBackground(.hidden)
-                    .background(Color.clear)
-                }
-            }
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color(red: 3/255, green: 8/255, blue: 18/255),
-                        Color(red: 7/255, green: 16/255, blue: 30/255),
-                        Color(red: 12/255, green: 24/255, blue: 42/255)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-            )
-            .navigationTitle("Saved Reports")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-            .sheet(item: $selectedReport) { report in
-                SavedReportDetailView(report: report)
-            }
-        }
-    }
-}
-
-struct SavedReportDetailView: View {
-    @Environment(\.dismiss) private var dismiss
-    let report: SFSTSavedReport
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                Text(report.reportText)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-            }
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color(red: 3/255, green: 8/255, blue: 18/255),
-                        Color(red: 7/255, green: 16/255, blue: 30/255),
-                        Color(red: 12/255, green: 24/255, blue: 42/255)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-            )
-            .navigationTitle(report.title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
     }
 }
 
