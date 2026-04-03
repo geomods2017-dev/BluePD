@@ -1,3 +1,4 @@
+import SwiftUI
 struct SavedReportsView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var savedReports: [SavedSFSTReport]
