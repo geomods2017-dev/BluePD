@@ -604,3 +604,51 @@ struct InstructionCard: View {
         .cornerRadius(12)
     }
 }
+
+struct IndianaImpliedConsentView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+
+                    Text("Indiana Implied Consent")
+                        .font(.title2.bold())
+                        .foregroundColor(.white)
+
+                    Text("""
+Indiana law requires submission to a certified chemical test when an officer has probable cause to believe a person operated a vehicle while intoxicated.
+
+Refusal may result in license suspension and other legal consequences.
+
+Verify agency-approved wording before field use.
+""")
+                    .foregroundColor(.white)
+                }
+                .padding()
+            }
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 3/255, green: 8/255, blue: 18/255),
+                        Color(red: 7/255, green: 16/255, blue: 30/255),
+                        Color(red: 12/255, green: 24/255, blue: 42/255)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            )
+            .navigationTitle("Implied Consent")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
