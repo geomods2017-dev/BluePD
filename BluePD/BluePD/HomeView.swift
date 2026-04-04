@@ -24,48 +24,28 @@ struct HomeView: View {
             .padding(.top, 14)
             .padding(.bottom, 32)
         }
-        .background(backgroundGradient.ignoresSafeArea())
+        .background(BluePDTheme.appBackground.ignoresSafeArea())
         .navigationTitle("BluePD")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var backgroundGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 2/255, green: 7/255, blue: 18/255),
-                Color(red: 7/255, green: 17/255, blue: 31/255),
-                Color(red: 10/255, green: 24/255, blue: 44/255)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
     }
 
     private var commandHeader: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.blue.opacity(0.12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.blue.opacity(0.25), lineWidth: 1)
-                        )
-
-                    Image(systemName: "shield.checkered")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(BluePDPalette.accent)
-                }
-                .frame(width: 56, height: 56)
+                BluePDIconContainer(
+                    systemImage: "shield.checkered",
+                    size: 56,
+                    iconSize: 22
+                )
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("BluePD")
                         .font(.title2.weight(.bold))
-                        .foregroundStyle(BluePDPalette.primaryText)
+                        .foregroundStyle(BluePDTheme.primaryText)
 
                     Text("Field-ready law enforcement tools")
                         .font(.subheadline)
-                        .foregroundStyle(BluePDPalette.secondaryText)
+                        .foregroundStyle(BluePDTheme.secondaryText)
                 }
 
                 Spacer()
@@ -75,11 +55,11 @@ struct HomeView: View {
                 Text("ON DUTY")
                     .font(.caption.weight(.bold))
                     .kerning(1.2)
-                    .foregroundStyle(BluePDPalette.accent)
+                    .foregroundStyle(BluePDTheme.accent)
 
                 Text(greetingLine)
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(BluePDPalette.primaryText.opacity(0.92))
+                    .foregroundStyle(BluePDTheme.primaryText.opacity(0.92))
             }
         }
         .padding(20)
@@ -213,12 +193,12 @@ struct HomeView: View {
     private func sectionHeader(_ title: String) -> some View {
         HStack(spacing: 10) {
             RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(BluePDPalette.accent)
+                .fill(BluePDTheme.accent)
                 .frame(width: 5, height: 24)
 
             Text(title)
                 .font(.title2.weight(.bold))
-                .foregroundStyle(BluePDPalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Spacer()
         }
@@ -227,16 +207,20 @@ struct HomeView: View {
 
     private func primaryActionRow(title: String, subtitle: String, systemImage: String) -> some View {
         HStack(spacing: 14) {
-            iconContainer(systemImage: systemImage, size: 46, iconSize: 18)
+            BluePDIconContainer(
+                systemImage: systemImage,
+                size: 46,
+                iconSize: 18
+            )
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(title)
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(BluePDPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(BluePDPalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -245,7 +229,7 @@ struct HomeView: View {
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(BluePDPalette.tertiaryText)
+                .foregroundStyle(BluePDTheme.tertiaryText)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 15)
@@ -254,16 +238,20 @@ struct HomeView: View {
 
     private func compactToolRow(title: String, subtitle: String, systemImage: String) -> some View {
         HStack(spacing: 14) {
-            iconContainer(systemImage: systemImage, size: 50, iconSize: 20)
+            BluePDIconContainer(
+                systemImage: systemImage,
+                size: 50,
+                iconSize: 20
+            )
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(title)
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(BluePDPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(BluePDPalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -276,112 +264,25 @@ struct HomeView: View {
 
     private func compactStatCard(title: String, subtitle: String, systemImage: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            iconContainer(systemImage: systemImage, size: 44, iconSize: 17)
+            BluePDIconContainer(
+                systemImage: systemImage,
+                size: 44,
+                iconSize: 17
+            )
 
             Text(title)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(BluePDPalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
                 .lineLimit(2)
                 .minimumScaleFactor(0.80)
 
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundStyle(BluePDPalette.secondaryText)
+                .foregroundStyle(BluePDTheme.secondaryText)
         }
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
         .bluePDInnerCard(cornerRadius: 22)
-    }
-
-    private func iconContainer(systemImage: String, size: CGFloat, iconSize: CGFloat) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.blue.opacity(0.10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.blue.opacity(0.22), lineWidth: 1)
-                )
-
-            Image(systemName: systemImage)
-                .font(.system(size: iconSize, weight: .semibold))
-                .foregroundStyle(BluePDPalette.accent)
-        }
-        .frame(width: size, height: size)
-    }
-}
-
-private enum BluePDPalette {
-    static let primaryText = Color.white
-    static let secondaryText = Color.white.opacity(0.74)
-    static let tertiaryText = Color.white.opacity(0.38)
-    static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
-}
-
-private struct BluePDCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.070),
-                                Color.white.opacity(0.032)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
-    }
-}
-
-private struct BluePDInnerCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.050),
-                                Color.white.opacity(0.028)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.065), lineWidth: 1)
-            )
-    }
-}
-
-private extension View {
-    func bluePDCard(cornerRadius: CGFloat = 24) -> some View {
-        modifier(BluePDCardModifier(cornerRadius: cornerRadius))
-    }
-
-    func bluePDInnerCard(cornerRadius: CGFloat = 20) -> some View {
-        modifier(BluePDInnerCardModifier(cornerRadius: cornerRadius))
-    }
-}
-
-private extension String {
-    func trimmedOrFallback(_ fallback: String) -> String {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? fallback : trimmed
     }
 }
 
