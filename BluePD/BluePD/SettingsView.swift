@@ -11,8 +11,9 @@ struct SettingsView: View {
     @AppStorage("defaultState") private var defaultState: String = "Indiana"
     @AppStorage("autoFillOfficerInfo") private var autoFillOfficerInfo: Bool = true
     @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
-    @AppStorage("useFaceID") private var useFaceID: Bool = true
-    @AppStorage("savedPIN") private var savedPIN: String = "1234"
+    @AppStorage("useBiometrics") private var useBiometrics: Bool = true
+    @AppStorage("savedPIN") private var savedPIN: String = ""
+    @AppStorage("hasCreatedPIN") private var hasCreatedPIN: Bool = false
     @AppStorage("isLoggedIn") private var isLoggedIn: Bool = false
 
     @State private var currentPIN: String = ""
@@ -27,6 +28,10 @@ struct SettingsView: View {
         "Indiana", "Illinois", "Michigan", "Ohio", "Kentucky",
         "Tennessee", "Florida", "Texas", "California", "New York"
     ]
+
+    private var hasValidPIN: Bool {
+        hasCreatedPIN && !savedPIN.isEmpty
+    }
 
     var body: some View {
         ScrollView {
@@ -164,25 +169,50 @@ struct SettingsView: View {
                     VStack(spacing: 12) {
                         settingsToggleRow(
                             title: "Enable Face ID",
-                            subtitle: "Use biometrics to unlock",
+                            subtitle: hasValidPIN ? "Use biometrics to unlock" : "Create a PIN first to enable Face ID",
                             systemImage: "faceid",
-                            isOn: $useFaceID
+                            isOn: $useBiometrics
                         )
-
-                        SecureSettingsField(title: "Current PIN", text: $currentPIN, systemImage: "key.fill")
-                        SecureSettingsField(title: "New PIN", text: $newPIN, systemImage: "lock.fill")
-                        SecureSettingsField(title: "Confirm PIN", text: $confirmNewPIN, systemImage: "checkmark.shield.fill")
-
-                        Button("Change PIN") {
-                            changePIN()
+                        .onChange(of: useBiometrics) { _, newValue in
+                            if newValue && !hasValidPIN {
+                                useBiometrics = false
+                                securityMessage = "Create a PIN before enabling Face ID."
+                                showSecurityMessage = true
+                            }
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(Color.blue)
-                        )
-                        .foregroundColor(.white)
+
+                        if hasValidPIN {
+                            SecureSettingsField(title: "Current PIN", text: $currentPIN, systemImage: "key.fill")
+                            SecureSettingsField(title: "New PIN", text: $newPIN, systemImage: "lock.fill")
+                            SecureSettingsField(title: "Confirm PIN", text: $confirmNewPIN, systemImage: "checkmark.shield.fill")
+
+                            Button("Change PIN") {
+                                changePIN()
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.blue)
+                            )
+                            .foregroundColor(.white)
+                        } else {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("No PIN Created")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+
+                                Text("A passcode has not been created yet. The app will require passcode setup on the next login.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.white.opacity(0.05))
+                            )
+                        }
 
                         if showSecurityMessage {
                             Text(securityMessage)
@@ -306,21 +336,50 @@ struct SettingsView: View {
     }
 
     private func changePIN() {
-        if currentPIN != savedPIN {
-            securityMessage = "Incorrect PIN."
-        } else if newPIN.isEmpty || confirmNewPIN.isEmpty {
-            securityMessage = "Enter and confirm a new PIN."
-        } else if newPIN != confirmNewPIN {
-            securityMessage = "PIN mismatch."
-        } else {
-            savedPIN = newPIN
-            securityMessage = "PIN updated."
-            currentPIN = ""
-            newPIN = ""
-            confirmNewPIN = ""
+        showSecurityMessage = true
+
+        let trimmedCurrentPIN = currentPIN.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNewPIN = newPIN.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedConfirmPIN = confirmNewPIN.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard hasValidPIN else {
+            securityMessage = "No existing PIN found."
+            return
         }
 
-        showSecurityMessage = true
+        guard trimmedCurrentPIN == savedPIN else {
+            securityMessage = "Incorrect current PIN."
+            currentPIN = ""
+            return
+        }
+
+        guard trimmedNewPIN.count == 4, trimmedNewPIN.allSatisfy(\.isNumber) else {
+            securityMessage = "New PIN must be exactly 4 digits."
+            newPIN = ""
+            confirmNewPIN = ""
+            return
+        }
+
+        guard trimmedNewPIN == trimmedConfirmPIN else {
+            securityMessage = "PIN mismatch."
+            newPIN = ""
+            confirmNewPIN = ""
+            return
+        }
+
+        guard trimmedNewPIN != savedPIN else {
+            securityMessage = "New PIN must be different from current PIN."
+            newPIN = ""
+            confirmNewPIN = ""
+            return
+        }
+
+        savedPIN = trimmedNewPIN
+        hasCreatedPIN = true
+        securityMessage = "PIN updated."
+        currentPIN = ""
+        newPIN = ""
+        confirmNewPIN = ""
     }
 }
 
