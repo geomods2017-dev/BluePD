@@ -191,7 +191,7 @@ struct SFSTView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Eye Selection")
                                 .font(.caption.weight(.medium))
-                                .foregroundStyle(SFSTPalette.secondaryText)
+                                .foregroundStyle(BluePDTheme.secondaryText)
 
                             Picker("Eye", selection: $selectedEye) {
                                 Text("Left").tag("Left")
@@ -281,7 +281,7 @@ struct SFSTView: View {
             .padding(.bottom, 32)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(backgroundGradient.ignoresSafeArea())
+        .background(BluePDTheme.appBackground.ignoresSafeArea())
         .navigationTitle("SFST Report")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -314,31 +314,19 @@ struct SFSTView: View {
         }
     }
 
-    private var backgroundGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 2/255, green: 7/255, blue: 18/255),
-                Color(red: 7/255, green: 17/255, blue: 31/255),
-                Color(red: 10/255, green: 24/255, blue: 44/255)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
     private var topHeader: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 14) {
-                sfstIconContainer(systemImage: "checkmark.shield.fill", size: 56, iconSize: 22)
+                BluePDIconContainer(systemImage: "checkmark.shield.fill", size: 56, iconSize: 22)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("SFST Report Builder")
                         .font(.title2.weight(.bold))
-                        .foregroundStyle(SFSTPalette.primaryText)
+                        .foregroundStyle(BluePDTheme.primaryText)
 
                     Text("Document subject details, field conditions, and standardized test clues.")
                         .font(.subheadline)
-                        .foregroundStyle(SFSTPalette.secondaryText)
+                        .foregroundStyle(BluePDTheme.secondaryText)
                 }
 
                 Spacer()
@@ -346,7 +334,7 @@ struct SFSTView: View {
 
             Text(reportUsageText)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(storeManager.isPro ? Color.green : SFSTPalette.primaryText.opacity(0.92))
+                .foregroundStyle(storeManager.isPro ? BluePDTheme.success : BluePDTheme.primaryText.opacity(0.92))
         }
         .padding(20)
         .bluePDCard(cornerRadius: 24)
@@ -402,14 +390,14 @@ struct SFSTView: View {
                 Text("Free report limit reached. Upgrade to BluePD Pro for unlimited saved reports.")
                     .font(.caption)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(Color.orange.opacity(0.95))
+                    .foregroundStyle(BluePDTheme.warning.opacity(0.95))
             }
 
             if !saveStatusMessage.isEmpty {
                 Text(saveStatusMessage)
                     .font(.caption)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(SFSTPalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
             }
         }
     }
@@ -576,11 +564,11 @@ struct SFSTView: View {
             HStack(spacing: 10) {
                 Image(systemName: systemImage)
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(SFSTPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
 
                 Text(title)
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(SFSTPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
             }
 
             content()
@@ -591,42 +579,26 @@ struct SFSTView: View {
 
     private func rowCard(title: String, subtitle: String, systemImage: String) -> some View {
         HStack(spacing: 14) {
-            sfstIconContainer(systemImage: systemImage, size: 46, iconSize: 18)
+            BluePDIconContainer(systemImage: systemImage, size: 46, iconSize: 18)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(SFSTPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(SFSTPalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(SFSTPalette.tertiaryText)
+                .foregroundStyle(BluePDTheme.tertiaryText)
         }
         .padding(16)
         .bluePDInnerCard(cornerRadius: 20)
-    }
-
-    private func sfstIconContainer(systemImage: String, size: CGFloat, iconSize: CGFloat) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.blue.opacity(0.10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.blue.opacity(0.22), lineWidth: 1)
-                )
-
-            Image(systemName: systemImage)
-                .font(.system(size: iconSize, weight: .semibold))
-                .foregroundStyle(SFSTPalette.accent)
-        }
-        .frame(width: size, height: size)
     }
 }
 
@@ -640,12 +612,12 @@ struct StyledTextField: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(SFSTPalette.secondaryText)
+                .foregroundStyle(BluePDTheme.secondaryText)
 
             TextField(
                 "",
                 text: $text,
-                prompt: Text(title).foregroundStyle(SFSTPalette.placeholderText)
+                prompt: Text(title).foregroundStyle(BluePDTheme.placeholderText)
             )
             .padding(.horizontal, 16)
             .frame(height: 58)
@@ -657,7 +629,7 @@ struct StyledTextField: View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(Color.white.opacity(0.06), lineWidth: 1)
             )
-            .foregroundStyle(SFSTPalette.primaryText)
+            .foregroundStyle(BluePDTheme.primaryText)
             .focused(focusedField, equals: field)
             .submitLabel(.done)
             .autocorrectionDisabled()
@@ -674,7 +646,7 @@ struct StyledDateField: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(SFSTPalette.secondaryText)
+                .foregroundStyle(BluePDTheme.secondaryText)
 
             DatePicker(
                 "",
@@ -706,7 +678,7 @@ struct DropdownField: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(SFSTPalette.secondaryText)
+                .foregroundStyle(BluePDTheme.secondaryText)
 
             Menu {
                 ForEach(options, id: \.self) { option in
@@ -717,12 +689,12 @@ struct DropdownField: View {
             } label: {
                 HStack {
                     Text(selection)
-                        .foregroundStyle(SFSTPalette.primaryText)
+                        .foregroundStyle(BluePDTheme.primaryText)
 
                     Spacer()
 
                     Image(systemName: "chevron.down")
-                        .foregroundStyle(SFSTPalette.tertiaryText)
+                        .foregroundStyle(BluePDTheme.tertiaryText)
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 58)
@@ -748,27 +720,11 @@ struct ToggleRow: View {
         Toggle(isOn: $isOn) {
             Text(title)
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(SFSTPalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
         }
-        .tint(.blue)
+        .tint(BluePDTheme.accent)
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.050),
-                            Color.white.opacity(0.028)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.065), lineWidth: 1)
-        )
+        .bluePDInnerCard(cornerRadius: 18)
     }
 }
 
@@ -780,13 +736,13 @@ struct SummaryCard: View {
         HStack {
             Text(title)
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(SFSTPalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Spacer()
 
             Text(value)
                 .font(.headline.weight(.bold))
-                .foregroundStyle(SFSTPalette.accent)
+                .foregroundStyle(BluePDTheme.accent)
         }
         .padding(16)
         .background(
@@ -808,18 +764,18 @@ struct InstructionCard: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(SFSTPalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             ForEach(lines, id: \.self) { line in
                 HStack(alignment: .top, spacing: 10) {
                     Circle()
-                        .fill(SFSTPalette.accent)
+                        .fill(BluePDTheme.accent)
                         .frame(width: 6, height: 6)
                         .padding(.top, 7)
 
                     Text(line)
                         .font(.subheadline)
-                        .foregroundStyle(SFSTPalette.primaryText.opacity(0.88))
+                        .foregroundStyle(BluePDTheme.primaryText.opacity(0.88))
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -865,11 +821,11 @@ struct HGNTimingCard: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(SFSTPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(SFSTPalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -910,11 +866,11 @@ WILL YOU NOW TAKE A CHEMICAL TEST?
                     VStack(spacing: 8) {
                         Text("Indiana Implied Consent")
                             .font(.title2.bold())
-                            .foregroundStyle(.white)
+                            .foregroundStyle(BluePDTheme.primaryText)
 
                         Text(showingFront ? "Standard OWI advisory" : "Serious bodily injury / fatal crash advisory")
                             .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.72))
+                            .foregroundStyle(BluePDTheme.secondaryText)
                     }
 
                     ZStack {
@@ -950,25 +906,14 @@ WILL YOU NOW TAKE A CHEMICAL TEST?
 
                     Text("Verify agency-approved wording before operational use.")
                         .font(.footnote)
-                        .foregroundStyle(.white.opacity(0.62))
+                        .foregroundStyle(BluePDTheme.secondaryText)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 18)
                 .padding(.bottom, 32)
             }
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color(red: 2/255, green: 7/255, blue: 18/255),
-                        Color(red: 7/255, green: 17/255, blue: 31/255),
-                        Color(red: 10/255, green: 24/255, blue: 44/255)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-            )
+            .background(BluePDTheme.appBackground.ignoresSafeArea())
             .navigationTitle("Implied Consent")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1027,114 +972,5 @@ struct ImpliedConsentCard: View {
                 )
         )
         .shadow(color: .black.opacity(0.25), radius: 14, x: 0, y: 8)
-    }
-}
-
-private enum SFSTPalette {
-    static let primaryText = Color.white
-    static let secondaryText = Color.white.opacity(0.74)
-    static let tertiaryText = Color.white.opacity(0.38)
-    static let placeholderText = Color.white.opacity(0.34)
-    static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
-}
-
-private struct BluePDCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.070),
-                                Color.white.opacity(0.032)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
-    }
-}
-
-private struct BluePDInnerCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.050),
-                                Color.white.opacity(0.028)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.065), lineWidth: 1)
-            )
-    }
-}
-
-private extension View {
-    func bluePDCard(cornerRadius: CGFloat = 24) -> some View {
-        modifier(BluePDCardModifier(cornerRadius: cornerRadius))
-    }
-
-    func bluePDInnerCard(cornerRadius: CGFloat = 20) -> some View {
-        modifier(BluePDInnerCardModifier(cornerRadius: cornerRadius))
-    }
-}
-
-private struct BluePDPrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline.weight(.semibold))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 58)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.08, green: 0.56, blue: 0.98),
-                                Color(red: 0.05, green: 0.42, blue: 0.92)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
-            .shadow(color: Color.blue.opacity(0.18), radius: 12, x: 0, y: 8)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
-    }
-}
-
-private struct BluePDDisabledButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline.weight(.semibold))
-            .foregroundStyle(.white.opacity(0.82))
-            .frame(maxWidth: .infinity)
-            .frame(height: 58)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white.opacity(0.10))
-            )
     }
 }
