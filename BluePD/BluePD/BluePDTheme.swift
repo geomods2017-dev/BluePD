@@ -10,15 +10,16 @@ enum BluePDTheme {
     static let tertiaryText = Color.white.opacity(0.38)
     static let placeholderText = Color.white.opacity(0.34)
 
+    static let cardFill = Color.white.opacity(0.05)
+    static let cardStroke = Color.white.opacity(0.07)
+    static let innerCardStroke = Color.white.opacity(0.065)
+
     static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
     static let accentSoft = accent.opacity(0.12)
 
     static let success = Color.green
     static let warning = Color.orange
     static let danger = Color.red
-
-    static let cardStroke = Color.white.opacity(0.07)
-    static let innerCardStroke = Color.white.opacity(0.065)
 
     static var appBackground: LinearGradient {
         LinearGradient(
