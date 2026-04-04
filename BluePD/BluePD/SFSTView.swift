@@ -85,12 +85,13 @@ struct SFSTView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 22) {
+                topHeader
                 topActionRow
 
                 sectionCard(title: "Subject & Incident", systemImage: "person.text.rectangle.fill") {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 14) {
                         StyledTextField(
                             title: "Subject Name",
                             text: $subjectName,
@@ -98,7 +99,7 @@ struct SFSTView: View {
                             field: .subjectName
                         )
 
-                        HStack(spacing: 12) {
+                        HStack(spacing: 14) {
                             StyledDateField(
                                 title: "Date",
                                 selection: $incidentDate,
@@ -122,7 +123,7 @@ struct SFSTView: View {
                 }
 
                 sectionCard(title: "Scene Conditions", systemImage: "car.fill") {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 14) {
                         DropdownField(title: "Road Surface", selection: $roadSurface, options: roadOptions)
                         DropdownField(title: "Lighting", selection: $lighting, options: lightingOptions)
                         DropdownField(title: "Weather", selection: $weather, options: weatherOptions)
@@ -131,7 +132,7 @@ struct SFSTView: View {
                 }
 
                 sectionCard(title: "Medical / Readiness", systemImage: "cross.case.fill") {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         InstructionCard(
                             title: "Pre-Test Reminders",
                             lines: [
@@ -153,7 +154,7 @@ struct SFSTView: View {
                 }
 
                 sectionCard(title: "HGN", systemImage: "eye.fill") {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 14) {
                         InstructionCard(
                             title: "Officer Setup",
                             lines: [
@@ -187,14 +188,26 @@ struct SFSTView: View {
                         ToggleRow(title: "Equal Tracking", isOn: $hgnEqualTrackingConfirmed)
                         ToggleRow(title: "Equal Pupil Size", isOn: $hgnEqualPupilSizeConfirmed)
 
-                        Picker("Eye", selection: $selectedEye) {
-                            Text("Left").tag("Left")
-                            Text("Right").tag("Right")
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Eye Selection")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(SFSTPalette.secondaryText)
+
+                            Picker("Eye", selection: $selectedEye) {
+                                Text("Left").tag("Left")
+                                Text("Right").tag("Right")
+                            }
+                            .pickerStyle(.segmented)
+                            .padding(6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .fill(Color.white.opacity(0.05))
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                            )
                         }
-                        .pickerStyle(.segmented)
-                        .padding(6)
-                        .background(Color.white.opacity(0.05))
-                        .cornerRadius(12)
 
                         if selectedEye == "Left" {
                             ToggleRow(title: "Lack of Smooth Pursuit", isOn: $hgnLeftLackOfSmoothPursuit)
@@ -211,7 +224,7 @@ struct SFSTView: View {
                 }
 
                 sectionCard(title: "Walk & Turn", systemImage: "figure.walk") {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         InstructionCard(
                             title: "Walk-and-Turn Instructions",
                             lines: [
@@ -239,7 +252,7 @@ struct SFSTView: View {
                 }
 
                 sectionCard(title: "One Leg Stand", systemImage: "figure.stand") {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 12) {
                         InstructionCard(
                             title: "One-Leg Stand Instructions",
                             lines: [
@@ -261,60 +274,14 @@ struct SFSTView: View {
                     }
                 }
 
-                Button {
-                    attemptSaveReport()
-                } label: {
-                    HStack {
-                        Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "internaldrive.fill")
-                        Text("Save Report to App")
-                            .fontWeight(.semibold)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(hasReachedFreeLimit ? Color.gray.opacity(0.6) : Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(14)
-                }
-                .padding(.top, 8)
-
-                VStack(spacing: 6) {
-                    Text(reportUsageText)
-                        .font(.caption)
-                        .foregroundColor(storeManager.isPro ? .green : .white.opacity(0.72))
-
-                    if hasReachedFreeLimit {
-                        Text("Free report limit reached. Upgrade to BluePD Pro for unlimited saved reports.")
-                            .font(.caption)
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.orange.opacity(0.95))
-                    }
-
-                    if !saveStatusMessage.isEmpty {
-                        Text(saveStatusMessage)
-                            .font(.caption)
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.white.opacity(0.72))
-                    }
-                }
+                saveSection
             }
-            .padding()
+            .padding(.horizontal, 18)
+            .padding(.top, 14)
+            .padding(.bottom, 32)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 3/255, green: 8/255, blue: 18/255),
-                    Color(red: 7/255, green: 16/255, blue: 30/255),
-                    Color(red: 12/255, green: 24/255, blue: 42/255)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-            .onTapGesture {
-                dismissKeyboard()
-            }
-        )
+        .background(backgroundGradient.ignoresSafeArea())
         .navigationTitle("SFST Report")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -324,6 +291,10 @@ struct SFSTView: View {
                     dismissKeyboard()
                 }
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            dismissKeyboard()
         }
         .sheet(isPresented: $showImpliedConsent) {
             IndianaImpliedConsentView()
@@ -341,6 +312,44 @@ struct SFSTView: View {
         } message: {
             Text("Free users can save up to \(freeReportLimit) reports. Upgrade to BluePD Pro for unlimited saved reports.")
         }
+    }
+
+    private var backgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 2/255, green: 7/255, blue: 18/255),
+                Color(red: 7/255, green: 17/255, blue: 31/255),
+                Color(red: 10/255, green: 24/255, blue: 44/255)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var topHeader: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 14) {
+                sfstIconContainer(systemImage: "checkmark.shield.fill", size: 56, iconSize: 22)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("SFST Report Builder")
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(SFSTPalette.primaryText)
+
+                    Text("Document subject details, field conditions, and standardized test clues.")
+                        .font(.subheadline)
+                        .foregroundStyle(SFSTPalette.secondaryText)
+                }
+
+                Spacer()
+            }
+
+            Text(reportUsageText)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(storeManager.isPro ? Color.green : SFSTPalette.primaryText.opacity(0.92))
+        }
+        .padding(20)
+        .bluePDCard(cornerRadius: 24)
     }
 
     private var topActionRow: some View {
@@ -368,6 +377,40 @@ struct SFSTView: View {
                 )
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    private var saveSection: some View {
+        VStack(spacing: 10) {
+            Button {
+                attemptSaveReport()
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "internaldrive.fill")
+                    Text("Save Report to App")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(
+                hasReachedFreeLimit
+                ? BluePDDisabledButtonStyle()
+                : BluePDPrimaryButtonStyle()
+            )
+
+            if hasReachedFreeLimit {
+                Text("Free report limit reached. Upgrade to BluePD Pro for unlimited saved reports.")
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(Color.orange.opacity(0.95))
+            }
+
+            if !saveStatusMessage.isEmpty {
+                Text(saveStatusMessage)
+                    .font(.caption)
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(SFSTPalette.secondaryText)
+            }
         }
     }
 
@@ -406,7 +449,7 @@ struct SFSTView: View {
                 if storeManager.isPro {
                     saveStatusMessage = "BluePD Pro unlocked. You now have unlimited saved reports."
                 } else {
-                    saveStatusMessage = "Purchase not completed."
+                    saveStatusMessage = "Purchase was not completed."
                 }
             }
         }
@@ -529,40 +572,61 @@ struct SFSTView: View {
         systemImage: String,
         @ViewBuilder content: () -> Content
     ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label(title, systemImage: systemImage)
-                .foregroundColor(.white)
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(SFSTPalette.primaryText)
+
+                Text(title)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(SFSTPalette.primaryText)
+            }
 
             content()
         }
-        .padding()
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(16)
+        .padding(18)
+        .bluePDCard(cornerRadius: 24)
     }
 
     private func rowCard(title: String, subtitle: String, systemImage: String) -> some View {
-        HStack {
-            Image(systemName: systemImage)
-                .foregroundColor(.blue)
+        HStack(spacing: 14) {
+            sfstIconContainer(systemImage: systemImage, size: 46, iconSize: 18)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .foregroundColor(.white)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(SFSTPalette.primaryText)
 
                 Text(subtitle)
-                    .foregroundColor(.gray)
-                    .font(.caption)
+                    .font(.subheadline)
+                    .foregroundStyle(SFSTPalette.secondaryText)
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(SFSTPalette.tertiaryText)
         }
-        .padding()
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(16)
+        .padding(16)
+        .bluePDInnerCard(cornerRadius: 20)
+    }
+
+    private func sfstIconContainer(systemImage: String, size: CGFloat, iconSize: CGFloat) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.blue.opacity(0.10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.blue.opacity(0.22), lineWidth: 1)
+                )
+
+            Image(systemName: systemImage)
+                .font(.system(size: iconSize, weight: .semibold))
+                .foregroundStyle(SFSTPalette.accent)
+        }
+        .frame(width: size, height: size)
     }
 }
 
@@ -573,18 +637,30 @@ struct StyledTextField: View {
     let field: SFSTView.ActiveField
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.caption)
-                .foregroundColor(.gray)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(SFSTPalette.secondaryText)
 
-            TextField(title, text: $text)
-                .padding()
-                .background(Color.white.opacity(0.05))
-                .cornerRadius(10)
-                .foregroundColor(.white)
-                .focused(focusedField, equals: field)
-                .submitLabel(.done)
+            TextField(
+                "",
+                text: $text,
+                prompt: Text(title).foregroundStyle(SFSTPalette.placeholderText)
+            )
+            .padding(.horizontal, 16)
+            .frame(height: 58)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+            )
+            .foregroundStyle(SFSTPalette.primaryText)
+            .focused(focusedField, equals: field)
+            .submitLabel(.done)
+            .autocorrectionDisabled()
         }
     }
 }
@@ -595,10 +671,10 @@ struct StyledDateField: View {
     let displayedComponents: DatePickerComponents
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.caption)
-                .foregroundColor(.gray)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(SFSTPalette.secondaryText)
 
             DatePicker(
                 "",
@@ -606,10 +682,16 @@ struct StyledDateField: View {
                 displayedComponents: displayedComponents
             )
             .labelsHidden()
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white.opacity(0.05))
-            .cornerRadius(10)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white.opacity(0.05))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+            )
             .colorScheme(.dark)
         }
     }
@@ -621,10 +703,10 @@ struct DropdownField: View {
     let options: [String]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.caption)
-                .foregroundColor(.gray)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(SFSTPalette.secondaryText)
 
             Menu {
                 ForEach(options, id: \.self) { option in
@@ -635,17 +717,25 @@ struct DropdownField: View {
             } label: {
                 HStack {
                     Text(selection)
-                        .foregroundColor(.white)
+                        .foregroundStyle(SFSTPalette.primaryText)
 
                     Spacer()
 
                     Image(systemName: "chevron.down")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(SFSTPalette.tertiaryText)
                 }
-                .padding()
-                .background(Color.white.opacity(0.05))
-                .cornerRadius(10)
+                .padding(.horizontal, 16)
+                .frame(height: 58)
+                .background(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(Color.white.opacity(0.05))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                )
             }
+            .buttonStyle(.plain)
         }
     }
 }
@@ -657,13 +747,28 @@ struct ToggleRow: View {
     var body: some View {
         Toggle(isOn: $isOn) {
             Text(title)
-                .foregroundColor(.white)
-                .font(.headline)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(SFSTPalette.primaryText)
         }
         .tint(.blue)
-        .padding()
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(12)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.050),
+                            Color.white.opacity(0.028)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(Color.white.opacity(0.065), lineWidth: 1)
+        )
     }
 }
 
@@ -674,17 +779,24 @@ struct SummaryCard: View {
     var body: some View {
         HStack {
             Text(title)
-                .foregroundColor(.white)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(SFSTPalette.primaryText)
 
             Spacer()
 
             Text(value)
-                .foregroundColor(.white)
-                .bold()
+                .font(.headline.weight(.bold))
+                .foregroundStyle(SFSTPalette.accent)
         }
-        .padding()
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(12)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.blue.opacity(0.10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color.blue.opacity(0.22), lineWidth: 1)
+                )
+        )
     }
 }
 
@@ -693,29 +805,32 @@ struct InstructionCard: View {
     let lines: [String]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.headline)
-                .foregroundColor(.white)
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(SFSTPalette.primaryText)
 
             ForEach(lines, id: \.self) { line in
-                HStack(alignment: .top, spacing: 8) {
-                    Text("•")
-                        .foregroundColor(.blue)
+                HStack(alignment: .top, spacing: 10) {
+                    Circle()
+                        .fill(SFSTPalette.accent)
+                        .frame(width: 6, height: 6)
+                        .padding(.top, 7)
 
                     Text(line)
-                        .foregroundColor(.white.opacity(0.85))
+                        .font(.subheadline)
+                        .foregroundStyle(SFSTPalette.primaryText.opacity(0.88))
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
-        .padding()
+        .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.blue.opacity(0.12))
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.blue.opacity(0.11))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.blue.opacity(0.35), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.blue.opacity(0.26), lineWidth: 1)
                 )
         )
     }
@@ -727,43 +842,46 @@ struct HGNTimingCard: View {
     let subtitle: String
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 16) {
             VStack(spacing: 2) {
                 Text(seconds)
                     .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
 
                 Text("SEC")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.white.opacity(0.8))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.82))
             }
             .frame(width: 84, height: 84)
             .background(
-                RoundedRectangle(cornerRadius: 18)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(Color.orange.opacity(0.22))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(Color.orange.opacity(0.20), lineWidth: 1)
+                    )
             )
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .font(.headline)
-                    .foregroundColor(.white)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(SFSTPalette.primaryText)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.72))
+                    .foregroundStyle(SFSTPalette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Spacer()
         }
-        .padding()
+        .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 18)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .fill(Color.orange.opacity(0.10))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(Color.orange.opacity(0.25), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(Color.orange.opacity(0.24), lineWidth: 1)
                 )
         )
     }
@@ -787,15 +905,17 @@ WILL YOU NOW TAKE A CHEMICAL TEST?
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    Text("Indiana Implied Consent")
-                        .font(.title2.bold())
-                        .foregroundColor(.white)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 22) {
+                    VStack(spacing: 8) {
+                        Text("Indiana Implied Consent")
+                            .font(.title2.bold())
+                            .foregroundStyle(.white)
 
-                    Text(showingFront ? "Standard OWI advisory" : "Serious bodily injury / fatal crash advisory")
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.7))
+                        Text(showingFront ? "Standard OWI advisory" : "Serious bodily injury / fatal crash advisory")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.72))
+                    }
 
                     ZStack {
                         if showingFront {
@@ -825,28 +945,27 @@ WILL YOU NOW TAKE A CHEMICAL TEST?
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(14)
                     }
+                    .buttonStyle(BluePDPrimaryButtonStyle())
 
                     Text("Verify agency-approved wording before operational use.")
                         .font(.footnote)
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundStyle(.white.opacity(0.62))
                         .multilineTextAlignment(.center)
                 }
-                .padding()
+                .padding(.horizontal, 18)
+                .padding(.top, 18)
+                .padding(.bottom, 32)
             }
             .background(
                 LinearGradient(
                     colors: [
-                        Color(red: 3/255, green: 8/255, blue: 18/255),
-                        Color(red: 7/255, green: 16/255, blue: 30/255),
-                        Color(red: 12/255, green: 24/255, blue: 42/255)
+                        Color(red: 2/255, green: 7/255, blue: 18/255),
+                        Color(red: 7/255, green: 17/255, blue: 31/255),
+                        Color(red: 10/255, green: 24/255, blue: 44/255)
                     ],
-                    startPoint: .top,
-                    endPoint: .bottom
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
             )
@@ -873,8 +992,8 @@ struct ImpliedConsentCard: View {
                 Spacer()
 
                 Text(text)
-                    .font(.system(size: 22, weight: .bold, design: .default))
-                    .foregroundColor(.white)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .lineSpacing(6)
                     .minimumScaleFactor(0.55)
@@ -890,7 +1009,7 @@ struct ImpliedConsentCard: View {
 
                 Text(sideLabel)
                     .font(.system(size: 28, weight: .heavy))
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
                     .rotationEffect(.degrees(90))
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
@@ -900,13 +1019,122 @@ struct ImpliedConsentCard: View {
         }
         .frame(minHeight: 520)
         .background(
-            RoundedRectangle(cornerRadius: 22)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.blue.opacity(0.88))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22)
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .stroke(Color.white.opacity(0.15), lineWidth: 1)
                 )
         )
         .shadow(color: .black.opacity(0.25), radius: 14, x: 0, y: 8)
+    }
+}
+
+private enum SFSTPalette {
+    static let primaryText = Color.white
+    static let secondaryText = Color.white.opacity(0.74)
+    static let tertiaryText = Color.white.opacity(0.38)
+    static let placeholderText = Color.white.opacity(0.34)
+    static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
+}
+
+private struct BluePDCardModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.070),
+                                Color.white.opacity(0.032)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
+    }
+}
+
+private struct BluePDInnerCardModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.050),
+                                Color.white.opacity(0.028)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.065), lineWidth: 1)
+            )
+    }
+}
+
+private extension View {
+    func bluePDCard(cornerRadius: CGFloat = 24) -> some View {
+        modifier(BluePDCardModifier(cornerRadius: cornerRadius))
+    }
+
+    func bluePDInnerCard(cornerRadius: CGFloat = 20) -> some View {
+        modifier(BluePDInnerCardModifier(cornerRadius: cornerRadius))
+    }
+}
+
+private struct BluePDPrimaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 58)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color(red: 0.08, green: 0.56, blue: 0.98),
+                                Color(red: 0.05, green: 0.42, blue: 0.92)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
+            .shadow(color: Color.blue.opacity(0.18), radius: 12, x: 0, y: 8)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+private struct BluePDDisabledButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.headline.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.82))
+            .frame(maxWidth: .infinity)
+            .frame(height: 58)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white.opacity(0.10))
+            )
     }
 }
