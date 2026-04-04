@@ -120,6 +120,15 @@ struct HomeView: View {
                     )
                 }
                 .buttonStyle(.plain)
+
+                NavigationLink(destination: QuickCardsView()) {
+                    primaryActionRow(
+                        title: "Quick Cards",
+                        subtitle: "Open your saved custom reference cards",
+                        systemImage: "rectangle.stack.text.card.fill"
+                    )
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -177,6 +186,12 @@ struct HomeView: View {
                     title: "Evidence",
                     subtitle: "Store and review case-related images",
                     systemImage: "camera.fill"
+                )
+
+                compactToolRow(
+                    title: "Quick Cards",
+                    subtitle: "Custom reminders, notes, and reference cards",
+                    systemImage: "rectangle.stack.text.card.fill"
                 )
             }
         }
