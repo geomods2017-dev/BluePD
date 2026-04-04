@@ -370,21 +370,31 @@ struct SFSTView: View {
 
     private var saveSection: some View {
         VStack(spacing: 10) {
-            Button {
-                attemptSaveReport()
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "internaldrive.fill")
-                    Text("Save Report to App")
-                        .fontWeight(.semibold)
+            if hasReachedFreeLimit {
+                Button {
+                    attemptSaveReport()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "internaldrive.fill")
+                        Text("Save Report to App")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
+                .buttonStyle(BluePDDisabledButtonStyle())
+            } else {
+                Button {
+                    attemptSaveReport()
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "internaldrive.fill")
+                        Text("Save Report to App")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(BluePDPrimaryButtonStyle())
             }
-            .buttonStyle(
-                hasReachedFreeLimit
-                ? BluePDDisabledButtonStyle()
-                : BluePDPrimaryButtonStyle()
-            )
 
             if hasReachedFreeLimit {
                 Text("Free report limit reached. Upgrade to BluePD Pro for unlimited saved reports.")
@@ -617,7 +627,7 @@ struct StyledTextField: View {
             TextField(
                 "",
                 text: $text,
-                prompt: Text(title).foregroundStyle(BluePDTheme.placeholderText)
+                prompt: Text(title).foregroundColor(BluePDTheme.placeholderText)
             )
             .padding(.horizontal, 16)
             .frame(height: 58)
