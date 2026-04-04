@@ -173,7 +173,7 @@ struct SettingsView: View {
                             systemImage: "faceid",
                             isOn: $useBiometrics
                         )
-                        .onChange(of: useBiometrics) { _, newValue in
+                        .onChange(of: useBiometrics) { newValue in
                             if newValue && !hasValidPIN {
                                 useBiometrics = false
                                 securityMessage = "Create a PIN before enabling Face ID."
