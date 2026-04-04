@@ -44,14 +44,14 @@ struct SettingsView: View {
                             HStack(spacing: 12) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(Color.green.opacity(0.12))
+                                        .fill(BluePDTheme.success.opacity(0.12))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                                .stroke(Color.green.opacity(0.25), lineWidth: 1)
+                                                .stroke(BluePDTheme.success.opacity(0.25), lineWidth: 1)
                                         )
 
                                     Image(systemName: "checkmark.seal.fill")
-                                        .foregroundStyle(.green)
+                                        .foregroundStyle(BluePDTheme.success)
                                         .font(.system(size: 18, weight: .semibold))
                                 }
                                 .frame(width: 44, height: 44)
@@ -59,11 +59,11 @@ struct SettingsView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Pro Unlocked")
                                         .font(.headline.weight(.semibold))
-                                        .foregroundStyle(SettingsPalette.primaryText)
+                                        .foregroundStyle(BluePDTheme.primaryText)
 
                                     Text("Premium access is active on this account.")
                                         .font(.subheadline)
-                                        .foregroundStyle(SettingsPalette.secondaryText)
+                                        .foregroundStyle(BluePDTheme.secondaryText)
                                 }
 
                                 Spacer()
@@ -106,7 +106,7 @@ struct SettingsView: View {
                         if !purchaseStatusMessage.isEmpty {
                             Text(purchaseStatusMessage)
                                 .font(.caption)
-                                .foregroundStyle(SettingsPalette.secondaryText)
+                                .foregroundStyle(BluePDTheme.secondaryText)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
@@ -117,23 +117,27 @@ struct SettingsView: View {
                         showProfileEditor = true
                     } label: {
                         HStack(spacing: 14) {
-                            iconContainer(systemImage: "person.crop.circle.badge.plus", size: 44, iconSize: 18)
+                            BluePDIconContainer(
+                                systemImage: "person.crop.circle.badge.plus",
+                                size: 44,
+                                iconSize: 18
+                            )
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Create or Edit Profile")
                                     .font(.headline.weight(.semibold))
-                                    .foregroundStyle(SettingsPalette.primaryText)
+                                    .foregroundStyle(BluePDTheme.primaryText)
 
                                 Text("Update officer, badge, rank, unit, and agency details.")
                                     .font(.subheadline)
-                                    .foregroundStyle(SettingsPalette.secondaryText)
+                                    .foregroundStyle(BluePDTheme.secondaryText)
                             }
 
                             Spacer()
 
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(SettingsPalette.tertiaryText)
+                                .foregroundStyle(BluePDTheme.tertiaryText)
                         }
                         .padding(16)
                         .bluePDInnerCard(cornerRadius: 20)
@@ -146,7 +150,7 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Default State")
                                 .font(.caption.weight(.medium))
-                                .foregroundStyle(SettingsPalette.secondaryText)
+                                .foregroundStyle(BluePDTheme.secondaryText)
 
                             Picker("Default State", selection: $defaultState) {
                                 ForEach(states, id: \.self) { state in
@@ -199,11 +203,11 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("No PIN Created")
                                     .font(.headline.weight(.semibold))
-                                    .foregroundStyle(SettingsPalette.primaryText)
+                                    .foregroundStyle(BluePDTheme.primaryText)
 
                                 Text("A passcode has not been created yet. The app will require passcode setup on the next login.")
                                     .font(.subheadline)
-                                    .foregroundStyle(SettingsPalette.secondaryText)
+                                    .foregroundStyle(BluePDTheme.secondaryText)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(16)
@@ -215,8 +219,8 @@ struct SettingsView: View {
                                 .font(.caption.weight(.medium))
                                 .foregroundStyle(
                                     securityMessage == "PIN updated."
-                                    ? Color.green
-                                    : Color.red.opacity(0.95)
+                                    ? BluePDTheme.success
+                                    : BluePDTheme.danger.opacity(0.95)
                                 )
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -246,7 +250,7 @@ struct SettingsView: View {
             .padding(.top, 14)
             .padding(.bottom, 32)
         }
-        .background(backgroundGradient.ignoresSafeArea())
+        .background(BluePDTheme.appBackground.ignoresSafeArea())
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showProfileEditor) {
@@ -260,27 +264,15 @@ struct SettingsView: View {
         }
     }
 
-    private var backgroundGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 2/255, green: 7/255, blue: 18/255),
-                Color(red: 7/255, green: 17/255, blue: 31/255),
-                Color(red: 10/255, green: 24/255, blue: 44/255)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
     private var headerCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("BluePD Settings")
                 .font(.title.weight(.bold))
-                .foregroundStyle(SettingsPalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Text("Manage security, defaults, appearance, account settings, and profile information.")
                 .font(.subheadline)
-                .foregroundStyle(SettingsPalette.secondaryText)
+                .foregroundStyle(BluePDTheme.secondaryText)
         }
         .padding(20)
         .bluePDCard(cornerRadius: 24)
@@ -294,12 +286,12 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 10) {
                 Image(systemName: systemImage)
-                    .foregroundStyle(SettingsPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
                     .font(.headline.weight(.semibold))
 
                 Text(title)
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(SettingsPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
             }
 
             content()
@@ -315,16 +307,20 @@ struct SettingsView: View {
         isOn: Binding<Bool>
     ) -> some View {
         HStack(spacing: 14) {
-            iconContainer(systemImage: systemImage, size: 46, iconSize: 18)
+            BluePDIconContainer(
+                systemImage: systemImage,
+                size: 46,
+                iconSize: 18
+            )
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(SettingsPalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundStyle(SettingsPalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -335,22 +331,6 @@ struct SettingsView: View {
         }
         .padding(16)
         .bluePDInnerCard(cornerRadius: 20)
-    }
-
-    private func iconContainer(systemImage: String, size: CGFloat, iconSize: CGFloat) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.blue.opacity(0.10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.blue.opacity(0.22), lineWidth: 1)
-                )
-
-            Image(systemName: systemImage)
-                .font(.system(size: iconSize, weight: .semibold))
-                .foregroundStyle(SettingsPalette.accent)
-        }
-        .frame(width: size, height: size)
     }
 
     private func changePIN() {
@@ -440,11 +420,11 @@ struct SecureSettingsField: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: systemImage)
-                    .foregroundStyle(SettingsPalette.accent)
+                    .foregroundStyle(BluePDTheme.accent)
 
                 Text(title)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(SettingsPalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
             }
 
             SecureField(title, text: $text)
@@ -459,127 +439,7 @@ struct SecureSettingsField: View {
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
-                .foregroundStyle(SettingsPalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
         }
-    }
-}
-
-private enum SettingsPalette {
-    static let primaryText = Color.white
-    static let secondaryText = Color.white.opacity(0.74)
-    static let tertiaryText = Color.white.opacity(0.38)
-    static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
-}
-
-private struct BluePDCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.070),
-                                Color.white.opacity(0.032)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
-    }
-}
-
-private struct BluePDInnerCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.050),
-                                Color.white.opacity(0.028)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.065), lineWidth: 1)
-            )
-    }
-}
-
-private extension View {
-    func bluePDCard(cornerRadius: CGFloat = 24) -> some View {
-        modifier(BluePDCardModifier(cornerRadius: cornerRadius))
-    }
-
-    func bluePDInnerCard(cornerRadius: CGFloat = 20) -> some View {
-        modifier(BluePDInnerCardModifier(cornerRadius: cornerRadius))
-    }
-}
-
-private struct BluePDPrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline.weight(.semibold))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 58)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.08, green: 0.56, blue: 0.98),
-                                Color(red: 0.05, green: 0.42, blue: 0.92)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
-            .shadow(color: Color.blue.opacity(0.18), radius: 12, x: 0, y: 8)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
-    }
-}
-
-private struct BluePDDestructiveButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline.weight(.semibold))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 58)
-            .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.red.opacity(0.90))
-            )
-            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
-    }
-}
-
-private struct BluePDTextButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline.weight(.semibold))
-            .foregroundStyle(SettingsPalette.accent.opacity(configuration.isPressed ? 0.75 : 1.0))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
     }
 }
