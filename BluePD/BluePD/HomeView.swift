@@ -8,21 +8,21 @@ struct HomeView: View {
     @State private var savedReports: [SavedSFSTReport] = []
 
     private let columns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.flexible(), spacing: 14),
+        GridItem(.flexible(), spacing: 14)
     ]
 
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(spacing: 18) {
+            VStack(alignment: .leading, spacing: 22) {
                 commandHeader
                 quickActionsSection
                 officerOverviewSection
                 toolsOverviewSection
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 28)
+            .padding(.horizontal, 18)
+            .padding(.top, 14)
+            .padding(.bottom, 32)
         }
         .background(backgroundGradient.ignoresSafeArea())
         .navigationTitle("BluePD")
@@ -32,41 +32,40 @@ struct HomeView: View {
     private var backgroundGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 3/255, green: 8/255, blue: 18/255),
-                Color(red: 7/255, green: 16/255, blue: 30/255),
-                Color(red: 12/255, green: 24/255, blue: 42/255)
+                Color(red: 2/255, green: 7/255, blue: 18/255),
+                Color(red: 7/255, green: 17/255, blue: 31/255),
+                Color(red: 10/255, green: 24/255, blue: 44/255)
             ],
-            startPoint: .top,
-            endPoint: .bottom
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
         )
     }
 
     private var commandHeader: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center, spacing: 12) {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 14) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.blue.opacity(0.14))
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.blue.opacity(0.12))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(Color.blue.opacity(0.35), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.blue.opacity(0.25), lineWidth: 1)
                         )
 
                     Image(systemName: "shield.checkered")
                         .font(.system(size: 22, weight: .bold))
-                        .foregroundColor(.blue)
+                        .foregroundStyle(BluePDPalette.accent)
                 }
-                .frame(width: 52, height: 52)
+                .frame(width: 56, height: 56)
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text("BluePD")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(BluePDPalette.primaryText)
 
                     Text("Field-ready law enforcement tools")
                         .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.66))
+                        .foregroundStyle(BluePDPalette.secondaryText)
                 }
 
                 Spacer()
@@ -74,26 +73,24 @@ struct HomeView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("ON DUTY")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .kerning(1.1)
-                    .foregroundColor(.blue.opacity(0.92))
+                    .font(.caption.weight(.bold))
+                    .kerning(1.2)
+                    .foregroundStyle(BluePDPalette.accent)
 
                 Text(greetingLine)
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.88))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(BluePDPalette.primaryText.opacity(0.92))
             }
         }
-        .padding(18)
-        .background(outerCardBackground)
-        .overlay(outerCardBorder)
+        .padding(20)
+        .bluePDCard(cornerRadius: 24)
     }
 
     private var quickActionsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             sectionHeader("Quick Access")
 
-            VStack(spacing: 10) {
+            VStack(spacing: 12) {
                 NavigationLink(destination: MirandaView()) {
                     primaryActionRow(
                         title: "Miranda Warnings",
@@ -124,7 +121,7 @@ struct HomeView: View {
                 NavigationLink(destination: QuickCardsView()) {
                     primaryActionRow(
                         title: "Quick Cards",
-                        subtitle: "Open your saved custom reference cards",
+                        subtitle: "Open saved custom reference cards",
                         systemImage: "rectangle.stack.text.card.fill"
                     )
                 }
@@ -134,24 +131,24 @@ struct HomeView: View {
     }
 
     private var officerOverviewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             sectionHeader("Officer Profile")
 
-            LazyVGrid(columns: columns, spacing: 12) {
+            LazyVGrid(columns: columns, spacing: 14) {
                 compactStatCard(
-                    title: officerName.trimmedOrFallback("Not Set"),
+                    title: officerName.trimmedOrFallback("No Name"),
                     subtitle: "Officer",
                     systemImage: "person.crop.rectangle.fill"
                 )
 
                 compactStatCard(
-                    title: agencyName.trimmedOrFallback("Not Set"),
+                    title: agencyName.trimmedOrFallback("No Agency"),
                     subtitle: "Agency",
                     systemImage: "building.columns.fill"
                 )
 
                 compactStatCard(
-                    title: officerUnit.trimmedOrFallback("Not Set"),
+                    title: officerUnit.trimmedOrFallback("No Unit"),
                     subtitle: "Unit",
                     systemImage: "shield.fill"
                 )
@@ -166,10 +163,10 @@ struct HomeView: View {
     }
 
     private var toolsOverviewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             sectionHeader("Operational Tools")
 
-            VStack(spacing: 10) {
+            VStack(spacing: 12) {
                 compactToolRow(
                     title: "Case Law",
                     subtitle: "Recent legal updates and searchable references",
@@ -214,15 +211,14 @@ struct HomeView: View {
     }
 
     private func sectionHeader(_ title: String) -> some View {
-        HStack {
-            Rectangle()
-                .fill(Color.blue.opacity(0.9))
-                .frame(width: 4, height: 18)
-                .cornerRadius(3)
+        HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                .fill(BluePDPalette.accent)
+                .frame(width: 5, height: 24)
 
             Text(title)
-                .font(.headline)
-                .foregroundColor(.white)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(BluePDPalette.primaryText)
 
             Spacer()
         }
@@ -230,145 +226,155 @@ struct HomeView: View {
     }
 
     private func primaryActionRow(title: String, subtitle: String, systemImage: String) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.blue.opacity(0.12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(Color.blue.opacity(0.28), lineWidth: 1)
-                    )
+        HStack(spacing: 14) {
+            iconContainer(systemImage: systemImage, size: 46, iconSize: 18)
 
-                Image(systemName: systemImage)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(.blue)
-            }
-            .frame(width: 42, height: 42)
-
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text(title)
-                    .font(.headline)
-                    .foregroundColor(.white)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(BluePDPalette.primaryText)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.62))
+                    .foregroundStyle(BluePDPalette.secondaryText)
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            Spacer()
+            Spacer(minLength: 10)
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.white.opacity(0.30))
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(BluePDPalette.tertiaryText)
         }
-        .padding(14)
-        .background(innerCardBackground)
-        .overlay(innerCardBorder)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 15)
+        .bluePDInnerCard(cornerRadius: 20)
     }
 
     private func compactToolRow(title: String, subtitle: String, systemImage: String) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.blue.opacity(0.10))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(Color.blue.opacity(0.24), lineWidth: 1)
-                    )
+        HStack(spacing: 14) {
+            iconContainer(systemImage: systemImage, size: 50, iconSize: 20)
 
-                Image(systemName: systemImage)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.blue)
-            }
-            .frame(width: 38, height: 38)
-
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text(title)
-                    .font(.headline)
-                    .foregroundColor(.white)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(BluePDPalette.primaryText)
 
                 Text(subtitle)
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.62))
+                    .foregroundStyle(BluePDPalette.secondaryText)
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            Spacer()
+            Spacer(minLength: 0)
         }
-        .padding(14)
-        .background(innerCardBackground)
-        .overlay(innerCardBorder)
+        .padding(16)
+        .bluePDInnerCard(cornerRadius: 22)
     }
 
     private func compactStatCard(title: String, subtitle: String, systemImage: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.blue.opacity(0.10))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .stroke(Color.blue.opacity(0.24), lineWidth: 1)
-                    )
-
-                Image(systemName: systemImage)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.blue)
-            }
-            .frame(width: 36, height: 36)
+        VStack(alignment: .leading, spacing: 12) {
+            iconContainer(systemImage: systemImage, size: 44, iconSize: 17)
 
             Text(title)
-                .font(.headline)
-                .foregroundColor(.white)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(BluePDPalette.primaryText)
                 .lineLimit(2)
-                .minimumScaleFactor(0.82)
+                .minimumScaleFactor(0.80)
 
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.58))
+                .foregroundStyle(BluePDPalette.secondaryText)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-        .background(innerCardBackground)
-        .overlay(innerCardBorder)
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
+        .bluePDInnerCard(cornerRadius: 22)
     }
 
-    private var outerCardBackground: some View {
-        RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.06),
-                        Color.white.opacity(0.03)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+    private func iconContainer(systemImage: String, size: CGFloat, iconSize: CGFloat) -> some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.blue.opacity(0.10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.blue.opacity(0.22), lineWidth: 1)
                 )
+
+            Image(systemName: systemImage)
+                .font(.system(size: iconSize, weight: .semibold))
+                .foregroundStyle(BluePDPalette.accent)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+private enum BluePDPalette {
+    static let primaryText = Color.white
+    static let secondaryText = Color.white.opacity(0.74)
+    static let tertiaryText = Color.white.opacity(0.38)
+    static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
+}
+
+private struct BluePDCardModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.070),
+                                Color.white.opacity(0.032)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
+    }
+}
+
+private struct BluePDInnerCardModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.050),
+                                Color.white.opacity(0.028)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.065), lineWidth: 1)
             )
     }
+}
 
-    private var outerCardBorder: some View {
-        RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .stroke(Color.blue.opacity(0.18), lineWidth: 1)
+private extension View {
+    func bluePDCard(cornerRadius: CGFloat = 24) -> some View {
+        modifier(BluePDCardModifier(cornerRadius: cornerRadius))
     }
 
-    private var innerCardBackground: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.045),
-                        Color.white.opacity(0.03)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-    }
-
-    private var innerCardBorder: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+    func bluePDInnerCard(cornerRadius: CGFloat = 20) -> some View {
+        modifier(BluePDInnerCardModifier(cornerRadius: cornerRadius))
     }
 }
 
