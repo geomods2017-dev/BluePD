@@ -11,11 +11,14 @@ enum BluePDTheme {
     static let placeholderText = Color.white.opacity(0.34)
 
     static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
-    static let accentSoft = Color.blue.opacity(0.12)
+    static let accentSoft = accent.opacity(0.12)
 
     static let success = Color.green
     static let warning = Color.orange
     static let danger = Color.red
+
+    static let cardStroke = Color.white.opacity(0.07)
+    static let innerCardStroke = Color.white.opacity(0.065)
 
     static var appBackground: LinearGradient {
         LinearGradient(
@@ -46,6 +49,17 @@ enum BluePDTheme {
             endPoint: .bottomTrailing
         )
     }
+
+    static var primaryButtonGradient: LinearGradient {
+        LinearGradient(
+            colors: [
+                Color(red: 0.08, green: 0.56, blue: 0.98),
+                Color(red: 0.05, green: 0.42, blue: 0.92)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 }
 
 struct BluePDCardModifier: ViewModifier {
@@ -59,7 +73,7 @@ struct BluePDCardModifier: ViewModifier {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
+                    .stroke(BluePDTheme.cardStroke, lineWidth: 1)
             )
             .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
     }
@@ -76,7 +90,7 @@ struct BluePDInnerCardModifier: ViewModifier {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.065), lineWidth: 1)
+                    .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
             )
     }
 }
@@ -85,24 +99,15 @@ struct BluePDPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline.weight(.semibold))
-            .foregroundStyle(.white)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 58)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.08, green: 0.56, blue: 0.98),
-                                Color(red: 0.05, green: 0.42, blue: 0.92)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(BluePDTheme.primaryButtonGradient)
             )
             .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
-            .shadow(color: Color.blue.opacity(0.18), radius: 12, x: 0, y: 8)
+            .shadow(color: BluePDTheme.accent.opacity(0.18), radius: 12, x: 0, y: 8)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
     }
 }
@@ -111,7 +116,7 @@ struct BluePDSecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline.weight(.semibold))
-            .foregroundStyle(BluePDTheme.primaryText)
+            .foregroundColor(BluePDTheme.primaryText)
             .frame(maxWidth: .infinity)
             .frame(height: 58)
             .background(
@@ -131,12 +136,12 @@ struct BluePDDestructiveButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline.weight(.semibold))
-            .foregroundStyle(.white)
+            .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 58)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.red.opacity(0.90))
+                    .fill(BluePDTheme.danger.opacity(0.90))
             )
             .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
@@ -147,7 +152,7 @@ struct BluePDDisabledButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline.weight(.semibold))
-            .foregroundStyle(.white.opacity(0.82))
+            .foregroundColor(.white.opacity(0.82))
             .frame(maxWidth: .infinity)
             .frame(height: 58)
             .background(
@@ -161,7 +166,7 @@ struct BluePDTextButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline.weight(.semibold))
-            .foregroundStyle(BluePDTheme.accent.opacity(configuration.isPressed ? 0.75 : 1.0))
+            .foregroundColor(BluePDTheme.accent.opacity(configuration.isPressed ? 0.75 : 1.0))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 6)
     }
@@ -185,15 +190,15 @@ struct BluePDIconContainer: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.blue.opacity(0.10))
+                .fill(BluePDTheme.accent.opacity(0.10))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.blue.opacity(0.22), lineWidth: 1)
+                        .stroke(BluePDTheme.accent.opacity(0.22), lineWidth: 1)
                 )
 
             Image(systemName: systemImage)
                 .font(.system(size: iconSize, weight: .semibold))
-                .foregroundStyle(BluePDTheme.accent)
+                .foregroundColor(BluePDTheme.accent)
         }
         .frame(width: size, height: size)
     }
