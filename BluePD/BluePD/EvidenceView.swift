@@ -46,7 +46,7 @@ struct EvidenceView: View {
             .padding(.bottom, 32)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(backgroundGradient.ignoresSafeArea())
+        .background(BluePDTheme.appBackground.ignoresSafeArea())
         .navigationTitle("Evidence")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -86,31 +86,19 @@ struct EvidenceView: View {
         }
     }
 
-    private var backgroundGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 2/255, green: 7/255, blue: 18/255),
-                Color(red: 7/255, green: 17/255, blue: 31/255),
-                Color(red: 10/255, green: 24/255, blue: 44/255)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
     private var topHeader: some View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 14) {
-                iconContainer(systemImage: "camera.viewfinder", size: 56, iconSize: 22)
+                BluePDIconContainer(systemImage: "camera.viewfinder", size: 56, iconSize: 22)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Evidence Manager")
                         .font(.title2.weight(.bold))
-                        .foregroundStyle(EvidencePalette.primaryText)
+                        .foregroundStyle(BluePDTheme.primaryText)
 
                     Text("Store and review case-related images")
                         .font(.subheadline)
-                        .foregroundStyle(EvidencePalette.secondaryText)
+                        .foregroundStyle(BluePDTheme.secondaryText)
                 }
 
                 Spacer()
@@ -118,7 +106,7 @@ struct EvidenceView: View {
 
             Text(headerSubtitle)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(EvidencePalette.primaryText.opacity(0.92))
+                .foregroundStyle(BluePDTheme.primaryText.opacity(0.92))
         }
         .padding(20)
         .bluePDCard(cornerRadius: 24)
@@ -129,28 +117,30 @@ struct EvidenceView: View {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill((storeManager.isPro ? Color.green : Color.blue).opacity(0.12))
+                        .fill((storeManager.isPro ? BluePDTheme.success : BluePDTheme.accent).opacity(0.12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke((storeManager.isPro ? Color.green : Color.blue).opacity(0.25), lineWidth: 1)
+                                .stroke((storeManager.isPro ? BluePDTheme.success : BluePDTheme.accent).opacity(0.25), lineWidth: 1)
                         )
 
                     Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "externaldrive.fill")
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(storeManager.isPro ? Color.green : EvidencePalette.accent)
+                        .foregroundStyle(storeManager.isPro ? BluePDTheme.success : BluePDTheme.accent)
                 }
                 .frame(width: 44, height: 44)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(storeManager.isPro ? "BluePD Pro Active" : "Free Evidence Storage")
                         .font(.headline.weight(.semibold))
-                        .foregroundStyle(EvidencePalette.primaryText)
+                        .foregroundStyle(BluePDTheme.primaryText)
 
-                    Text(storeManager.isPro
-                         ? "Unlimited evidence storage available"
-                         : "\(evidenceItems.count)/\(freeEvidenceLimit) evidence items used")
-                        .font(.subheadline)
-                        .foregroundStyle(EvidencePalette.secondaryText)
+                    Text(
+                        storeManager.isPro
+                        ? "Unlimited evidence storage available"
+                        : "\(evidenceItems.count)/\(freeEvidenceLimit) evidence items used"
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(BluePDTheme.secondaryText)
                 }
 
                 Spacer()
@@ -159,13 +149,13 @@ struct EvidenceView: View {
             if hasReachedFreeEvidenceLimit {
                 Text("Free evidence limit reached. Upgrade to BluePD Pro for unlimited evidence storage.")
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(Color.orange.opacity(0.95))
+                    .foregroundStyle(BluePDTheme.warning.opacity(0.95))
             }
 
             if !evidenceStatusMessage.isEmpty {
                 Text(evidenceStatusMessage)
                     .font(.caption)
-                    .foregroundStyle(EvidencePalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
             }
         }
         .padding(18)
@@ -212,11 +202,11 @@ struct EvidenceView: View {
                     VStack(spacing: 12) {
                         Image(systemName: hasReachedFreeEvidenceLimit ? "lock.fill" : "photo.badge.plus")
                             .font(.system(size: 30, weight: .medium))
-                            .foregroundStyle(hasReachedFreeEvidenceLimit ? Color.orange : EvidencePalette.accent)
+                            .foregroundStyle(hasReachedFreeEvidenceLimit ? BluePDTheme.warning : BluePDTheme.accent)
 
                         Text(hasReachedFreeEvidenceLimit ? "Free Limit Reached" : "Select Evidence Photos")
                             .font(.headline.weight(.semibold))
-                            .foregroundStyle(EvidencePalette.primaryText)
+                            .foregroundStyle(BluePDTheme.primaryText)
 
                         Text(
                             hasReachedFreeEvidenceLimit
@@ -224,7 +214,7 @@ struct EvidenceView: View {
                             : "Add photos from the library."
                         )
                         .font(.subheadline)
-                        .foregroundStyle(EvidencePalette.secondaryText)
+                        .foregroundStyle(BluePDTheme.secondaryText)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 28)
@@ -246,7 +236,7 @@ struct EvidenceView: View {
 
     private var gallerySection: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center) {
+            HStack {
                 sectionHeader("Gallery")
 
                 Spacer()
@@ -256,7 +246,7 @@ struct EvidenceView: View {
                         clearAllEvidence()
                     }
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.red.opacity(0.95))
+                    .foregroundStyle(BluePDTheme.danger.opacity(0.95))
                 }
             }
 
@@ -279,7 +269,7 @@ struct EvidenceView: View {
             ZStack(alignment: .topLeading) {
                 if evidenceNotes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text("Add scene details, collection notes, item descriptions, or chain-of-custody reminders.")
-                        .foregroundStyle(EvidencePalette.placeholderText)
+                        .foregroundStyle(BluePDTheme.placeholderText)
                         .padding(.horizontal, 18)
                         .padding(.vertical, 18)
                 }
@@ -287,23 +277,14 @@ struct EvidenceView: View {
                 TextEditor(text: $evidenceNotes)
                     .focused($isNotesFocused)
                     .scrollContentBackground(.hidden)
-                    .foregroundStyle(EvidencePalette.primaryText)
+                    .foregroundStyle(BluePDTheme.primaryText)
                     .frame(minHeight: 160)
                     .padding(12)
                     .background(Color.clear)
             }
             .background(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.050),
-                                Color.white.opacity(0.028)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(BluePDTheme.innerCardGradient)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
@@ -322,12 +303,12 @@ struct EvidenceView: View {
     private func sectionHeader(_ title: String) -> some View {
         HStack(spacing: 10) {
             RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(EvidencePalette.accent)
+                .fill(BluePDTheme.accent)
                 .frame(width: 5, height: 24)
 
             Text(title)
                 .font(.title2.weight(.bold))
-                .foregroundStyle(EvidencePalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Spacer()
         }
@@ -336,17 +317,17 @@ struct EvidenceView: View {
 
     private func compactSummaryCard(title: String, subtitle: String, systemImage: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            iconContainer(systemImage: systemImage, size: 44, iconSize: 17)
+            BluePDIconContainer(systemImage: systemImage, size: 44, iconSize: 17)
 
             Text(title)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(EvidencePalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
                 .lineLimit(2)
                 .minimumScaleFactor(0.80)
 
             Text(subtitle)
                 .font(.subheadline)
-                .foregroundStyle(EvidencePalette.secondaryText)
+                .foregroundStyle(BluePDTheme.secondaryText)
         }
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
@@ -357,15 +338,15 @@ struct EvidenceView: View {
         VStack(spacing: 12) {
             Image(systemName: "photo.on.rectangle.angled")
                 .font(.system(size: 34))
-                .foregroundStyle(EvidencePalette.accent)
+                .foregroundStyle(BluePDTheme.accent)
 
             Text("No Evidence Added")
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(EvidencePalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Text("Photos you attach to this case will appear here for review.")
                 .font(.subheadline)
-                .foregroundStyle(EvidencePalette.secondaryText)
+                .foregroundStyle(BluePDTheme.secondaryText)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -389,14 +370,14 @@ struct EvidenceView: View {
                         .frame(height: 148)
                         .overlay(
                             Image(systemName: "photo")
-                                .foregroundStyle(EvidencePalette.secondaryText)
+                                .foregroundStyle(BluePDTheme.secondaryText)
                         )
                 }
 
                 HStack {
                     Text("Photo \(index + 1)")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(EvidencePalette.primaryText)
+                        .foregroundStyle(BluePDTheme.primaryText)
 
                     Spacer()
                 }
@@ -406,16 +387,7 @@ struct EvidenceView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.050),
-                                Color.white.opacity(0.028)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(BluePDTheme.innerCardGradient)
             )
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .overlay(
@@ -434,22 +406,6 @@ struct EvidenceView: View {
             }
             .padding(10)
         }
-    }
-
-    private func iconContainer(systemImage: String, size: CGFloat, iconSize: CGFloat) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.blue.opacity(0.10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(Color.blue.opacity(0.22), lineWidth: 1)
-                )
-
-            Image(systemName: systemImage)
-                .font(.system(size: iconSize, weight: .semibold))
-                .foregroundStyle(EvidencePalette.accent)
-        }
-        .frame(width: size, height: size)
     }
 
     private func dismissKeyboard() {
@@ -672,11 +628,11 @@ struct StyledEvidenceTextField: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: systemImage)
-                    .foregroundStyle(EvidencePalette.accent)
+                    .foregroundStyle(BluePDTheme.accent)
 
                 Text(title)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(EvidencePalette.secondaryText)
+                    .foregroundStyle(BluePDTheme.secondaryText)
             }
 
             TextField(title, text: $text)
@@ -684,7 +640,7 @@ struct StyledEvidenceTextField: View {
                 .submitLabel(.done)
                 .autocorrectionDisabled()
                 .textInputAutocapitalization(.characters)
-                .foregroundStyle(EvidencePalette.primaryText)
+                .foregroundStyle(BluePDTheme.primaryText)
                 .padding(.horizontal, 16)
                 .frame(height: 58)
                 .background(
@@ -696,81 +652,6 @@ struct StyledEvidenceTextField: View {
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
         }
-    }
-}
-
-private enum EvidencePalette {
-    static let primaryText = Color.white
-    static let secondaryText = Color.white.opacity(0.74)
-    static let placeholderText = Color.white.opacity(0.34)
-    static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
-}
-
-private struct BluePDCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.070),
-                                Color.white.opacity(0.032)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
-    }
-}
-
-private struct BluePDInnerCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.050),
-                                Color.white.opacity(0.028)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.065), lineWidth: 1)
-            )
-    }
-}
-
-private extension View {
-    func bluePDCard(cornerRadius: CGFloat = 24) -> some View {
-        modifier(BluePDCardModifier(cornerRadius: cornerRadius))
-    }
-
-    func bluePDInnerCard(cornerRadius: CGFloat = 20) -> some View {
-        modifier(BluePDInnerCardModifier(cornerRadius: cornerRadius))
-    }
-}
-
-private extension String {
-    func trimmedOrFallback(_ fallback: String) -> String {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? fallback : trimmed
     }
 }
 
