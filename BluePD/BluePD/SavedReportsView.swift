@@ -2,8 +2,12 @@ import SwiftUI
 
 struct SavedReportsView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var storeManager: StoreManager
+
     @Binding var savedReports: [SavedSFSTReport]
     @State private var selectedReport: SavedSFSTReport?
+
+    private let freeReportLimit = 3
 
     private let backgroundGradient = LinearGradient(
         colors: [
@@ -15,56 +19,82 @@ struct SavedReportsView: View {
         endPoint: .bottom
     )
 
+    private var hasReachedFreeLimit: Bool {
+        !storeManager.isPro && savedReports.count >= freeReportLimit
+    }
+
+    private var reportsStatusTitle: String {
+        if storeManager.isPro {
+            return "BluePD Pro Active"
+        } else {
+            return "Free Saved Reports"
+        }
+    }
+
+    private var reportsStatusSubtitle: String {
+        if storeManager.isPro {
+            return "Unlimited saved reports available"
+        } else {
+            return "\(savedReports.count)/\(freeReportLimit) reports used"
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
                 backgroundGradient
                     .ignoresSafeArea()
 
-                if savedReports.isEmpty {
-                    VStack(spacing: 14) {
-                        Image(systemName: "doc.text.magnifyingglass")
-                            .font(.system(size: 42))
-                            .foregroundColor(.blue)
+                VStack(spacing: 14) {
+                    reportsStatusBanner
 
-                        Text("No Saved Reports")
-                            .font(.headline)
-                            .foregroundColor(.white)
+                    if savedReports.isEmpty {
+                        VStack(spacing: 14) {
+                            Image(systemName: "doc.text.magnifyingglass")
+                                .font(.system(size: 42))
+                                .foregroundColor(.blue)
 
-                        Text("Generated SFST reports will appear here.")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
-                } else {
-                    List {
-                        ForEach(savedReports) { report in
-                            Button {
-                                selectedReport = report
-                            } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(report.subjectName.isEmpty ? "Unnamed Subject" : report.subjectName)
-                                        .font(.headline)
-                                        .foregroundColor(.white)
+                            Text("No Saved Reports")
+                                .font(.headline)
+                                .foregroundColor(.white)
 
-                                    Text(report.createdAt.formatted(date: .abbreviated, time: .shortened))
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
+                            Text("Generated SFST reports will appear here.")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
+                                .multilineTextAlignment(.center)
+                        }
+                        .padding()
+                        .frame(maxHeight: .infinity)
+                    } else {
+                        List {
+                            ForEach(savedReports) { report in
+                                Button {
+                                    selectedReport = report
+                                } label: {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(report.subjectName.isEmpty ? "Unnamed Subject" : report.subjectName)
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+
+                                        Text(report.createdAt.formatted(date: .abbreviated, time: .shortened))
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                    .padding(.vertical, 6)
                                 }
-                                .padding(.vertical, 6)
+                                .buttonStyle(.plain)
+                                .listRowBackground(Color.white.opacity(0.05))
                             }
-                            .buttonStyle(.plain)
-                            .listRowBackground(Color.white.opacity(0.05))
+                            .onDelete { offsets in
+                                savedReports.remove(atOffsets: offsets)
+                            }
                         }
-                        .onDelete { offsets in
-                            savedReports.remove(atOffsets: offsets)
-                        }
+                        .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .background(Color.clear)
                 }
+                .padding(.top, 8)
             }
             .navigationTitle("Saved Reports")
             .navigationBarTitleDisplayMode(.inline)
@@ -80,6 +110,38 @@ struct SavedReportsView: View {
                 SavedReportDetailView(report: report)
             }
         }
+    }
+
+    private var reportsStatusBanner: some View {
+        HStack(spacing: 12) {
+            Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "folder.fill")
+                .foregroundColor(storeManager.isPro ? .green : .blue)
+                .font(.title3)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(reportsStatusTitle)
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                Text(reportsStatusSubtitle)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.72))
+
+                if hasReachedFreeLimit {
+                    Text("Free limit reached. Upgrade to BluePD Pro for unlimited saved reports.")
+                        .font(.caption)
+                        .foregroundColor(.orange.opacity(0.95))
+                }
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.06))
+        )
+        .padding(.horizontal)
     }
 }
 
