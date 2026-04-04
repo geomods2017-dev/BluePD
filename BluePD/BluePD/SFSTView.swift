@@ -137,17 +137,32 @@ struct SFSTView: View {
                 sectionCard(title: "HGN", systemImage: "eye.fill") {
                     VStack(spacing: 12) {
                         InstructionCard(
-                            title: "HGN Instructions / Tips",
+                            title: "Officer Setup",
                             lines: [
-                                "Check for equal pupil size before beginning.",
-                                "Check for equal tracking.",
-                                "Check for resting nystagmus.",
-                                "Hold the stimulus about 12–15 inches from the subject’s face and slightly above eye level.",
-                                "Instruct the subject to keep their head still and follow the stimulus with their eyes only.",
-                                "Check lack of smooth pursuit in each eye.",
-                                "Check distinct and sustained nystagmus at maximum deviation.",
-                                "Check onset of nystagmus prior to 45 degrees."
+                                "Confirm the subject understands instructions.",
+                                "Remove distractions when practical.",
+                                "Position the stimulus approximately 12–15 inches from the subject’s face.",
+                                "Hold the stimulus slightly above eye level.",
+                                "Tell the subject to keep the head still and follow the stimulus with the eyes only."
                             ]
+                        )
+
+                        HGNTimingCard(
+                            seconds: "2",
+                            title: "Lack of Smooth Pursuit",
+                            subtitle: "Move from center to side in about 2 seconds, then return in about 2 seconds."
+                        )
+
+                        HGNTimingCard(
+                            seconds: "4",
+                            title: "Maximum Deviation",
+                            subtitle: "Move to maximum deviation and hold for at least 4 seconds."
+                        )
+
+                        HGNTimingCard(
+                            seconds: "4",
+                            title: "Onset Prior to 45°",
+                            subtitle: "Move slowly from center to side in about 4 seconds."
                         )
 
                         ToggleRow(title: "Resting Nystagmus", isOn: $hgnRestingNystagmusObserved)
@@ -159,6 +174,9 @@ struct SFSTView: View {
                             Text("Right").tag("Right")
                         }
                         .pickerStyle(.segmented)
+                        .padding(6)
+                        .background(Color.white.opacity(0.05))
+                        .cornerRadius(12)
 
                         if selectedEye == "Left" {
                             ToggleRow(title: "Lack of Smooth Pursuit", isOn: $hgnLeftLackOfSmoothPursuit)
@@ -283,7 +301,7 @@ struct SFSTView: View {
             } label: {
                 rowCard(
                     title: "Indiana Implied Consent",
-                    subtitle: "Open advisory card",
+                    subtitle: "Open flip card",
                     systemImage: "doc.text.fill"
                 )
             }
@@ -600,31 +618,131 @@ struct InstructionCard: View {
             }
         }
         .padding()
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.blue.opacity(0.12))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.blue.opacity(0.35), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct HGNTimingCard: View {
+    let seconds: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            VStack(spacing: 2) {
+                Text(seconds)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.white)
+
+                Text("SEC")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white.opacity(0.8))
+            }
+            .frame(width: 84, height: 84)
+            .background(
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(Color.orange.opacity(0.22))
+            )
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.white)
+
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.72))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer()
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color.orange.opacity(0.10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(Color.orange.opacity(0.25), lineWidth: 1)
+                )
+        )
     }
 }
 
 struct IndianaImpliedConsentView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var showingFront = true
+
+    private let frontText = """
+I HAVE PROBABLE CAUSE TO BELIEVE THAT YOU HAVE OPERATED A VEHICLE WHILE INTOXICATED. I MUST NOW OFFER YOU THE OPPORTUNITY TO SUBMIT TO A CHEMICAL TEST AND INFORM YOU THAT YOUR REFUSAL TO SUBMIT TO A CHEMICAL TEST WILL RESULT IN THE SUSPENSION OF YOUR DRIVING PRIVILEGES FOR ONE YEAR. IF YOU HAVE AT LEAST ONE PREVIOUS CONVICTION FOR OPERATING WHILE INTOXICATED, YOUR REFUSAL TO SUBMIT TO A CHEMICAL TEST WILL RESULT IN THE SUSPENSION OF YOUR DRIVING PRIVILEGES FOR TWO YEARS.
+
+WILL YOU NOW TAKE A CHEMICAL TEST?
+"""
+
+    private let backText = """
+I HAVE REASON TO BELIEVE THAT YOU HAVE OPERATED A VEHICLE THAT WAS INVOLVED IN A FATAL OR SERIOUS BODILY INJURY CRASH. I MUST NOW OFFER YOU THE OPPORTUNITY TO SUBMIT TO A CHEMICAL TEST AND INFORM YOU THAT YOUR REFUSAL TO SUBMIT TO A CHEMICAL TEST WILL RESULT IN THE SUSPENSION OF YOUR DRIVING PRIVILEGES FOR ONE YEAR AND IS PUNISHABLE AS A CLASS C INFRACTION. IF YOU HAVE AT LEAST ONE PREVIOUS CONVICTION FOR OPERATING WHILE INTOXICATED, YOUR REFUSAL TO SUBMIT TO A CHEMICAL TEST WILL RESULT IN THE SUSPENSION OF YOUR DRIVING PRIVILEGES FOR TWO YEARS AND IS PUNISHABLE AS A CLASS A INFRACTION.
+
+WILL YOU NOW TAKE A CHEMICAL TEST?
+"""
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-
+                VStack(spacing: 20) {
                     Text("Indiana Implied Consent")
                         .font(.title2.bold())
                         .foregroundColor(.white)
 
-                    Text("""
-Indiana law requires submission to a certified chemical test when an officer has probable cause to believe a person operated a vehicle while intoxicated.
+                    Text(showingFront ? "Standard OWI advisory" : "Serious bodily injury / fatal crash advisory")
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.7))
 
-Refusal may result in license suspension and other legal consequences.
+                    ZStack {
+                        if showingFront {
+                            ImpliedConsentCard(
+                                sideLabel: "IMPLIED CONSENT",
+                                text: frontText
+                            )
+                            .transition(.opacity)
+                        } else {
+                            ImpliedConsentCard(
+                                sideLabel: "IMPLIED CONSENT - SBI",
+                                text: backText
+                            )
+                            .transition(.opacity)
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.25), value: showingFront)
 
-Verify agency-approved wording before field use.
-""")
-                    .foregroundColor(.white)
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            showingFront.toggle()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text(showingFront ? "Flip to Back" : "Flip to Front")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(14)
+                    }
+
+                    Text("Verify agency-approved wording before operational use.")
+                        .font(.footnote)
+                        .foregroundColor(.white.opacity(0.6))
+                        .multilineTextAlignment(.center)
                 }
                 .padding()
             }
@@ -650,5 +768,53 @@ Verify agency-approved wording before field use.
                 }
             }
         }
+    }
+}
+
+struct ImpliedConsentCard: View {
+    let sideLabel: String
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 0) {
+            VStack {
+                Spacer()
+
+                Text(text)
+                    .font(.system(size: 22, weight: .bold, design: .default))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6)
+                    .minimumScaleFactor(0.55)
+                    .padding(24)
+
+                Spacer()
+            }
+            .frame(maxWidth: .infinity)
+
+            ZStack {
+                Rectangle()
+                    .fill(Color.white.opacity(0.08))
+
+                Text(sideLabel)
+                    .font(.system(size: 28, weight: .heavy))
+                    .foregroundColor(.white)
+                    .rotationEffect(.degrees(90))
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                    .padding(.horizontal, 8)
+            }
+            .frame(width: 72)
+        }
+        .frame(minHeight: 520)
+        .background(
+            RoundedRectangle(cornerRadius: 22)
+                .fill(Color.blue.opacity(0.88))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+        )
+        .shadow(color: .black.opacity(0.25), radius: 14, x: 0, y: 8)
     }
 }
