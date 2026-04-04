@@ -131,7 +131,7 @@ struct StatesView: View {
                     "",
                     text: $searchText,
                     prompt: Text("Search state or abbreviation")
-                        .foregroundStyle(BluePDTheme.placeholderText)
+                        .foregroundColor(BluePDTheme.placeholderText)
                 )
                 .textInputAutocapitalization(.characters)
                 .autocorrectionDisabled()
