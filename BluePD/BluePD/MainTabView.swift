@@ -64,13 +64,6 @@ struct MainTabView: View {
             }
 
             NavigationStack {
-                QuickCardsView()
-            }
-            .tabItem {
-                Label("Quick Cards", systemImage: "rectangle.stack.text.card.fill")
-            }
-
-            NavigationStack {
                 SettingsView()
             }
             .tabItem {
