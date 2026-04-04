@@ -2,23 +2,40 @@ import SwiftUI
 import PhotosUI
 
 struct EvidenceView: View {
+    @EnvironmentObject var storeManager: StoreManager
+
     @State private var selectedItems: [PhotosPickerItem] = []
     @State private var evidenceItems: [EvidenceRecord] = []
     @State private var evidenceNotes: String = ""
     @State private var caseReference: String = ""
 
+    @State private var showUpgradeAlert = false
+    @State private var isPurchasingPro = false
+    @State private var evidenceStatusMessage = ""
+
     @FocusState private var isNotesFocused: Bool
     @FocusState private var isCaseReferenceFocused: Bool
+
+    private let freeEvidenceLimit = 10
 
     private let gridColumns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
 
+    private var hasReachedFreeEvidenceLimit: Bool {
+        !storeManager.isPro && evidenceItems.count >= freeEvidenceLimit
+    }
+
+    private var remainingFreeSlots: Int {
+        max(0, freeEvidenceLimit - evidenceItems.count)
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
                 topHeader
+                storageStatusSection
                 overviewSection
                 addEvidenceSection
                 gallerySection
@@ -49,13 +66,23 @@ struct EvidenceView: View {
             loadSavedMetadata()
         }
         .onChange(of: selectedItems) { newItems in
-            loadSelectedImages(from: newItems)
+            handleSelectedItems(newItems)
         }
         .onChange(of: caseReference) { _ in
             saveMetadata()
         }
         .onChange(of: evidenceNotes) { _ in
             saveMetadata()
+        }
+        .alert("Upgrade to BluePD Pro", isPresented: $showUpgradeAlert) {
+            Button(isPurchasingPro ? "Purchasing..." : "Upgrade") {
+                purchasePro()
+            }
+            .disabled(isPurchasingPro)
+
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Free users can store up to \(freeEvidenceLimit) evidence items. Upgrade to BluePD Pro for unlimited evidence storage.")
         }
     }
 
@@ -106,6 +133,42 @@ struct EvidenceView: View {
         .overlay(cardBorder)
     }
 
+    private var storageStatusSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "externaldrive.fill")
+                    .foregroundColor(storeManager.isPro ? .green : .blue)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(storeManager.isPro ? "BluePD Pro Active" : "Free Evidence Storage")
+                        .font(.headline)
+                        .foregroundColor(.white)
+
+                    Text(storeManager.isPro ? "Unlimited evidence storage available" : "\(evidenceItems.count)/\(freeEvidenceLimit) evidence items used")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.72))
+                }
+
+                Spacer()
+            }
+
+            if hasReachedFreeEvidenceLimit {
+                Text("Free evidence limit reached. Upgrade to BluePD Pro for unlimited evidence storage.")
+                    .font(.caption)
+                    .foregroundColor(.orange.opacity(0.95))
+            }
+
+            if !evidenceStatusMessage.isEmpty {
+                Text(evidenceStatusMessage)
+                    .font(.caption)
+                    .foregroundColor(.white.opacity(0.72))
+            }
+        }
+        .padding(14)
+        .background(innerCardBackground)
+        .overlay(innerCardBorder)
+    }
+
     private var overviewSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Overview")
@@ -140,21 +203,25 @@ struct EvidenceView: View {
 
                 PhotosPicker(
                     selection: $selectedItems,
-                    maxSelectionCount: 20,
+                    maxSelectionCount: storeManager.isPro ? 20 : max(remainingFreeSlots, 1),
                     matching: .images
                 ) {
                     VStack(spacing: 10) {
-                        Image(systemName: "photo.badge.plus")
+                        Image(systemName: hasReachedFreeEvidenceLimit ? "lock.fill" : "photo.badge.plus")
                             .font(.system(size: 30, weight: .medium))
-                            .foregroundColor(.blue)
+                            .foregroundColor(hasReachedFreeEvidenceLimit ? .orange : .blue)
 
-                        Text("Select Evidence Photos")
+                        Text(hasReachedFreeEvidenceLimit ? "Free Limit Reached" : "Select Evidence Photos")
                             .font(.headline)
                             .foregroundColor(.white)
 
-                        Text("Add photos from the library")
-                            .font(.subheadline)
-                            .foregroundColor(.white.opacity(0.62))
+                        Text(
+                            hasReachedFreeEvidenceLimit
+                            ? "Upgrade to BluePD Pro to add more evidence"
+                            : "Add photos from the library"
+                        )
+                        .font(.subheadline)
+                        .foregroundColor(.white.opacity(0.62))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 24)
@@ -169,6 +236,7 @@ struct EvidenceView: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .disabled(hasReachedFreeEvidenceLimit)
             }
         }
     }
@@ -368,19 +436,60 @@ struct EvidenceView: View {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
     }
 
+    private func handleSelectedItems(_ items: [PhotosPickerItem]) {
+        evidenceStatusMessage = ""
+
+        guard !items.isEmpty else { return }
+
+        if hasReachedFreeEvidenceLimit {
+            selectedItems.removeAll()
+            showUpgradeAlert = true
+            return
+        }
+
+        let allowableItems: [PhotosPickerItem]
+        if storeManager.isPro {
+            allowableItems = items
+        } else {
+            allowableItems = Array(items.prefix(remainingFreeSlots))
+            if items.count > allowableItems.count {
+                evidenceStatusMessage = "Free plan limit allows \(remainingFreeSlots) more evidence item\(remainingFreeSlots == 1 ? "" : "s")."
+            }
+        }
+
+        loadSelectedImages(from: allowableItems)
+    }
+
     private func loadSelectedImages(from items: [PhotosPickerItem]) {
         Task {
             for item in items {
+                if !storeManager.isPro && evidenceItems.count >= freeEvidenceLimit {
+                    await MainActor.run {
+                        evidenceStatusMessage = "Free evidence limit reached."
+                        showUpgradeAlert = true
+                    }
+                    break
+                }
+
                 if let data = try? await item.loadTransferable(type: Data.self),
                    let image = UIImage(data: data),
                    let savedFilename = EvidenceStorage.saveImage(image) {
                     let newRecord = EvidenceRecord(id: UUID(), filename: savedFilename)
-                    evidenceItems.append(newRecord)
+
+                    await MainActor.run {
+                        evidenceItems.append(newRecord)
+                    }
                 }
             }
 
-            EvidenceStorage.saveManifest(evidenceItems)
-            selectedItems.removeAll()
+            await MainActor.run {
+                EvidenceStorage.saveManifest(evidenceItems)
+                selectedItems.removeAll()
+
+                if evidenceStatusMessage.isEmpty {
+                    evidenceStatusMessage = "Evidence updated."
+                }
+            }
         }
     }
 
@@ -391,6 +500,7 @@ struct EvidenceView: View {
         EvidenceStorage.deleteImage(named: item.filename)
         evidenceItems.remove(at: index)
         EvidenceStorage.saveManifest(evidenceItems)
+        evidenceStatusMessage = "Evidence item removed."
     }
 
     private func clearAllEvidence() {
@@ -401,6 +511,7 @@ struct EvidenceView: View {
         evidenceItems.removeAll()
         selectedItems.removeAll()
         EvidenceStorage.saveManifest(evidenceItems)
+        evidenceStatusMessage = "All evidence cleared."
     }
 
     private func loadSavedEvidence() {
@@ -420,6 +531,27 @@ struct EvidenceView: View {
         let metadata = EvidenceStorage.loadMetadata()
         caseReference = metadata.caseReference
         evidenceNotes = metadata.evidenceNotes
+    }
+
+    private func purchasePro() {
+        guard !isPurchasingPro else { return }
+
+        isPurchasingPro = true
+        evidenceStatusMessage = "Contacting App Store..."
+
+        Task {
+            await storeManager.purchase()
+
+            await MainActor.run {
+                isPurchasingPro = false
+
+                if storeManager.isPro {
+                    evidenceStatusMessage = "BluePD Pro unlocked. You now have unlimited evidence storage."
+                } else {
+                    evidenceStatusMessage = "Purchase not completed."
+                }
+            }
+        }
     }
 }
 
