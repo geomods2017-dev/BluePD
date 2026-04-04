@@ -3,13 +3,20 @@ import LocalAuthentication
 
 struct LoginView: View {
     @AppStorage("isLoggedIn") private var isLoggedIn = false
-    @AppStorage("savedPIN") private var savedPIN = "1234"
+    @AppStorage("savedPIN") private var savedPIN = ""
     @AppStorage("useBiometrics") private var useBiometrics = true
+    @AppStorage("hasCreatedPIN") private var hasCreatedPIN = false
 
     @State private var pin = ""
+    @State private var confirmPIN = ""
+    @State private var firstPINEntry = ""
     @State private var errorMessage = ""
     @State private var isAuthenticating = false
     @FocusState private var pinFieldFocused: Bool
+
+    private var isCreatingPIN: Bool {
+        !hasCreatedPIN || savedPIN.isEmpty
+    }
 
     var body: some View {
         ZStack {
@@ -36,56 +43,16 @@ struct LoginView: View {
                         .font(.largeTitle.bold())
                         .foregroundStyle(.white)
 
-                    Text("Secure Access")
+                    Text(isCreatingPIN ? "Create Your Passcode" : "Secure Access")
                         .font(.headline)
                         .foregroundStyle(.white.opacity(0.78))
                 }
 
                 VStack(spacing: 16) {
-                    SecureField("Enter PIN", text: $pin)
-                        .keyboardType(.numberPad)
-                        .textContentType(.oneTimeCode)
-                        .focused($pinFieldFocused)
-                        .padding()
-                        .background(Color.white.opacity(0.12))
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                        )
-
-                    Button(action: loginWithPIN) {
-                        HStack {
-                            Image(systemName: "lock.fill")
-                            Text("Login with PIN")
-                                .fontWeight(.semibold)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.white)
-                        .foregroundStyle(.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                    }
-
-                    if useBiometrics {
-                        Button(action: authenticateWithBiometrics) {
-                            HStack {
-                                Image(systemName: "faceid")
-                                Text("Use Face ID")
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.white.opacity(0.12))
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                            )
-                        }
-                        .disabled(isAuthenticating)
+                    if isCreatingPIN {
+                        createPINSection
+                    } else {
+                        loginSection
                     }
 
                     if !errorMessage.isEmpty {
@@ -103,7 +70,7 @@ struct LoginView: View {
 
                 Spacer()
 
-                Text("Authorized personnel only")
+                Text(isCreatingPIN ? "Create a 4-digit passcode to secure BluePD" : "Authorized personnel only")
                     .font(.footnote)
                     .foregroundStyle(.white.opacity(0.65))
                     .padding(.bottom, 24)
@@ -114,15 +81,136 @@ struct LoginView: View {
         }
     }
 
+    private var createPINSection: some View {
+        VStack(spacing: 16) {
+            SecureField("Create 4-digit PIN", text: $pin)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .focused($pinFieldFocused)
+                .padding()
+                .background(Color.white.opacity(0.12))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+
+            SecureField("Confirm 4-digit PIN", text: $confirmPIN)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .padding()
+                .background(Color.white.opacity(0.12))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+
+            Button(action: createPIN) {
+                HStack {
+                    Image(systemName: "lock.badge.plus.fill")
+                    Text("Save PIN")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.white)
+                .foregroundStyle(.black)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+        }
+    }
+
+    private var loginSection: some View {
+        VStack(spacing: 16) {
+            SecureField("Enter PIN", text: $pin)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .focused($pinFieldFocused)
+                .padding()
+                .background(Color.white.opacity(0.12))
+                .foregroundStyle(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
+
+            Button(action: loginWithPIN) {
+                HStack {
+                    Image(systemName: "lock.fill")
+                    Text("Login with PIN")
+                        .fontWeight(.semibold)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.white)
+                .foregroundStyle(.black)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+            }
+
+            if useBiometrics {
+                Button(action: authenticateWithBiometrics) {
+                    HStack {
+                        Image(systemName: "faceid")
+                        Text("Use Face ID")
+                            .fontWeight(.semibold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.white.opacity(0.12))
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                    )
+                }
+                .disabled(isAuthenticating)
+            }
+        }
+    }
+
+    private func createPIN() {
+        errorMessage = ""
+
+        let trimmedPIN = pin.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedConfirmPIN = confirmPIN.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard trimmedPIN.count == 4, trimmedPIN.allSatisfy(\.isNumber) else {
+            errorMessage = "PIN must be exactly 4 digits."
+            pin = ""
+            confirmPIN = ""
+            return
+        }
+
+        guard trimmedPIN == trimmedConfirmPIN else {
+            errorMessage = "PINs do not match."
+            pin = ""
+            confirmPIN = ""
+            return
+        }
+
+        savedPIN = trimmedPIN
+        hasCreatedPIN = true
+        isLoggedIn = true
+        pin = ""
+        confirmPIN = ""
+    }
+
     private func loginWithPIN() {
         errorMessage = ""
 
-        guard !pin.trimmingCharacters(in: .whitespaces).isEmpty else {
+        let trimmedPIN = pin.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedPIN.isEmpty else {
             errorMessage = "Enter your PIN."
             return
         }
 
-        if pin == savedPIN {
+        if trimmedPIN == savedPIN {
             isLoggedIn = true
             pin = ""
         } else {
@@ -132,6 +220,11 @@ struct LoginView: View {
     }
 
     private func authenticateWithBiometrics() {
+        guard hasCreatedPIN, !savedPIN.isEmpty else {
+            errorMessage = "Create a PIN before enabling Face ID."
+            return
+        }
+
         let context = LAContext()
         var error: NSError?
 
