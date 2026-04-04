@@ -27,6 +27,7 @@
 		A1B2C4071E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4081E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift */; };
 		A1B2C4111E1F2A3B4C5D6E7F /* StoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4121E1F2A3B4C5D6E7F /* StoreManager.swift */; };
 		A1B2C4131E1F2A3B4C5D6E7F /* SavedReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4141E1F2A3B4C5D6E7F /* SavedReportsView.swift */; };
+        A1B2C4151E1F2A3B4C5D6E7F /* QuickCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4161E1F2A3B4C5D6E7F /* QuickCardsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,6 +52,7 @@
 		A1B2C4081E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchDisclaimerView.swift; sourceTree = "<group>"; };
 		A1B2C4121E1F2A3B4C5D6E7F /* StoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreManager.swift; sourceTree = "<group>"; };
 		A1B2C4141E1F2A3B4C5D6E7F /* SavedReportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedReportsView.swift; sourceTree = "<group>"; };
+        A1B2C4161E1F2A3B4C5D6E7F /* QuickCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCardsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +97,7 @@
 				A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */,
 				A1B2C4121E1F2A3B4C5D6E7F /* StoreManager.swift */,
 				A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */,
+                A1B2C4161E1F2A3B4C5D6E7F /* QuickCardsView.swift */,
 			);
 			path = BluePD;
 			sourceTree = "<group>";
@@ -196,6 +199,7 @@
 				A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */,
 				A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */,
 				A1B2C4111E1F2A3B4C5D6E7F /* StoreManager.swift in Sources */,
+                A1B2C4151E1F2A3B4C5D6E7F /* QuickCardsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
