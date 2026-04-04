@@ -81,8 +81,8 @@ struct StatesView: View {
         VStack(spacing: 0) {
             headerSection
 
-            ScrollView {
-                LazyVStack(spacing: 10) {
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 14) {
                     if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && filteredStates.isEmpty {
                         emptyStateCard
                     } else {
@@ -98,9 +98,9 @@ struct StatesView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 4)
-                .padding(.bottom, 24)
+                .padding(.horizontal, 18)
+                .padding(.top, 6)
+                .padding(.bottom, 30)
             }
         }
         .background(backgroundGradient.ignoresSafeArea())
@@ -114,84 +114,77 @@ struct StatesView: View {
     private var backgroundGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(red: 7/255, green: 12/255, blue: 24/255),
-                Color(red: 13/255, green: 23/255, blue: 40/255),
-                Color(red: 18/255, green: 29/255, blue: 48/255)
+                Color(red: 2/255, green: 7/255, blue: 18/255),
+                Color(red: 7/255, green: 17/255, blue: 31/255),
+                Color(red: 10/255, green: 24/255, blue: 44/255)
             ],
-            startPoint: .top,
-            endPoint: .bottom
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
         )
     }
 
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Official State Code Links")
-                .font(.headline)
-                .foregroundColor(.white)
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Official State Code Links")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(StatesPalette.primaryText)
 
-            Text("Search by state name or abbreviation. Indiana stays pinned at the top.")
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.66))
+                Text("Search by state name or abbreviation. Indiana stays pinned at the top.")
+                    .font(.subheadline)
+                    .foregroundStyle(StatesPalette.secondaryText)
+            }
 
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.white.opacity(0.50))
+                    .foregroundStyle(StatesPalette.secondaryText)
 
-                TextField("Search state or abbreviation", text: $searchText)
-                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .foregroundColor(.white)
+                TextField(
+                    "",
+                    text: $searchText,
+                    prompt: Text("Search state or abbreviation")
+                        .foregroundStyle(StatesPalette.placeholderText)
+                )
+                .textInputAutocapitalization(.characters)
+                .autocorrectionDisabled()
+                .foregroundStyle(StatesPalette.primaryText)
 
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.white.opacity(0.42))
+                            .foregroundStyle(StatesPalette.tertiaryText)
                     }
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.05), lineWidth: 1)
-            )
+            .padding(.horizontal, 16)
+            .frame(height: 58)
+            .bluePDInnerCard(cornerRadius: 18)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
+        .padding(.horizontal, 18)
+        .padding(.top, 14)
         .padding(.bottom, 14)
     }
 
     private var emptyStateCard: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-                .font(.title3)
-                .foregroundColor(.white.opacity(0.60))
+                .font(.system(size: 28, weight: .medium))
+                .foregroundStyle(StatesPalette.secondaryText)
 
-            Text("No states found")
-                .font(.headline)
-                .foregroundColor(.white)
+            Text("No States Found")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(StatesPalette.primaryText)
 
             Text("Try searching by full state name or abbreviation.")
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.62))
+                .foregroundStyle(StatesPalette.secondaryText)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 28)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.05), lineWidth: 1)
-        )
+        .padding(.vertical, 30)
+        .bluePDCard(cornerRadius: 22)
     }
 }
 
@@ -199,63 +192,58 @@ struct StateRowCard: View {
     let state: StateLink
 
     var body: some View {
-        HStack(spacing: 12) {
-            VStack(spacing: 2) {
+        HStack(spacing: 14) {
+            VStack(spacing: 3) {
                 Text(state.abbreviation)
-                    .font(.subheadline)
-                    .fontWeight(.bold)
-                    .foregroundColor(.blue)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(StatesPalette.accent)
 
                 if state.isPinned {
                     Image(systemName: "star.fill")
                         .font(.caption2)
-                        .foregroundColor(.blue.opacity(0.90))
+                        .foregroundStyle(StatesPalette.accent.opacity(0.92))
                 }
             }
-            .frame(width: 42, height: 42)
+            .frame(width: 48, height: 48)
             .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(state.isPinned ? Color.blue.opacity(0.14) : Color.blue.opacity(0.10))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.blue.opacity(state.isPinned ? 0.26 : 0.18), lineWidth: 1)
+                    )
             )
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 8) {
                     Text(state.name)
-                        .font(.headline)
-                        .foregroundColor(.white)
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(StatesPalette.primaryText)
 
                     if state.isPinned {
                         Text("Pinned")
-                            .font(.caption2)
-                            .fontWeight(.semibold)
+                            .font(.caption2.weight(.semibold))
                             .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
+                            .padding(.vertical, 4)
                             .background(Color.blue.opacity(0.12))
-                            .foregroundColor(.blue)
+                            .foregroundStyle(StatesPalette.accent)
                             .clipShape(Capsule())
                     }
                 }
 
-                Text("Official code / statute site")
+                Text("Official state code access")
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.60))
+                    .foregroundStyle(StatesPalette.secondaryText)
             }
 
             Spacer()
 
             Image(systemName: "arrow.up.right.square")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.white.opacity(0.34))
+                .foregroundStyle(StatesPalette.tertiaryText)
         }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.05), lineWidth: 1)
-        )
+        .padding(16)
+        .bluePDInnerCard(cornerRadius: 22)
     }
 }
 
@@ -293,4 +281,73 @@ struct SafariView: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) { }
+}
+
+private enum StatesPalette {
+    static let primaryText = Color.white
+    static let secondaryText = Color.white.opacity(0.74)
+    static let tertiaryText = Color.white.opacity(0.38)
+    static let placeholderText = Color.white.opacity(0.34)
+    static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
+}
+
+private struct BluePDCardModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.070),
+                                Color.white.opacity(0.032)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.07), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
+    }
+}
+
+private struct BluePDInnerCardModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.050),
+                                Color.white.opacity(0.028)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(Color.white.opacity(0.065), lineWidth: 1)
+            )
+    }
+}
+
+private extension View {
+    func bluePDCard(cornerRadius: CGFloat = 24) -> some View {
+        modifier(BluePDCardModifier(cornerRadius: cornerRadius))
+    }
+
+    func bluePDInnerCard(cornerRadius: CGFloat = 20) -> some View {
+        modifier(BluePDInnerCardModifier(cornerRadius: cornerRadius))
+    }
 }
