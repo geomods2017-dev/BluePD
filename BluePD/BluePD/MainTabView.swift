@@ -5,7 +5,6 @@ struct MainTabView: View {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
 
-        // Darker tactical background
         appearance.backgroundColor = UIColor(
             red: 5/255,
             green: 10/255,
@@ -13,20 +12,17 @@ struct MainTabView: View {
             alpha: 0.98
         )
 
-        // Subtle top border
         appearance.shadowColor = UIColor.white.withAlphaComponent(0.08)
 
         let selectedColor = UIColor.systemBlue
         let normalColor = UIColor.white.withAlphaComponent(0.55)
 
-        // Selected state
         appearance.stackedLayoutAppearance.selected.iconColor = selectedColor
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
             .foregroundColor: selectedColor,
             .font: UIFont.systemFont(ofSize: 11, weight: .semibold)
         ]
 
-        // Normal state
         appearance.stackedLayoutAppearance.normal.iconColor = normalColor
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
             .foregroundColor: normalColor,
@@ -39,7 +35,6 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
-
             NavigationStack {
                 HomeView()
             }
@@ -66,6 +61,13 @@ struct MainTabView: View {
             }
             .tabItem {
                 Label("Evidence", systemImage: "camera.fill")
+            }
+
+            NavigationStack {
+                QuickCardsView()
+            }
+            .tabItem {
+                Label("Quick Cards", systemImage: "rectangle.stack.text.card.fill")
             }
 
             NavigationStack {
