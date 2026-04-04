@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 
 struct SFSTView: View {
+    @EnvironmentObject var storeManager: StoreManager
     @Binding var savedReports: [SavedSFSTReport]
 
     @State private var subjectName = ""
@@ -53,6 +54,9 @@ struct SFSTView: View {
 
     @State private var showImpliedConsent = false
     @State private var showSavedReports = false
+    @State private var showUpgradeAlert = false
+    @State private var isPurchasingPro = false
+    @State private var saveStatusMessage = ""
 
     @FocusState private var focusedField: ActiveField?
 
@@ -65,6 +69,20 @@ struct SFSTView: View {
     private let lightingOptions = ["Daylight", "Dark - Lit", "Dark - Unlit", "Dawn / Dusk", "Other"]
     private let weatherOptions = ["Clear", "Rain", "Fog", "Snow", "Wind", "Other"]
     private let footwearOptions = ["Barefoot", "Sandals", "Boots", "Tennis Shoes", "Heels", "Other"]
+
+    private let freeReportLimit = 3
+
+    private var hasReachedFreeLimit: Bool {
+        !storeManager.isPro && savedReports.count >= freeReportLimit
+    }
+
+    private var reportUsageText: String {
+        if storeManager.isPro {
+            return "BluePD Pro: Unlimited saved reports"
+        } else {
+            return "\(savedReports.count)/\(freeReportLimit) saved reports used"
+        }
+    }
 
     var body: some View {
         ScrollView {
@@ -243,19 +261,41 @@ struct SFSTView: View {
                     }
                 }
 
-                Button(action: generateReportToApp) {
+                Button {
+                    attemptSaveReport()
+                } label: {
                     HStack {
-                        Image(systemName: "internaldrive.fill")
+                        Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "internaldrive.fill")
                         Text("Save Report to App")
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.blue)
+                    .background(hasReachedFreeLimit ? Color.gray.opacity(0.6) : Color.blue)
                     .foregroundColor(.white)
                     .cornerRadius(14)
                 }
                 .padding(.top, 8)
+
+                VStack(spacing: 6) {
+                    Text(reportUsageText)
+                        .font(.caption)
+                        .foregroundColor(storeManager.isPro ? .green : .white.opacity(0.72))
+
+                    if hasReachedFreeLimit {
+                        Text("Free report limit reached. Upgrade to BluePD Pro for unlimited saved reports.")
+                            .font(.caption)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.orange.opacity(0.95))
+                    }
+
+                    if !saveStatusMessage.isEmpty {
+                        Text(saveStatusMessage)
+                            .font(.caption)
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.white.opacity(0.72))
+                    }
+                }
             }
             .padding()
         }
@@ -291,6 +331,16 @@ struct SFSTView: View {
         .sheet(isPresented: $showSavedReports) {
             SavedReportsView(savedReports: $savedReports)
         }
+        .alert("Upgrade to BluePD Pro", isPresented: $showUpgradeAlert) {
+            Button(isPurchasingPro ? "Purchasing..." : "Upgrade") {
+                purchasePro()
+            }
+            .disabled(isPurchasingPro)
+
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Free users can save up to \(freeReportLimit) reports. Upgrade to BluePD Pro for unlimited saved reports.")
+        }
     }
 
     private var topActionRow: some View {
@@ -313,11 +363,52 @@ struct SFSTView: View {
             } label: {
                 rowCard(
                     title: "Saved Reports",
-                    subtitle: "\(savedReports.count) report\(savedReports.count == 1 ? "" : "s") in app",
+                    subtitle: savedReportsSubtitle,
                     systemImage: "folder.fill"
                 )
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    private var savedReportsSubtitle: String {
+        if storeManager.isPro {
+            return "\(savedReports.count) report\(savedReports.count == 1 ? "" : "s") in app • Pro"
+        } else {
+            return "\(savedReports.count)/\(freeReportLimit) reports used"
+        }
+    }
+
+    private func attemptSaveReport() {
+        saveStatusMessage = ""
+        dismissKeyboard()
+
+        if hasReachedFreeLimit {
+            showUpgradeAlert = true
+            return
+        }
+
+        generateReportToApp()
+    }
+
+    private func purchasePro() {
+        guard !isPurchasingPro else { return }
+
+        isPurchasingPro = true
+        saveStatusMessage = "Contacting App Store..."
+
+        Task {
+            await storeManager.purchase()
+
+            await MainActor.run {
+                isPurchasingPro = false
+
+                if storeManager.isPro {
+                    saveStatusMessage = "BluePD Pro unlocked. You now have unlimited saved reports."
+                } else {
+                    saveStatusMessage = "Purchase not completed."
+                }
+            }
         }
     }
 
@@ -387,6 +478,7 @@ struct SFSTView: View {
         )
 
         savedReports.insert(newReport, at: 0)
+        saveStatusMessage = "Report saved."
         showSavedReports = true
     }
 
