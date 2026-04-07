@@ -4,15 +4,14 @@ import StoreKit
 final class StoreManager: ObservableObject {
     @Published var isPro = false
     @Published var products: [Product] = []
+    @Published var errorMessage: String? = nil
     @Published var isLoadingProducts = false
-    @Published var isPurchasing = false
-    @Published var errorMessage: String?
 
     private let productID = "com.bluepd.pro"
-    private var updatesTask: Task<Void, Never>?
+    private var transactionListenerTask: Task<Void, Never>?
 
     init() {
-        updatesTask = observeTransactionUpdates()
+        transactionListenerTask = listenForTransactions()
 
         Task {
             await loadProducts()
@@ -21,7 +20,7 @@ final class StoreManager: ObservableObject {
     }
 
     deinit {
-        updatesTask?.cancel()
+        transactionListenerTask?.cancel()
     }
 
     func loadProducts() async {
@@ -33,11 +32,12 @@ final class StoreManager: ObservableObject {
             products = storeProducts
 
             if products.isEmpty {
-                errorMessage = "Unable to load the Pro upgrade right now."
+                errorMessage = "Pro upgrade is currently unavailable."
+                print("No products returned for id: \(productID)")
             }
         } catch {
             products = []
-            errorMessage = "Failed to load purchase options. Please try again."
+            errorMessage = "Failed to load Pro upgrade."
             print("Failed to load products: \(error)")
         }
 
@@ -45,11 +45,7 @@ final class StoreManager: ObservableObject {
     }
 
     func purchase() async {
-        if isPurchasing { return }
-
         errorMessage = nil
-        isPurchasing = true
-        defer { isPurchasing = false }
 
         do {
             if products.isEmpty {
@@ -69,25 +65,29 @@ final class StoreManager: ObservableObject {
                 switch verification {
                 case .verified(let transaction):
                     isPro = true
+                    errorMessage = nil
                     await transaction.finish()
                     await refreshPurchasedStatus()
 
                 case .unverified(_, let error):
-                    errorMessage = "Purchase could not be verified."
+                    errorMessage = "Purchase verification failed."
                     print("Purchase verification failed: \(error)")
                 }
 
             case .pending:
                 errorMessage = "Purchase is pending approval."
+                print("Purchase is pending approval.")
 
             case .userCancelled:
-                break
+                errorMessage = "Purchase cancelled."
+                print("User cancelled purchase.")
 
             @unknown default:
                 errorMessage = "Unknown purchase result."
+                print("Unknown purchase result.")
             }
         } catch {
-            errorMessage = "Purchase failed. Please try again."
+            errorMessage = "Purchase failed."
             print("Purchase failed: \(error)")
         }
     }
@@ -98,8 +98,12 @@ final class StoreManager: ObservableObject {
         do {
             try await AppStore.sync()
             await refreshPurchasedStatus()
+
+            if !isPro {
+                errorMessage = "No previous Pro purchase found."
+            }
         } catch {
-            errorMessage = "Restore failed. Please try again."
+            errorMessage = "Restore failed."
             print("Restore failed: \(error)")
         }
     }
@@ -125,27 +129,28 @@ final class StoreManager: ObservableObject {
         isPro = hasPro
     }
 
-    private func observeTransactionUpdates() -> Task<Void, Never> {
+    private func listenForTransactions() -> Task<Void, Never> {
         Task.detached { [weak self] in
             for await result in Transaction.updates {
                 guard let self else { return }
 
-                await MainActor.run {
-                    switch result {
-                    case .verified(let transaction):
-                        if transaction.productID == self.productID {
+                switch result {
+                case .verified(let transaction):
+                    if transaction.productID == self.productID {
+                        await MainActor.run {
                             self.isPro = true
+                            self.errorMessage = nil
                         }
-
-                        Task {
-                            await transaction.finish()
-                            await self.refreshPurchasedStatus()
-                        }
-
-                    case .unverified(_, let error):
-                        self.errorMessage = "Transaction verification failed."
-                        print("Transaction update unverified: \(error)")
                     }
+
+                    await transaction.finish()
+                    await self.refreshPurchasedStatus()
+
+                case .unverified(_, let error):
+                    await MainActor.run {
+                        self.errorMessage = "Transaction verification failed."
+                    }
+                    print("Transaction update unverified: \(error)")
                 }
             }
         }
