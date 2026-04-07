@@ -23,6 +23,8 @@ struct SettingsView: View {
     @State private var showSecurityMessage: Bool = false
     @State private var showProfileEditor = false
     @State private var purchaseStatusMessage: String = ""
+    @State private var isPurchasingPro = false
+    @State private var isRestoringPurchases = false
 
     private let states = [
         "Indiana", "Illinois", "Michigan", "Ohio", "Kentucky",
@@ -31,6 +33,10 @@ struct SettingsView: View {
 
     private var hasValidPIN: Bool {
         hasCreatedPIN && !savedPIN.isEmpty
+    }
+
+    private var canAttemptPurchase: Bool {
+        !isPurchasingPro && !isRestoringPurchases && !storeManager.products.isEmpty
     }
 
     var body: some View {
@@ -71,37 +77,30 @@ struct SettingsView: View {
                             .padding(16)
                             .bluePDInnerCard(cornerRadius: 20)
                         } else {
-                            Button {
-                                Task {
-                                    purchaseStatusMessage = "Contacting App Store..."
-                                    await storeManager.purchase()
-
-                                    if storeManager.isPro {
-                                        purchaseStatusMessage = "BluePD Pro unlocked."
-                                    } else {
-                                        purchaseStatusMessage = "Purchase was not completed."
-                                    }
+                            VStack(spacing: 12) {
+                                Button {
+                                    purchasePro()
+                                } label: {
+                                    Text(isPurchasingPro ? "Processing..." : "Upgrade to Pro ($4.99)")
+                                        .frame(maxWidth: .infinity)
                                 }
-                            } label: {
-                                Text("Upgrade to Pro ($4.99)")
-                                    .frame(maxWidth: .infinity)
+                                .buttonStyle(BluePDPrimaryButtonStyle())
+                                .disabled(!canAttemptPurchase)
+
+                                if storeManager.products.isEmpty {
+                                    Text("Pro upgrade is currently unavailable.")
+                                        .font(.caption)
+                                        .foregroundStyle(BluePDTheme.warning.opacity(0.95))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                             }
-                            .buttonStyle(BluePDPrimaryButtonStyle())
                         }
 
-                        Button("Restore Purchases") {
-                            Task {
-                                purchaseStatusMessage = "Restoring purchases..."
-                                await storeManager.restorePurchases()
-
-                                if storeManager.isPro {
-                                    purchaseStatusMessage = "Purchases restored."
-                                } else {
-                                    purchaseStatusMessage = "No previous Pro purchase found."
-                                }
-                            }
+                        Button(isRestoringPurchases ? "Restoring..." : "Restore Purchases") {
+                            restorePurchases()
                         }
                         .buttonStyle(BluePDTextButtonStyle())
+                        .disabled(isPurchasingPro || isRestoringPurchases)
 
                         if !purchaseStatusMessage.isEmpty {
                             Text(purchaseStatusMessage)
@@ -253,6 +252,15 @@ struct SettingsView: View {
         .background(BluePDTheme.appBackground.ignoresSafeArea())
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            Task {
+                if storeManager.products.isEmpty {
+                    await storeManager.loadProducts()
+                }
+
+                await storeManager.refreshPurchasedStatus()
+            }
+        }
         .sheet(isPresented: $showProfileEditor) {
             ProfileEditorView(
                 officerName: $officerName,
@@ -331,6 +339,52 @@ struct SettingsView: View {
         }
         .padding(16)
         .bluePDInnerCard(cornerRadius: 20)
+    }
+
+    private func purchasePro() {
+        guard !isPurchasingPro else { return }
+
+        isPurchasingPro = true
+        purchaseStatusMessage = "Contacting App Store..."
+
+        Task {
+            await storeManager.purchase()
+
+            await MainActor.run {
+                isPurchasingPro = false
+
+                if storeManager.isPro {
+                    purchaseStatusMessage = "BluePD Pro unlocked."
+                } else if let errorMessage = storeManager.errorMessage, !errorMessage.isEmpty {
+                    purchaseStatusMessage = errorMessage
+                } else {
+                    purchaseStatusMessage = "Purchase was not completed."
+                }
+            }
+        }
+    }
+
+    private func restorePurchases() {
+        guard !isRestoringPurchases else { return }
+
+        isRestoringPurchases = true
+        purchaseStatusMessage = "Restoring purchases..."
+
+        Task {
+            await storeManager.restorePurchases()
+
+            await MainActor.run {
+                isRestoringPurchases = false
+
+                if storeManager.isPro {
+                    purchaseStatusMessage = "Purchases restored."
+                } else if let errorMessage = storeManager.errorMessage, !errorMessage.isEmpty {
+                    purchaseStatusMessage = errorMessage
+                } else {
+                    purchaseStatusMessage = "No previous Pro purchase found."
+                }
+            }
+        }
     }
 
     private func changePIN() {
@@ -441,5 +495,12 @@ struct SecureSettingsField: View {
                 )
                 .foregroundStyle(BluePDTheme.primaryText)
         }
+    }
+}
+
+#Preview {
+    NavigationStack {
+        SettingsView()
+            .environmentObject(StoreManager())
     }
 }
