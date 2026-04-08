@@ -20,7 +20,7 @@ struct SettingsView: View {
     @State private var newPIN: String = ""
     @State private var confirmNewPIN: String = ""
     @State private var securityMessage: String = ""
-    @State private var showSecurityMessage: Bool = false
+    @State private var showSecurityMessage = false
     @State private var showProfileEditor = false
     @State private var purchaseStatusMessage: String = ""
     @State private var isPurchasingPro = false
@@ -36,7 +36,26 @@ struct SettingsView: View {
     }
 
     private var canAttemptPurchase: Bool {
-        !isPurchasingPro && !isRestoringPurchases && !storeManager.products.isEmpty
+        !isPurchasingPro && !isRestoringPurchases && !storeManager.isLoadingProducts
+    }
+
+    private var proPriceText: String {
+        if let product = storeManager.products.first {
+            return product.displayPrice
+        }
+        return "$4.99"
+    }
+
+    private var purchaseButtonTitle: String {
+        if isPurchasingPro {
+            return "Processing..."
+        }
+
+        if storeManager.isLoadingProducts {
+            return "Loading..."
+        }
+
+        return "Upgrade to Pro (\(proPriceText))"
     }
 
     var body: some View {
@@ -47,53 +66,9 @@ struct SettingsView: View {
                 settingsSectionCard(title: "BluePD Pro", systemImage: "star.fill") {
                     VStack(spacing: 14) {
                         if storeManager.isPro {
-                            HStack(spacing: 12) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(BluePDTheme.success.opacity(0.12))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                                .stroke(BluePDTheme.success.opacity(0.25), lineWidth: 1)
-                                        )
-
-                                    Image(systemName: "checkmark.seal.fill")
-                                        .foregroundStyle(BluePDTheme.success)
-                                        .font(.system(size: 18, weight: .semibold))
-                                }
-                                .frame(width: 44, height: 44)
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Pro Unlocked")
-                                        .font(.headline.weight(.semibold))
-                                        .foregroundStyle(BluePDTheme.primaryText)
-
-                                    Text("Premium access is active on this account.")
-                                        .font(.subheadline)
-                                        .foregroundStyle(BluePDTheme.secondaryText)
-                                }
-
-                                Spacer()
-                            }
-                            .padding(16)
-                            .bluePDInnerCard(cornerRadius: 20)
+                            proUnlockedCard
                         } else {
-                            VStack(spacing: 12) {
-                                Button {
-                                    purchasePro()
-                                } label: {
-                                    Text(isPurchasingPro ? "Processing..." : "Upgrade to Pro ($4.99)")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(BluePDPrimaryButtonStyle())
-                                .disabled(!canAttemptPurchase)
-
-                                if storeManager.products.isEmpty {
-                                    Text("Pro upgrade is currently unavailable.")
-                                        .font(.caption)
-                                        .foregroundStyle(BluePDTheme.warning.opacity(0.95))
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                            }
+                            proPurchaseCard
                         }
 
                         Button(isRestoringPurchases ? "Restoring..." : "Restore Purchases") {
@@ -252,13 +227,12 @@ struct SettingsView: View {
         .background(BluePDTheme.appBackground.ignoresSafeArea())
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            Task {
-                if storeManager.products.isEmpty {
-                    await storeManager.loadProducts()
-                }
+        .task {
+            await storeManager.loadProducts()
+            await storeManager.refreshPurchasedStatus()
 
-                await storeManager.refreshPurchasedStatus()
+            if let error = storeManager.errorMessage, !error.isEmpty, purchaseStatusMessage.isEmpty {
+                purchaseStatusMessage = error
             }
         }
         .sheet(isPresented: $showProfileEditor) {
@@ -284,6 +258,77 @@ struct SettingsView: View {
         }
         .padding(20)
         .bluePDCard(cornerRadius: 24)
+    }
+
+    private var proUnlockedCard: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(BluePDTheme.success.opacity(0.12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(BluePDTheme.success.opacity(0.25), lineWidth: 1)
+                    )
+
+                Image(systemName: "checkmark.seal.fill")
+                    .foregroundStyle(BluePDTheme.success)
+                    .font(.system(size: 18, weight: .semibold))
+            }
+            .frame(width: 44, height: 44)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Pro Unlocked")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(BluePDTheme.primaryText)
+
+                Text("Premium access is active on this account.")
+                    .font(.subheadline)
+                    .foregroundStyle(BluePDTheme.secondaryText)
+            }
+
+            Spacer()
+        }
+        .padding(16)
+        .bluePDInnerCard(cornerRadius: 20)
+    }
+
+    private var proPurchaseCard: some View {
+        VStack(spacing: 12) {
+            Button {
+                purchasePro()
+            } label: {
+                Text(purchaseButtonTitle)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(BluePDPrimaryButtonStyle())
+            .disabled(!canAttemptPurchase)
+
+            if storeManager.isLoadingProducts {
+                Text("Loading Pro upgrade...")
+                    .font(.caption)
+                    .foregroundStyle(BluePDTheme.secondaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else if storeManager.products.isEmpty {
+                Text("Pro upgrade could not be loaded. Tap Upgrade to retry.")
+                    .font(.caption)
+                    .foregroundStyle(BluePDTheme.warning.opacity(0.95))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                Button("Retry Loading Pro") {
+                    Task {
+                        purchaseStatusMessage = "Retrying App Store..."
+                        await storeManager.loadProducts()
+
+                        if storeManager.products.isEmpty {
+                            purchaseStatusMessage = storeManager.errorMessage ?? "Pro upgrade is unavailable."
+                        } else {
+                            purchaseStatusMessage = "Pro upgrade loaded."
+                        }
+                    }
+                }
+                .buttonStyle(BluePDTextButtonStyle())
+            }
+        }
     }
 
     private func settingsSectionCard<Content: View>(
@@ -350,16 +395,16 @@ struct SettingsView: View {
         Task {
             await storeManager.purchase()
 
-            await MainActor.run {
-                isPurchasingPro = false
+            isPurchasingPro = false
 
-                if storeManager.isPro {
-                    purchaseStatusMessage = "BluePD Pro unlocked."
-                } else if let errorMessage = storeManager.errorMessage, !errorMessage.isEmpty {
-                    purchaseStatusMessage = errorMessage
-                } else {
-                    purchaseStatusMessage = "Purchase was not completed."
-                }
+            if storeManager.isPro {
+                purchaseStatusMessage = "BluePD Pro unlocked."
+            } else if let errorMessage = storeManager.errorMessage, !errorMessage.isEmpty {
+                purchaseStatusMessage = errorMessage
+            } else if storeManager.products.isEmpty {
+                purchaseStatusMessage = "Pro upgrade is unavailable. Verify Product ID and App Store Connect setup."
+            } else {
+                purchaseStatusMessage = "Purchase was not completed."
             }
         }
     }
@@ -373,16 +418,14 @@ struct SettingsView: View {
         Task {
             await storeManager.restorePurchases()
 
-            await MainActor.run {
-                isRestoringPurchases = false
+            isRestoringPurchases = false
 
-                if storeManager.isPro {
-                    purchaseStatusMessage = "Purchases restored."
-                } else if let errorMessage = storeManager.errorMessage, !errorMessage.isEmpty {
-                    purchaseStatusMessage = errorMessage
-                } else {
-                    purchaseStatusMessage = "No previous Pro purchase found."
-                }
+            if storeManager.isPro {
+                purchaseStatusMessage = "Purchases restored."
+            } else if let errorMessage = storeManager.errorMessage, !errorMessage.isEmpty {
+                purchaseStatusMessage = errorMessage
+            } else {
+                purchaseStatusMessage = "No previous Pro purchase found."
             }
         }
     }
