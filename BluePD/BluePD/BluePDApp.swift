@@ -7,12 +7,14 @@ struct BluePDApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if isLoggedIn {
-                ContentView()
-                    .environmentObject(storeManager)
-            } else {
-                LoginView()
+            Group {
+                if isLoggedIn {
+                    ContentView()
+                } else {
+                    LoginView()
+                }
             }
+            .environmentObject(storeManager)
         }
     }
 }
