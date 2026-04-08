@@ -40,10 +40,7 @@ struct SettingsView: View {
     }
 
     private var proPriceText: String {
-        if let product = storeManager.products.first {
-            return product.displayPrice
-        }
-        return "$4.99"
+        storeManager.product?.displayPrice ?? "$4.99"
     }
 
     private var purchaseButtonTitle: String {
@@ -231,7 +228,9 @@ struct SettingsView: View {
             await storeManager.loadProducts()
             await storeManager.refreshPurchasedStatus()
 
-            if let error = storeManager.errorMessage, !error.isEmpty, purchaseStatusMessage.isEmpty {
+            if purchaseStatusMessage.isEmpty,
+               let error = storeManager.errorMessage,
+               !error.isEmpty {
                 purchaseStatusMessage = error
             }
         }
@@ -308,7 +307,7 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(BluePDTheme.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
-            } else if storeManager.products.isEmpty {
+            } else if storeManager.product == nil {
                 Text("Pro upgrade could not be loaded. Tap Upgrade to retry.")
                     .font(.caption)
                     .foregroundStyle(BluePDTheme.warning.opacity(0.95))
@@ -319,7 +318,7 @@ struct SettingsView: View {
                         purchaseStatusMessage = "Retrying App Store..."
                         await storeManager.loadProducts()
 
-                        if storeManager.products.isEmpty {
+                        if storeManager.product == nil {
                             purchaseStatusMessage = storeManager.errorMessage ?? "Pro upgrade is unavailable."
                         } else {
                             purchaseStatusMessage = "Pro upgrade loaded."
@@ -399,9 +398,9 @@ struct SettingsView: View {
 
             if storeManager.isPro {
                 purchaseStatusMessage = "BluePD Pro unlocked."
-            } else if let errorMessage = storeManager.errorMessage, !errorMessage.isEmpty {
-                purchaseStatusMessage = errorMessage
-            } else if storeManager.products.isEmpty {
+            } else if let error = storeManager.errorMessage, !error.isEmpty {
+                purchaseStatusMessage = error
+            } else if storeManager.product == nil {
                 purchaseStatusMessage = "Pro upgrade is unavailable. Verify Product ID and App Store Connect setup."
             } else {
                 purchaseStatusMessage = "Purchase was not completed."
@@ -422,8 +421,8 @@ struct SettingsView: View {
 
             if storeManager.isPro {
                 purchaseStatusMessage = "Purchases restored."
-            } else if let errorMessage = storeManager.errorMessage, !errorMessage.isEmpty {
-                purchaseStatusMessage = errorMessage
+            } else if let error = storeManager.errorMessage, !error.isEmpty {
+                purchaseStatusMessage = error
             } else {
                 purchaseStatusMessage = "No previous Pro purchase found."
             }
