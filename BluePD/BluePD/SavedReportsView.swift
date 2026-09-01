@@ -3,67 +3,43 @@ import SwiftUI
 struct SavedReportsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var storeManager: StoreManager
+    @EnvironmentObject var cloudSync: CloudSyncManager
 
     @Binding var savedReports: [SavedSFSTReport]
     @State private var selectedReport: SavedSFSTReport?
 
     private let freeReportLimit = 3
 
-    private let backgroundGradient = LinearGradient(
-        colors: [
-            Color(red: 3/255, green: 8/255, blue: 18/255),
-            Color(red: 7/255, green: 16/255, blue: 30/255),
-            Color(red: 12/255, green: 24/255, blue: 42/255)
-        ],
-        startPoint: .top,
-        endPoint: .bottom
-    )
-
     private var hasReachedFreeLimit: Bool {
         !storeManager.isPro && savedReports.count >= freeReportLimit
     }
 
     private var reportsStatusTitle: String {
-        if storeManager.isPro {
-            return "BluePD Pro Active"
-        } else {
-            return "Free Saved Reports"
-        }
+        storeManager.isPro ? "BluePD Pro Active" : "Free Saved Reports"
     }
 
     private var reportsStatusSubtitle: String {
-        if storeManager.isPro {
-            return "Unlimited saved reports available"
-        } else {
-            return "\(savedReports.count)/\(freeReportLimit) reports used"
-        }
+        storeManager.isPro
+            ? "Unlimited saved reports available"
+            : "\(savedReports.count)/\(freeReportLimit) reports used"
     }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                backgroundGradient
+                BluePDTheme.appBackground
                     .ignoresSafeArea()
 
                 VStack(spacing: 14) {
                     reportsStatusBanner
 
                     if savedReports.isEmpty {
-                        VStack(spacing: 14) {
-                            Image(systemName: "doc.text.magnifyingglass")
-                                .font(.system(size: 42))
-                                .foregroundColor(.blue)
-
-                            Text("No Saved Reports")
-                                .font(.headline)
-                                .foregroundColor(.white)
-
-                            Text("Generated SFST reports will appear here.")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding()
+                        BluePDEmptyState(
+                            systemImage: "doc.text.magnifyingglass",
+                            title: "No Saved Reports",
+                            message: "Generated SFST reports will appear here."
+                        )
+                        .padding(.horizontal, 16)
                         .frame(maxHeight: .infinity)
                     } else {
                         List {
@@ -74,19 +50,19 @@ struct SavedReportsView: View {
                                     VStack(alignment: .leading, spacing: 6) {
                                         Text(report.subjectName.isEmpty ? "Unnamed Subject" : report.subjectName)
                                             .font(.headline)
-                                            .foregroundColor(.white)
+                                            .foregroundColor(BluePDTheme.primaryText)
 
                                         Text(report.createdAt.formatted(date: .abbreviated, time: .shortened))
                                             .font(.caption)
-                                            .foregroundColor(.gray)
+                                            .foregroundColor(BluePDTheme.secondaryText)
                                     }
                                     .padding(.vertical, 6)
                                 }
                                 .buttonStyle(.plain)
-                                .listRowBackground(Color.white.opacity(0.05))
+                                .listRowBackground(BluePDTheme.cardFill)
                             }
                             .onDelete { offsets in
-                                savedReports.remove(atOffsets: offsets)
+                                deleteReports(at: offsets)
                             }
                         }
                         .listStyle(.plain)
@@ -103,7 +79,7 @@ struct SavedReportsView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(BluePDTheme.primaryText)
                 }
             }
             .sheet(item: $selectedReport) { report in
@@ -115,33 +91,41 @@ struct SavedReportsView: View {
     private var reportsStatusBanner: some View {
         HStack(spacing: 12) {
             Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "folder.fill")
-                .foregroundColor(storeManager.isPro ? .green : .blue)
+                .foregroundColor(storeManager.isPro ? BluePDTheme.success : BluePDTheme.accent)
                 .font(.title3)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(reportsStatusTitle)
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(BluePDTheme.primaryText)
 
                 Text(reportsStatusSubtitle)
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.72))
+                    .foregroundColor(BluePDTheme.secondaryText)
 
                 if hasReachedFreeLimit {
                     Text("Free limit reached. Upgrade to BluePD Pro for unlimited saved reports.")
                         .font(.caption)
-                        .foregroundColor(.orange.opacity(0.95))
+                        .foregroundColor(BluePDTheme.warning)
                 }
             }
 
             Spacer()
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.06))
-        )
+        .padding(16)
+        .bluePDInnerCard(cornerRadius: 18)
         .padding(.horizontal)
+    }
+
+    private func deleteReports(at offsets: IndexSet) {
+        let removed = offsets.map { savedReports[$0] }
+        savedReports.remove(atOffsets: offsets)
+
+        for report in removed {
+            Task {
+                await cloudSync.delete(id: report.id, kind: .report)
+            }
+        }
     }
 }
 
@@ -149,15 +133,8 @@ struct SavedReportDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let report: SavedSFSTReport
 
-    private let backgroundGradient = LinearGradient(
-        colors: [
-            Color(red: 3/255, green: 8/255, blue: 18/255),
-            Color(red: 7/255, green: 16/255, blue: 30/255),
-            Color(red: 12/255, green: 24/255, blue: 42/255)
-        ],
-        startPoint: .top,
-        endPoint: .bottom
-    )
+    @State private var shareFile: ShareableFile?
+    @State private var exportErrorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -165,35 +142,71 @@ struct SavedReportDetailView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(report.subjectName.isEmpty ? "Unnamed Subject" : report.subjectName)
                         .font(.headline)
-                        .foregroundColor(.white)
+                        .foregroundColor(BluePDTheme.primaryText)
 
                     Text(report.createdAt.formatted(date: .abbreviated, time: .shortened))
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundColor(BluePDTheme.secondaryText)
 
                     Divider()
-                        .overlay(Color.white.opacity(0.15))
+                        .overlay(BluePDTheme.innerCardStroke)
 
                     Text(report.reportText)
-                        .foregroundColor(.white)
+                        .foregroundColor(BluePDTheme.primaryText)
                         .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if let exportErrorMessage {
+                        Text(exportErrorMessage)
+                            .font(.caption)
+                            .foregroundColor(BluePDTheme.danger)
+                    }
                 }
                 .padding()
             }
             .background(
-                backgroundGradient
+                BluePDTheme.appBackground
                     .ignoresSafeArea()
             )
             .navigationTitle("Report Detail")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        exportPDF()
+                    } label: {
+                        Label("Export / Share", systemImage: "square.and.arrow.up")
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(BluePDTheme.primaryText)
                 }
             }
+            .sheet(item: $shareFile) { file in
+                ShareSheet(items: [file.url])
+            }
         }
+    }
+
+    private func exportPDF() {
+        exportErrorMessage = nil
+
+        let subjectLine = report.subjectName.isEmpty ? "Unnamed Subject" : report.subjectName
+        let subtitle = "Subject: \(subjectLine) • \(report.createdAt.formatted(date: .abbreviated, time: .shortened))"
+
+        guard let data = PDFReportBuilder.makeTextReportPDF(
+            title: "SFST Report",
+            subtitle: subtitle,
+            body: report.reportText,
+            generatedAt: report.createdAt
+        ), let url = PDFReportBuilder.writeTemporaryPDF(data: data, suggestedName: "SFST Report - \(subjectLine)") else {
+            exportErrorMessage = "Could not generate PDF. Try again."
+            return
+        }
+
+        shareFile = ShareableFile(url: url)
     }
 }

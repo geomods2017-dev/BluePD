@@ -1,25 +1,94 @@
 import SwiftUI
 
+/// Storage key shared between the Settings toggle and BluePDTheme's live lookups.
+/// Any top-level screen that declares `@AppStorage(BluePDTheme.daylightModeKey)` will
+/// automatically re-render when Daylight Mode is switched, since BluePDTheme itself
+/// reads this key fresh on every access rather than caching a static value.
 enum BluePDTheme {
-    static let backgroundTop = Color(red: 2/255, green: 7/255, blue: 18/255)
-    static let backgroundMid = Color(red: 7/255, green: 17/255, blue: 31/255)
-    static let backgroundBottom = Color(red: 10/255, green: 24/255, blue: 44/255)
+    static let daylightModeKey = "daylightModeEnabled"
 
-    static let primaryText = Color.white
-    static let secondaryText = Color.white.opacity(0.74)
-    static let tertiaryText = Color.white.opacity(0.38)
-    static let placeholderText = Color.white.opacity(0.34)
+    static var isDaylightMode: Bool {
+        UserDefaults.standard.bool(forKey: daylightModeKey)
+    }
 
-    static let cardFill = Color.white.opacity(0.05)
-    static let cardStroke = Color.white.opacity(0.07)
-    static let innerCardStroke = Color.white.opacity(0.065)
+    // MARK: - Backgrounds
 
-    static let accent = Color(red: 0.10, green: 0.56, blue: 1.00)
-    static let accentSoft = accent.opacity(0.12)
+    static var backgroundTop: Color {
+        isDaylightMode
+            ? Color(red: 244/255, green: 246/255, blue: 250/255)
+            : Color(red: 2/255, green: 7/255, blue: 18/255)
+    }
 
-    static let success = Color.green
-    static let warning = Color.orange
-    static let danger = Color.red
+    static var backgroundMid: Color {
+        isDaylightMode
+            ? Color(red: 233/255, green: 237/255, blue: 244/255)
+            : Color(red: 7/255, green: 17/255, blue: 31/255)
+    }
+
+    static var backgroundBottom: Color {
+        isDaylightMode
+            ? Color(red: 220/255, green: 227/255, blue: 238/255)
+            : Color(red: 10/255, green: 24/255, blue: 44/255)
+    }
+
+    // MARK: - Text
+
+    static var primaryText: Color {
+        isDaylightMode ? Color(red: 8/255, green: 14/255, blue: 26/255) : Color.white
+    }
+
+    static var secondaryText: Color {
+        isDaylightMode
+            ? Color(red: 8/255, green: 14/255, blue: 26/255).opacity(0.72)
+            : Color.white.opacity(0.78)
+    }
+
+    static var tertiaryText: Color {
+        isDaylightMode
+            ? Color(red: 8/255, green: 14/255, blue: 26/255).opacity(0.46)
+            : Color.white.opacity(0.42)
+    }
+
+    static var placeholderText: Color {
+        isDaylightMode
+            ? Color(red: 8/255, green: 14/255, blue: 26/255).opacity(0.38)
+            : Color.white.opacity(0.38)
+    }
+
+    // MARK: - Cards
+
+    static var cardFill: Color {
+        isDaylightMode ? Color.white : Color.white.opacity(0.05)
+    }
+
+    static var cardStroke: Color {
+        isDaylightMode ? Color.black.opacity(0.10) : Color.white.opacity(0.08)
+    }
+
+    static var innerCardStroke: Color {
+        isDaylightMode ? Color.black.opacity(0.08) : Color.white.opacity(0.07)
+    }
+
+    // MARK: - Accent & status
+
+    static var accent: Color {
+        isDaylightMode ? Color(red: 0.02, green: 0.36, blue: 0.86) : Color(red: 0.10, green: 0.56, blue: 1.00)
+    }
+
+    static var accentSoft: Color { accent.opacity(isDaylightMode ? 0.10 : 0.12) }
+
+    static var success: Color { isDaylightMode ? Color(red: 0.09, green: 0.52, blue: 0.24) : Color.green }
+    static var warning: Color { isDaylightMode ? Color(red: 0.72, green: 0.42, blue: 0.02) : Color.orange }
+    static var danger: Color { isDaylightMode ? Color(red: 0.72, green: 0.10, blue: 0.10) : Color.red }
+
+    // MARK: - Layout constants
+
+    static let cardCornerRadius: CGFloat = 24
+    static let innerCardCornerRadius: CGFloat = 20
+    static let controlCornerRadius: CGFloat = 16
+    static let controlHeight: CGFloat = 58
+
+    // MARK: - Gradients
 
     static var appBackground: LinearGradient {
         LinearGradient(
@@ -30,37 +99,44 @@ enum BluePDTheme {
     }
 
     static var outerCardGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color.white.opacity(0.070),
-                Color.white.opacity(0.032)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        isDaylightMode
+            ? LinearGradient(colors: [cardFill, cardFill], startPoint: .topLeading, endPoint: .bottomTrailing)
+            : LinearGradient(
+                colors: [Color.white.opacity(0.070), Color.white.opacity(0.032)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
     }
 
     static var innerCardGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color.white.opacity(0.050),
-                Color.white.opacity(0.028)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        isDaylightMode
+            ? LinearGradient(colors: [cardFill, cardFill], startPoint: .topLeading, endPoint: .bottomTrailing)
+            : LinearGradient(
+                colors: [Color.white.opacity(0.050), Color.white.opacity(0.028)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
     }
 
     static var primaryButtonGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.08, green: 0.56, blue: 0.98),
-                Color(red: 0.05, green: 0.42, blue: 0.92)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        isDaylightMode
+            ? LinearGradient(colors: [accent, accent], startPoint: .topLeading, endPoint: .bottomTrailing)
+            : LinearGradient(
+                colors: [Color(red: 0.08, green: 0.56, blue: 0.98), Color(red: 0.05, green: 0.42, blue: 0.92)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
     }
+
+    // MARK: - Type scale
+    // A single place to reach for consistent weights across screens, so new/edited
+    // views don't reinvent ad hoc font choices.
+
+    static let screenTitleFont: Font = .title2.weight(.bold)
+    static let sectionTitleFont: Font = .title2.weight(.bold)
+    static let cardTitleFont: Font = .headline.weight(.semibold)
+    static let bodyFont: Font = .subheadline
+    static let captionFont: Font = .caption.weight(.medium)
 }
 
 struct BluePDCardModifier: ViewModifier {
@@ -76,7 +152,7 @@ struct BluePDCardModifier: ViewModifier {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(BluePDTheme.cardStroke, lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 10)
+            .shadow(color: .black.opacity(BluePDTheme.isDaylightMode ? 0.08 : 0.22), radius: 18, x: 0, y: 10)
     }
 }
 
@@ -102,9 +178,9 @@ struct BluePDPrimaryButtonStyle: ButtonStyle {
             .font(.headline.weight(.semibold))
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 58)
+            .frame(height: BluePDTheme.controlHeight)
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: BluePDTheme.controlCornerRadius, style: .continuous)
                     .fill(BluePDTheme.primaryButtonGradient)
             )
             .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
@@ -119,14 +195,14 @@ struct BluePDSecondaryButtonStyle: ButtonStyle {
             .font(.headline.weight(.semibold))
             .foregroundColor(BluePDTheme.primaryText)
             .frame(maxWidth: .infinity)
-            .frame(height: 58)
+            .frame(height: BluePDTheme.controlHeight)
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
+                RoundedRectangle(cornerRadius: BluePDTheme.controlCornerRadius, style: .continuous)
+                    .fill(BluePDTheme.isDaylightMode ? Color.black.opacity(0.05) : Color.white.opacity(0.08))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.white.opacity(0.10), lineWidth: 1)
+                RoundedRectangle(cornerRadius: BluePDTheme.controlCornerRadius, style: .continuous)
+                    .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
             )
             .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
@@ -139,9 +215,9 @@ struct BluePDDestructiveButtonStyle: ButtonStyle {
             .font(.headline.weight(.semibold))
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 58)
+            .frame(height: BluePDTheme.controlHeight)
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                RoundedRectangle(cornerRadius: BluePDTheme.controlCornerRadius, style: .continuous)
                     .fill(BluePDTheme.danger.opacity(0.90))
             )
             .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
@@ -153,12 +229,12 @@ struct BluePDDisabledButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.headline.weight(.semibold))
-            .foregroundColor(.white.opacity(0.82))
+            .foregroundColor(BluePDTheme.primaryText.opacity(0.82))
             .frame(maxWidth: .infinity)
-            .frame(height: 58)
+            .frame(height: BluePDTheme.controlHeight)
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white.opacity(0.10))
+                RoundedRectangle(cornerRadius: BluePDTheme.controlCornerRadius, style: .continuous)
+                    .fill(BluePDTheme.isDaylightMode ? Color.black.opacity(0.06) : Color.white.opacity(0.10))
             )
     }
 }
@@ -174,11 +250,11 @@ struct BluePDTextButtonStyle: ButtonStyle {
 }
 
 extension View {
-    func bluePDCard(cornerRadius: CGFloat = 24) -> some View {
+    func bluePDCard(cornerRadius: CGFloat = BluePDTheme.cardCornerRadius) -> some View {
         modifier(BluePDCardModifier(cornerRadius: cornerRadius))
     }
 
-    func bluePDInnerCard(cornerRadius: CGFloat = 20) -> some View {
+    func bluePDInnerCard(cornerRadius: CGFloat = BluePDTheme.innerCardCornerRadius) -> some View {
         modifier(BluePDInnerCardModifier(cornerRadius: cornerRadius))
     }
 }

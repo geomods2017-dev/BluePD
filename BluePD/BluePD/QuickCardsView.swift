@@ -31,6 +31,11 @@ enum QuickCardStorage {
 
 struct QuickCardsView: View {
     @EnvironmentObject var storeManager: StoreManager
+    @EnvironmentObject var cloudSync: CloudSyncManager
+
+    // Re-declaring this key (unused directly) makes SwiftUI re-render this screen
+    // whenever Daylight Mode is toggled in Settings, since BluePDTheme reads it live.
+    @AppStorage(BluePDTheme.daylightModeKey) private var daylightModeEnabled: Bool = false
 
     @State private var cards: [QuickReferenceCard] = []
     @State private var searchText = ""
@@ -39,6 +44,7 @@ struct QuickCardsView: View {
     @State private var showUpgradeAlert = false
     @State private var isPurchasingPro = false
     @State private var statusMessage = ""
+    @State private var hasRunInitialSync = false
 
     private let freeCardLimit = 3
 
@@ -60,7 +66,7 @@ struct QuickCardsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                backgroundGradient
+                BluePDTheme.appBackground
                     .ignoresSafeArea()
 
                 VStack(spacing: 14) {
@@ -110,18 +116,24 @@ struct QuickCardsView: View {
                         createCardTapped()
                     } label: {
                         Image(systemName: "plus")
-                            .foregroundColor(.white)
+                            .foregroundColor(BluePDTheme.primaryText)
                     }
                 }
             }
             .onAppear {
                 loadCards()
             }
+            .task {
+                guard !hasRunInitialSync else { return }
+                hasRunInitialSync = true
+                await runInitialSync()
+            }
             .sheet(isPresented: $showCreateCard) {
                 CreateQuickCardView { newCard in
                     cards.insert(newCard, at: 0)
                     QuickCardStorage.save(cards)
                     statusMessage = "Quick card saved."
+                    Task { await cloudSync.push(newCard, id: newCard.id, kind: .card, updatedAt: newCard.createdAt) }
                 }
             }
             .sheet(item: $selectedCard) { card in
@@ -149,39 +161,19 @@ struct QuickCardsView: View {
         }
     }
 
-    private var backgroundGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 7/255, green: 12/255, blue: 24/255),
-                Color(red: 13/255, green: 23/255, blue: 40/255),
-                Color(red: 18/255, green: 29/255, blue: 48/255)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: "rectangle.stack.text.card.fill")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundColor(.blue)
-                    .frame(width: 44, height: 44)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(Color.blue.opacity(0.14))
-                    )
+                BluePDIconContainer(systemImage: "rectangle.stack.text.card.fill", size: 44, iconSize: 20)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Quick Reference Cards")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
+                        .font(.title3.weight(.bold))
+                        .foregroundColor(BluePDTheme.primaryText)
 
                     Text("Create personalized quick-access field notes")
                         .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.68))
+                        .foregroundColor(BluePDTheme.secondaryText)
                 }
 
                 Spacer()
@@ -189,11 +181,10 @@ struct QuickCardsView: View {
 
             Text("Store your own reminders, statutes, notes, procedures, or checklists for fast access.")
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.82))
+                .foregroundColor(BluePDTheme.secondaryText)
         }
         .padding(16)
-        .background(cardBackground)
-        .overlay(cardBorder)
+        .bluePDCard(cornerRadius: 18)
         .padding(.horizontal, 16)
     }
 
@@ -201,16 +192,16 @@ struct QuickCardsView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Image(systemName: storeManager.isPro ? "checkmark.seal.fill" : "rectangle.stack.fill")
-                    .foregroundColor(storeManager.isPro ? .green : .blue)
+                    .foregroundColor(storeManager.isPro ? BluePDTheme.success : BluePDTheme.accent)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(storeManager.isPro ? "BluePD Pro Active" : "Free Quick Cards")
                         .font(.headline)
-                        .foregroundColor(.white)
+                        .foregroundColor(BluePDTheme.primaryText)
 
                     Text(storeManager.isPro ? "Unlimited custom cards available" : "\(cards.count)/\(freeCardLimit) cards used")
                         .font(.caption)
-                        .foregroundColor(.white.opacity(0.72))
+                        .foregroundColor(BluePDTheme.secondaryText)
                 }
 
                 Spacer()
@@ -219,34 +210,36 @@ struct QuickCardsView: View {
             if hasReachedFreeCardLimit {
                 Text("Free card limit reached. Upgrade to BluePD Pro for unlimited custom cards.")
                     .font(.caption)
-                    .foregroundColor(.orange.opacity(0.95))
+                    .foregroundColor(BluePDTheme.warning)
             }
 
             if !statusMessage.isEmpty {
                 Text(statusMessage)
                     .font(.caption)
-                    .foregroundColor(.white.opacity(0.72))
+                    .foregroundColor(BluePDTheme.secondaryText)
             }
         }
         .padding(14)
-        .background(innerCardBackground)
-        .overlay(innerCardBorder)
+        .bluePDInnerCard(cornerRadius: 14)
         .padding(.horizontal, 16)
     }
 
     private var searchSection: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.white.opacity(0.55))
+                .foregroundColor(BluePDTheme.tertiaryText)
 
-            TextField("Search quick cards", text: $searchText)
-                .foregroundColor(.white)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.sentences)
+            TextField(
+                "",
+                text: $searchText,
+                prompt: Text("Search quick cards").foregroundColor(BluePDTheme.placeholderText)
+            )
+            .foregroundColor(BluePDTheme.primaryText)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.sentences)
         }
         .padding(14)
-        .background(innerCardBackground)
-        .overlay(innerCardBorder)
+        .bluePDInnerCard(cornerRadius: 14)
         .padding(.horizontal, 16)
     }
 
@@ -254,34 +247,23 @@ struct QuickCardsView: View {
         VStack(spacing: 14) {
             Spacer()
 
-            Image(systemName: "rectangle.stack.text.card")
-                .font(.system(size: 42))
-                .foregroundColor(.blue)
-
-            Text(searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "No Quick Cards Yet" : "No Matching Cards")
-                .font(.headline)
-                .foregroundColor(.white)
-
-            Text(searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                 ? "Create a custom quick card to store notes, procedures, or reminders."
-                 : "Try a different search term.")
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.62))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 30)
+            BluePDEmptyState(
+                systemImage: "rectangle.stack.text.card",
+                title: searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "No Quick Cards Yet" : "No Matching Cards",
+                message: searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    ? "Create a custom quick card to store notes, procedures, or reminders."
+                    : "Try a different search term."
+            )
+            .padding(.horizontal, 16)
 
             Button {
                 createCardTapped()
             } label: {
                 Text("Create Quick Card")
-                    .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(14)
-                    .padding(.horizontal, 32)
             }
+            .buttonStyle(BluePDPrimaryButtonStyle())
+            .padding(.horizontal, 32)
 
             Spacer()
         }
@@ -292,49 +274,28 @@ struct QuickCardsView: View {
             HStack {
                 Text(card.title)
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundColor(BluePDTheme.primaryText)
                     .lineLimit(2)
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
-                    .foregroundColor(.white.opacity(0.45))
+                    .foregroundColor(BluePDTheme.tertiaryText)
             }
 
             Text(card.content)
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.72))
+                .foregroundColor(BluePDTheme.secondaryText)
                 .lineLimit(3)
                 .multilineTextAlignment(.leading)
 
             Text(card.createdAt.formatted(date: .abbreviated, time: .shortened))
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.5))
+                .foregroundColor(BluePDTheme.tertiaryText)
         }
         .padding(14)
-        .background(innerCardBackground)
-        .overlay(innerCardBorder)
-    }
-
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .fill(Color.white.opacity(0.055))
-    }
-
-    private var cardBorder: some View {
-        RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .stroke(Color.white.opacity(0.06), lineWidth: 1)
-    }
-
-    private var innerCardBackground: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(Color.white.opacity(0.045))
-    }
-
-    private var innerCardBorder: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .stroke(Color.white.opacity(0.05), lineWidth: 1)
+        .bluePDInnerCard(cornerRadius: 14)
     }
 
     private func createCardTapped() {
@@ -357,12 +318,14 @@ struct QuickCardsView: View {
         cards.sort { $0.createdAt > $1.createdAt }
         QuickCardStorage.save(cards)
         statusMessage = "Quick card updated."
+        Task { await cloudSync.push(updatedCard, id: updatedCard.id, kind: .card, updatedAt: Date()) }
     }
 
     private func deleteCard(_ card: QuickReferenceCard) {
         cards.removeAll { $0.id == card.id }
         QuickCardStorage.save(cards)
         statusMessage = "Quick card deleted."
+        Task { await cloudSync.delete(id: card.id, kind: .card) }
     }
 
     private func purchasePro() {
@@ -385,6 +348,20 @@ struct QuickCardsView: View {
             }
         }
     }
+
+    @MainActor
+    private func runInitialSync() async {
+        await cloudSync.checkAccountStatus()
+        guard cloudSync.status.isHealthy else { return }
+
+        let remoteCards = await cloudSync.pullAll(kind: .card, as: QuickReferenceCard.self)
+        let merged = CloudSyncManager.mergeAdditively(local: cards, remote: remoteCards)
+
+        if merged.count != cards.count {
+            cards = merged.sorted { $0.createdAt > $1.createdAt }
+            QuickCardStorage.save(cards)
+        }
+    }
 }
 
 struct CreateQuickCardView: View {
@@ -398,41 +375,33 @@ struct CreateQuickCardView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 7/255, green: 12/255, blue: 24/255),
-                        Color(red: 13/255, green: 23/255, blue: 40/255),
-                        Color(red: 18/255, green: 29/255, blue: 48/255)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                BluePDTheme.appBackground
+                    .ignoresSafeArea()
 
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Title")
                             .font(.caption)
-                            .foregroundColor(.white.opacity(0.65))
+                            .foregroundColor(BluePDTheme.secondaryText)
 
                         TextField("Enter card title", text: $title)
-                            .foregroundColor(.white)
+                            .foregroundColor(BluePDTheme.primaryText)
                             .padding()
-                            .background(Color.white.opacity(0.05))
+                            .background(BluePDTheme.cardFill)
                             .cornerRadius(14)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Content")
                             .font(.caption)
-                            .foregroundColor(.white.opacity(0.65))
+                            .foregroundColor(BluePDTheme.secondaryText)
 
                         TextEditor(text: $content)
                             .scrollContentBackground(.hidden)
-                            .foregroundColor(.white)
+                            .foregroundColor(BluePDTheme.primaryText)
                             .frame(minHeight: 220)
                             .padding(10)
-                            .background(Color.white.opacity(0.05))
+                            .background(BluePDTheme.cardFill)
                             .cornerRadius(14)
                     }
 
@@ -447,7 +416,7 @@ struct CreateQuickCardView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(BluePDTheme.primaryText)
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -461,7 +430,7 @@ struct CreateQuickCardView: View {
                         onSave(newCard)
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(BluePDTheme.primaryText)
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
@@ -474,6 +443,7 @@ struct QuickCardDetailView: View {
 
     @State private var title: String
     @State private var content: String
+    @State private var shareFile: ShareableFile?
 
     let card: QuickReferenceCard
     var onSave: (QuickReferenceCard) -> Void
@@ -494,67 +464,63 @@ struct QuickCardDetailView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 7/255, green: 12/255, blue: 24/255),
-                        Color(red: 13/255, green: 23/255, blue: 40/255),
-                        Color(red: 18/255, green: 29/255, blue: 48/255)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                BluePDTheme.appBackground
+                    .ignoresSafeArea()
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Title")
                                 .font(.caption)
-                                .foregroundColor(.white.opacity(0.65))
+                                .foregroundColor(BluePDTheme.secondaryText)
 
                             TextField("Card title", text: $title)
-                                .foregroundColor(.white)
+                                .foregroundColor(BluePDTheme.primaryText)
                                 .padding()
-                                .background(Color.white.opacity(0.05))
+                                .background(BluePDTheme.cardFill)
                                 .cornerRadius(14)
                         }
 
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Content")
                                 .font(.caption)
-                                .foregroundColor(.white.opacity(0.65))
+                                .foregroundColor(BluePDTheme.secondaryText)
 
                             TextEditor(text: $content)
                                 .scrollContentBackground(.hidden)
-                                .foregroundColor(.white)
+                                .foregroundColor(BluePDTheme.primaryText)
                                 .frame(minHeight: 280)
                                 .padding(10)
-                                .background(Color.white.opacity(0.05))
+                                .background(BluePDTheme.cardFill)
                                 .cornerRadius(14)
                         }
 
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Created")
                                 .font(.caption)
-                                .foregroundColor(.white.opacity(0.65))
+                                .foregroundColor(BluePDTheme.secondaryText)
 
                             Text(card.createdAt.formatted(date: .abbreviated, time: .shortened))
                                 .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.72))
+                                .foregroundColor(BluePDTheme.secondaryText)
                         }
+
+                        Button {
+                            shareCard()
+                        } label: {
+                            Label("Share / Export", systemImage: "square.and.arrow.up")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(BluePDSecondaryButtonStyle())
+                        .padding(.top, 8)
 
                         Button(role: .destructive) {
                             onDelete()
                         } label: {
                             Text("Delete Card")
-                                .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(Color.red)
-                                .foregroundColor(.white)
-                                .cornerRadius(14)
                         }
-                        .padding(.top, 8)
+                        .buttonStyle(BluePDDestructiveButtonStyle())
                     }
                     .padding()
                 }
@@ -566,7 +532,7 @@ struct QuickCardDetailView: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(BluePDTheme.primaryText)
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -580,17 +546,27 @@ struct QuickCardDetailView: View {
                         onSave(updatedCard)
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(BluePDTheme.primaryText)
                     .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
+            .sheet(item: $shareFile) { file in
+                ShareSheet(items: [file.url])
+            }
         }
+    }
+
+    private func shareCard() {
+        guard let data = PDFReportBuilder.makeTextReportPDF(title: title, body: content) ,
+              let url = PDFReportBuilder.writeTemporaryPDF(data: data, suggestedName: title) else {
+            return
+        }
+        shareFile = ShareableFile(url: url)
     }
 }
 
 #Preview {
-    NavigationStack {
-        QuickCardsView()
-            .environmentObject(StoreManager())
-    }
+    QuickCardsView()
+        .environmentObject(StoreManager())
+        .environmentObject(CloudSyncManager())
 }
