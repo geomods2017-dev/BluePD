@@ -3,6 +3,11 @@ import PhotosUI
 
 struct EvidenceView: View {
     @EnvironmentObject var storeManager: StoreManager
+    @EnvironmentObject var cloudSync: CloudSyncManager
+
+    // Re-declaring this key (unused directly) makes SwiftUI re-render this screen
+    // whenever Daylight Mode is toggled in Settings, since BluePDTheme reads it live.
+    @AppStorage(BluePDTheme.daylightModeKey) private var daylightModeEnabled: Bool = false
 
     @State private var selectedItems: [PhotosPickerItem] = []
     @State private var evidenceItems: [EvidenceRecord] = []
@@ -12,6 +17,9 @@ struct EvidenceView: View {
     @State private var showUpgradeAlert = false
     @State private var isPurchasingPro = false
     @State private var evidenceStatusMessage = ""
+    @State private var hasRunInitialSync = false
+    @State private var shareFile: ShareableFile?
+    @State private var isExportingPDF = false
 
     @FocusState private var isNotesFocused: Bool
     @FocusState private var isCaseReferenceFocused: Bool
@@ -50,6 +58,15 @@ struct EvidenceView: View {
         .navigationTitle("Evidence")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    exportEvidenceLog()
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                }
+                .disabled(evidenceItems.isEmpty || isExportingPDF)
+            }
+
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
@@ -65,6 +82,11 @@ struct EvidenceView: View {
             loadSavedEvidence()
             loadSavedMetadata()
         }
+        .task {
+            guard !hasRunInitialSync else { return }
+            hasRunInitialSync = true
+            await runInitialSync()
+        }
         .onChange(of: selectedItems) { newItems in
             handleSelectedItems(newItems)
         }
@@ -73,6 +95,9 @@ struct EvidenceView: View {
         }
         .onChange(of: evidenceNotes) { _ in
             saveMetadata()
+        }
+        .sheet(item: $shareFile) { file in
+            ShareSheet(items: [file.url])
         }
         .alert("Upgrade to BluePD Pro", isPresented: $showUpgradeAlert) {
             Button(isPurchasingPro ? "Purchasing..." : "Upgrade") {
@@ -457,6 +482,8 @@ struct EvidenceView: View {
                     await MainActor.run {
                         evidenceItems.append(newRecord)
                     }
+
+                    await cloudSync.pushEvidence(newRecord, image: image)
                 }
             }
 
@@ -479,9 +506,12 @@ struct EvidenceView: View {
         evidenceItems.remove(at: index)
         EvidenceStorage.saveManifest(evidenceItems)
         evidenceStatusMessage = "Evidence item removed."
+        Task { await cloudSync.delete(id: item.id, kind: .evidence) }
     }
 
     private func clearAllEvidence() {
+        let removedItems = evidenceItems
+
         for item in evidenceItems {
             EvidenceStorage.deleteImage(named: item.filename)
         }
@@ -490,10 +520,76 @@ struct EvidenceView: View {
         selectedItems.removeAll()
         EvidenceStorage.saveManifest(evidenceItems)
         evidenceStatusMessage = "All evidence cleared."
+
+        Task {
+            for item in removedItems {
+                await cloudSync.delete(id: item.id, kind: .evidence)
+            }
+        }
     }
 
     private func loadSavedEvidence() {
         evidenceItems = EvidenceStorage.loadManifest()
+    }
+
+    @MainActor
+    private func runInitialSync() async {
+        await cloudSync.checkAccountStatus()
+        guard cloudSync.status.isHealthy else { return }
+
+        let remoteEvidence = await cloudSync.pullEvidence()
+        let localIDs = Set(evidenceItems.map(\.id))
+        var didAddAny = false
+
+        for (record, imageData) in remoteEvidence where !localIDs.contains(record.id) {
+            guard let imageData, let image = UIImage(data: imageData) else { continue }
+            guard let filename = EvidenceStorage.saveImage(image) else { continue }
+
+            evidenceItems.append(EvidenceRecord(id: record.id, filename: filename))
+            didAddAny = true
+        }
+
+        if didAddAny {
+            EvidenceStorage.saveManifest(evidenceItems)
+        }
+    }
+
+    private func exportEvidenceLog() {
+        isExportingPDF = true
+        defer { isExportingPDF = false }
+
+        var bodyHTML = ""
+
+        let trimmedNotes = evidenceNotes.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedNotes.isEmpty {
+            let escapedNotes = trimmedNotes
+                .replacingOccurrences(of: "&", with: "&amp;")
+                .replacingOccurrences(of: "<", with: "&lt;")
+                .replacingOccurrences(of: ">", with: "&gt;")
+                .replacingOccurrences(of: "\n", with: "<br/>")
+            bodyHTML += "<p><strong>Notes:</strong><br/>\(escapedNotes)</p><hr/>"
+        }
+
+        for (index, item) in evidenceItems.enumerated() {
+            bodyHTML += "<p><strong>Photo \(index + 1)</strong></p>"
+            if let image = item.uiImage, let jpegData = image.jpegData(compressionQuality: 0.5) {
+                let base64 = jpegData.base64EncodedString()
+                bodyHTML += "<img src=\"data:image/jpeg;base64,\(base64)\" />"
+            }
+        }
+
+        let subtitle = caseReference.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let data = PDFReportBuilder.makeHTMLReportPDF(
+            title: "Evidence Log",
+            subtitle: subtitle.isEmpty ? nil : "Case Reference: \(subtitle)",
+            bodyHTML: bodyHTML
+        ), let url = PDFReportBuilder.writeTemporaryPDF(data: data, suggestedName: "Evidence Log") else {
+            evidenceStatusMessage = "Could not generate evidence log PDF."
+            return
+        }
+
+        shareFile = ShareableFile(url: url)
     }
 
     private func saveMetadata() {
@@ -658,5 +754,7 @@ struct StyledEvidenceTextField: View {
 #Preview {
     NavigationStack {
         EvidenceView()
+            .environmentObject(StoreManager())
+            .environmentObject(CloudSyncManager())
     }
 }

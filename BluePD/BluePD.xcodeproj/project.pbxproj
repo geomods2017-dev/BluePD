@@ -16,9 +16,9 @@
 		A1B2C3DB1E1F2A3B4C5D6E7F /* SFSTView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DC1E1F2A3B4C5D6E7F /* SFSTView.swift */; };
 		A1B2C3DD1E1F2A3B4C5D6E7F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */; };
 		A1B2C3DF1E1F2A3B4C5D6E7F /* MirandaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E01E1F2A3B4C5D6E7F /* MirandaView.swift */; };
-		A1B2C3E11E1F2A3B4C5D6E7F /* CaseLawView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E21E1F2A3B4C5D6E7F /* CaseLawView.swift */; };
-		A1B2C40F1E1F2A3B4C5D6E7F /* SafariWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C4101E1F2A3B4C5D6E7F /* SafariWebView.swift */; };
-		A1B2C3E31E1F2A3B4C5D6E7F /* StatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E41E1F2A3B4C5D6E7F /* StatesView.swift */; };
+		BEAD7137FEE286A448B5B58B /* ReferenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2348FBEF5B4F96CC7468B53 /* ReferenceView.swift */; };
+		CEF8BCD0D0A02C36CF21505A /* SharingKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB78E089D37B25A69A01D9EC /* SharingKit.swift */; };
+		0DCA154B266774109E9984EA /* CloudSyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D1DB53173E24246F293402A /* CloudSyncManager.swift */; };
 		A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */; };
 		A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */; };
 		A1B2C3E91E1F2A3B4C5D6E7F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */; };
@@ -41,12 +41,13 @@
 		A1B2C3DC1E1F2A3B4C5D6E7F /* SFSTView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SFSTView.swift; sourceTree = "<group>"; };
 		A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		A1B2C3E01E1F2A3B4C5D6E7F /* MirandaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirandaView.swift; sourceTree = "<group>"; };
-		A1B2C3E21E1F2A3B4C5D6E7F /* CaseLawView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaseLawView.swift; sourceTree = "<group>"; };
-		A1B2C4101E1F2A3B4C5D6E7F /* SafariWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebView.swift; sourceTree = "<group>"; };
-		A1B2C3E41E1F2A3B4C5D6E7F /* StatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatesView.swift; sourceTree = "<group>"; };
+		E2348FBEF5B4F96CC7468B53 /* ReferenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReferenceView.swift; sourceTree = "<group>"; };
+		CB78E089D37B25A69A01D9EC /* SharingKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharingKit.swift; sourceTree = "<group>"; };
+		9D1DB53173E24246F293402A /* CloudSyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncManager.swift; sourceTree = "<group>"; };
 		A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvidenceView.swift; sourceTree = "<group>"; };
 		A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8D70F3509F5B5B6627A03C6C /* BluePD.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BluePD.entitlements; sourceTree = "<group>"; };
 		A1B2C4021E1F2A3B4C5D6E7F /* SavedSFSTReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedSFSTReport.swift; sourceTree = "<group>"; };
 		A1B2C4061E1F2A3B4C5D6E7F /* DisclaimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisclaimerView.swift; sourceTree = "<group>"; };
 		A1B2C4081E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstLaunchDisclaimerView.swift; sourceTree = "<group>"; };
@@ -90,14 +91,15 @@
 				A1B2C4081E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift */,
 				A1B2C3DE1E1F2A3B4C5D6E7F /* MainTabView.swift */,
 				A1B2C3E01E1F2A3B4C5D6E7F /* MirandaView.swift */,
-				A1B2C3E21E1F2A3B4C5D6E7F /* CaseLawView.swift */,
-				A1B2C4101E1F2A3B4C5D6E7F /* SafariWebView.swift */,
-				A1B2C3E41E1F2A3B4C5D6E7F /* StatesView.swift */,
+				E2348FBEF5B4F96CC7468B53 /* ReferenceView.swift */,
+				CB78E089D37B25A69A01D9EC /* SharingKit.swift */,
+				9D1DB53173E24246F293402A /* CloudSyncManager.swift */,
 				A1B2C3E61E1F2A3B4C5D6E7F /* EvidenceView.swift */,
 				A1B2C3E81E1F2A3B4C5D6E7F /* SettingsView.swift */,
 				A1B2C4121E1F2A3B4C5D6E7F /* StoreManager.swift */,
 				A1B2C3EA1E1F2A3B4C5D6E7F /* Assets.xcassets */,
                 A1B2C4161E1F2A3B4C5D6E7F /* QuickCardsView.swift */,
+				8D70F3509F5B5B6627A03C6C /* BluePD.entitlements */,
 			);
 			path = BluePD;
 			sourceTree = "<group>";
@@ -193,9 +195,9 @@
 				A1B2C4071E1F2A3B4C5D6E7F /* FirstLaunchDisclaimerView.swift in Sources */,
 				A1B2C3DD1E1F2A3B4C5D6E7F /* MainTabView.swift in Sources */,
 				A1B2C3DF1E1F2A3B4C5D6E7F /* MirandaView.swift in Sources */,
-				A1B2C3E11E1F2A3B4C5D6E7F /* CaseLawView.swift in Sources */,
-				A1B2C40F1E1F2A3B4C5D6E7F /* SafariWebView.swift in Sources */,
-				A1B2C3E31E1F2A3B4C5D6E7F /* StatesView.swift in Sources */,
+				BEAD7137FEE286A448B5B58B /* ReferenceView.swift in Sources */,
+				CEF8BCD0D0A02C36CF21505A /* SharingKit.swift in Sources */,
+				0DCA154B266774109E9984EA /* CloudSyncManager.swift in Sources */,
 				A1B2C3E51E1F2A3B4C5D6E7F /* EvidenceView.swift in Sources */,
 				A1B2C3E71E1F2A3B4C5D6E7F /* SettingsView.swift in Sources */,
 				A1B2C4111E1F2A3B4C5D6E7F /* StoreManager.swift in Sources */,
@@ -311,6 +313,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BluePD/BluePD.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 100;
 				DEVELOPMENT_TEAM = TP65F453BM;
@@ -326,7 +329,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bluepd.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -341,6 +344,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BluePD/BluePD.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 100;
 				DEVELOPMENT_TEAM = TP65F453BM;
@@ -356,7 +360,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bluepd.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

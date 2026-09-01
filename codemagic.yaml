@@ -10,8 +10,21 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.bluepd.app
 
-    scripts:
-      - name: Set up code signing
+        scripts:
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "com.bluepd.app" \
+            --type IOS_APP_STORE \
+            --create \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --key-id "$APP_STORE_CONNECT_KEY_ID" \
+            --private-key "$APP_STORE_CONNECT_PRIVATE_KEY"
+
+      - name: Set up signing certificate
+        script: |
+          keychain initialize
+
+      - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
 

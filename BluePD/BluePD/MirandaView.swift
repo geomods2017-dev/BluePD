@@ -9,6 +9,8 @@ struct MirandaView: View {
     @State private var showPirtle = false
     @State private var pirtleResponse: String = ""
 
+    @State private var shareFile: ShareableFile?
+
     enum Language {
         case english
         case spanish
@@ -33,42 +35,32 @@ struct MirandaView: View {
                 if showCopied {
                     Text("Copied to clipboard")
                         .font(.caption)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(BluePDTheme.success)
                 }
             }
             .padding()
         }
-        .background(
-            LinearGradient(
-                colors: [
-                    Color(red: 7/255, green: 12/255, blue: 24/255),
-                    Color(red: 13/255, green: 23/255, blue: 40/255)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        )
+        .background(BluePDTheme.appBackground.ignoresSafeArea())
         .navigationTitle("Miranda")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $shareFile) { file in
+            ShareSheet(items: [file.url])
+        }
     }
 
     private var headerCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Miranda Warning")
-                .font(.title2)
-                .bold()
-                .foregroundColor(.white)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Text("Read clearly, confirm understanding, and document the response.")
                 .font(.subheadline)
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundStyle(BluePDTheme.secondaryText)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.06))
-        )
+        .bluePDInnerCard(cornerRadius: 18)
     }
 
     private var languageToggle: some View {
@@ -77,8 +69,8 @@ struct MirandaView: View {
                 Text("English")
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(selectedLanguage == .english ? Color.blue : Color.white.opacity(0.08))
-                    .foregroundColor(.white)
+                    .background(selectedLanguage == .english ? BluePDTheme.accent : BluePDTheme.cardFill)
+                    .foregroundColor(selectedLanguage == .english ? .white : BluePDTheme.primaryText)
                     .cornerRadius(10)
             }
 
@@ -86,8 +78,8 @@ struct MirandaView: View {
                 Text("Spanish")
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(selectedLanguage == .spanish ? Color.blue : Color.white.opacity(0.08))
-                    .foregroundColor(.white)
+                    .background(selectedLanguage == .spanish ? BluePDTheme.accent : BluePDTheme.cardFill)
+                    .foregroundColor(selectedLanguage == .spanish ? .white : BluePDTheme.primaryText)
                     .cornerRadius(10)
             }
         }
@@ -97,39 +89,40 @@ struct MirandaView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Miranda")
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Text(currentMirandaText)
                 .font(.title3)
-                .foregroundColor(.white)
+                .foregroundStyle(BluePDTheme.primaryText)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.05))
-        )
+        .bluePDInnerCard(cornerRadius: 18)
     }
 
     private var acknowledgmentSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Acknowledgment")
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Text(currentAcknowledgmentQuestion)
-                .foregroundColor(.white.opacity(0.85))
+                .foregroundStyle(BluePDTheme.secondaryText)
 
-            TextField("Subject response (e.g. Yes, No, Nods head)", text: $subjectResponse)
-                .padding()
-                .background(Color.white.opacity(0.08))
-                .cornerRadius(12)
-                .foregroundColor(.white)
+            TextField(
+                "",
+                text: $subjectResponse,
+                prompt: Text("Subject response (e.g. Yes, No, Nods head)")
+                    .foregroundColor(BluePDTheme.placeholderText)
+            )
+            .padding()
+            .background(BluePDTheme.cardFill)
+            .cornerRadius(12)
+            .foregroundStyle(BluePDTheme.primaryText)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.06))
-        )
+        .bluePDInnerCard(cornerRadius: 18)
     }
 
     private var pirtleToggleCard: some View {
@@ -138,98 +131,100 @@ struct MirandaView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Indiana Pirtle Advisement")
                         .font(.headline)
-                        .foregroundColor(.white)
+                        .foregroundStyle(BluePDTheme.primaryText)
 
                     Text("Use when requesting consent to search in Indiana in a custodial setting where Pirtle applies.")
                         .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundStyle(BluePDTheme.secondaryText)
                 }
 
                 Spacer()
 
                 Toggle("", isOn: $showPirtle)
                     .labelsHidden()
-                    .tint(.blue)
+                    .tint(BluePDTheme.accent)
             }
 
             if showPirtle {
                 Text("Enabled")
                     .font(.caption)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(BluePDTheme.success)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.06))
-        )
+        .bluePDInnerCard(cornerRadius: 18)
     }
 
     private var pirtleCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Indiana Pirtle Advisement")
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Text(currentPirtleText)
                 .font(.title3)
-                .foregroundColor(.white)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Text("Confirm current Indiana law, agency policy, and prosecutor guidance before operational use.")
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.65))
+                .foregroundStyle(BluePDTheme.tertiaryText)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.05))
-        )
+        .bluePDInnerCard(cornerRadius: 18)
     }
 
     private var pirtleAcknowledgmentSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Pirtle Acknowledgment")
                 .font(.headline)
-                .foregroundColor(.white)
+                .foregroundStyle(BluePDTheme.primaryText)
 
             Text(currentPirtleQuestion)
-                .foregroundColor(.white.opacity(0.85))
+                .foregroundStyle(BluePDTheme.secondaryText)
 
-            TextField("Subject response (e.g. Yes, No, Wants attorney, Refuses)", text: $pirtleResponse)
-                .padding()
-                .background(Color.white.opacity(0.08))
-                .cornerRadius(12)
-                .foregroundColor(.white)
+            TextField(
+                "",
+                text: $pirtleResponse,
+                prompt: Text("Subject response (e.g. Yes, No, Wants attorney, Refuses)")
+                    .foregroundColor(BluePDTheme.placeholderText)
+            )
+            .padding()
+            .background(BluePDTheme.cardFill)
+            .cornerRadius(12)
+            .foregroundStyle(BluePDTheme.primaryText)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Color.white.opacity(0.06))
-        )
+        .bluePDInnerCard(cornerRadius: 18)
     }
 
     private var actionButtons: some View {
         VStack(spacing: 10) {
-            Button("Copy Warning(s) + Response") {
+            Button {
                 UIPasteboard.general.string = buildOutput()
                 showCopied = true
+            } label: {
+                Text("Copy Warning(s) + Response")
+                    .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
+            .buttonStyle(BluePDPrimaryButtonStyle())
+
+            Button {
+                shareTranscript()
+            } label: {
+                Label("Share / Export", systemImage: "square.and.arrow.up")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(BluePDSecondaryButtonStyle())
 
             Button("Clear Responses") {
                 subjectResponse = ""
                 pirtleResponse = ""
                 showCopied = false
             }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.white.opacity(0.08))
-            .foregroundColor(.white)
-            .cornerRadius(12)
+            .buttonStyle(BluePDTextButtonStyle())
         }
     }
 
@@ -302,6 +297,7 @@ Response:
         if showPirtle {
             output += """
 
+
 Indiana Pirtle Advisement Given:
 \(currentPirtleText)
 
@@ -314,5 +310,17 @@ Response:
         }
 
         return output
+    }
+
+    private func shareTranscript() {
+        guard let data = PDFReportBuilder.makeTextReportPDF(
+            title: "Miranda Advisement",
+            subtitle: selectedLanguage == .english ? "English" : "Spanish",
+            body: buildOutput()
+        ), let url = PDFReportBuilder.writeTemporaryPDF(data: data, suggestedName: "Miranda Advisement") else {
+            return
+        }
+
+        shareFile = ShareableFile(url: url)
     }
 }

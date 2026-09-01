@@ -20,32 +20,22 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 8/255, green: 18/255, blue: 36/255),
-                    Color(red: 18/255, green: 45/255, blue: 84/255),
-                    Color.black
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            BluePDTheme.appBackground
+                .ignoresSafeArea()
 
             VStack(spacing: 24) {
                 Spacer()
 
                 VStack(spacing: 14) {
-                    Image(systemName: "shield.fill")
-                        .font(.system(size: 60))
-                        .foregroundStyle(.white)
+                    BluePDIconContainer(systemImage: "shield.fill", size: 84, iconSize: 34)
 
                     Text("BluePD")
                         .font(.largeTitle.bold())
-                        .foregroundStyle(.white)
+                        .foregroundStyle(BluePDTheme.primaryText)
 
                     Text(isCreatingPIN ? "Create Your Passcode" : "Secure Access")
                         .font(.headline)
-                        .foregroundStyle(.white.opacity(0.78))
+                        .foregroundStyle(BluePDTheme.secondaryText)
                 }
 
                 VStack(spacing: 16) {
@@ -58,21 +48,20 @@ struct LoginView: View {
                     if !errorMessage.isEmpty {
                         Text(errorMessage)
                             .font(.footnote)
-                            .foregroundStyle(.red.opacity(0.95))
+                            .foregroundStyle(BluePDTheme.danger)
                             .multilineTextAlignment(.center)
                             .padding(.top, 4)
                     }
                 }
                 .padding(20)
-                .background(.ultraThinMaterial.opacity(0.55))
-                .clipShape(RoundedRectangle(cornerRadius: 24))
+                .bluePDCard(cornerRadius: 24)
                 .padding(.horizontal, 20)
 
                 Spacer()
 
                 Text(isCreatingPIN ? "Create a 4-digit passcode to secure BluePD" : "Authorized personnel only")
                     .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.65))
+                    .foregroundStyle(BluePDTheme.tertiaryText)
                     .padding(.bottom, 24)
             }
         }
@@ -88,24 +77,24 @@ struct LoginView: View {
                 .textContentType(.oneTimeCode)
                 .focused($pinFieldFocused)
                 .padding()
-                .background(Color.white.opacity(0.12))
-                .foregroundStyle(.white)
+                .background(BluePDTheme.cardFill)
+                .foregroundStyle(BluePDTheme.primaryText)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
                 )
 
             SecureField("Confirm 4-digit PIN", text: $confirmPIN)
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
                 .padding()
-                .background(Color.white.opacity(0.12))
-                .foregroundStyle(.white)
+                .background(BluePDTheme.cardFill)
+                .foregroundStyle(BluePDTheme.primaryText)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
                 )
 
             Button(action: createPIN) {
@@ -115,11 +104,8 @@ struct LoginView: View {
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.white)
-                .foregroundStyle(.black)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            .buttonStyle(BluePDPrimaryButtonStyle())
         }
     }
 
@@ -130,12 +116,12 @@ struct LoginView: View {
                 .textContentType(.oneTimeCode)
                 .focused($pinFieldFocused)
                 .padding()
-                .background(Color.white.opacity(0.12))
-                .foregroundStyle(.white)
+                .background(BluePDTheme.cardFill)
+                .foregroundStyle(BluePDTheme.primaryText)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                        .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
                 )
 
             Button(action: loginWithPIN) {
@@ -145,11 +131,8 @@ struct LoginView: View {
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.white)
-                .foregroundStyle(.black)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
+            .buttonStyle(BluePDPrimaryButtonStyle())
 
             if useBiometrics {
                 Button(action: authenticateWithBiometrics) {
@@ -159,15 +142,8 @@ struct LoginView: View {
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.white.opacity(0.12))
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                    )
                 }
+                .buttonStyle(BluePDSecondaryButtonStyle())
                 .disabled(isAuthenticating)
             }
         }

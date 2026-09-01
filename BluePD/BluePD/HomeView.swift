@@ -1,11 +1,18 @@
 import SwiftUI
 
 struct HomeView: View {
+    @EnvironmentObject var cloudSync: CloudSyncManager
+
     @AppStorage("officerName") private var officerName: String = ""
     @AppStorage("agencyName") private var agencyName: String = ""
     @AppStorage("officerUnit") private var officerUnit: String = ""
+    // Re-declaring this key (unused directly) makes SwiftUI re-render Home whenever
+    // Daylight Mode is toggled in Settings, since BluePDTheme reads it live rather than
+    // through a published value of its own.
+    @AppStorage(BluePDTheme.daylightModeKey) private var daylightModeEnabled: Bool = false
 
-    @State private var savedReports: [SavedSFSTReport] = []
+    @State private var savedReports: [SavedSFSTReport] = SavedSFSTReportStore.load()
+    @State private var hasRunInitialSync = false
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
@@ -17,8 +24,7 @@ struct HomeView: View {
             VStack(alignment: .leading, spacing: 22) {
                 commandHeader
                 quickActionsSection
-                officerOverviewSection
-                toolsOverviewSection
+                statusSection
             }
             .padding(.horizontal, 18)
             .padding(.top, 14)
@@ -27,6 +33,14 @@ struct HomeView: View {
         .background(BluePDTheme.appBackground.ignoresSafeArea())
         .navigationTitle("BluePD")
         .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: savedReports) { newValue in
+            SavedSFSTReportStore.save(newValue)
+        }
+        .task {
+            guard !hasRunInitialSync else { return }
+            hasRunInitialSync = true
+            await runInitialSync()
+        }
     }
 
     private var commandHeader: some View {
@@ -91,18 +105,9 @@ struct HomeView: View {
 
                 NavigationLink(destination: SavedReportsView(savedReports: $savedReports)) {
                     primaryActionRow(
-                        title: "Past Reports",
-                        subtitle: "Review previously saved SFST reports",
+                        title: "Saved Reports",
+                        subtitle: savedReportsSubtitle,
                         systemImage: "doc.text.fill"
-                    )
-                }
-                .buttonStyle(.plain)
-
-                NavigationLink(destination: QuickCardsView()) {
-                    primaryActionRow(
-                        title: "Quick Cards",
-                        subtitle: "Open saved custom reference cards",
-                        systemImage: "rectangle.stack.text.card.fill"
                     )
                 }
                 .buttonStyle(.plain)
@@ -110,7 +115,7 @@ struct HomeView: View {
         }
     }
 
-    private var officerOverviewSection: some View {
+    private var statusSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             sectionHeader("Officer Profile")
 
@@ -133,45 +138,33 @@ struct HomeView: View {
                     systemImage: "shield.fill"
                 )
 
-                compactStatCard(
-                    title: "Secured",
-                    subtitle: "Access",
-                    systemImage: "lock.shield.fill"
-                )
+                syncStatCard
             }
         }
     }
 
-    private var toolsOverviewSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            sectionHeader("Operational Tools")
+    private var syncStatCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            BluePDIconContainer(
+                systemImage: cloudSync.status.isHealthy ? "icloud.fill" : "icloud.slash.fill",
+                size: 44,
+                iconSize: 17
+            )
 
-            VStack(spacing: 12) {
-                compactToolRow(
-                    title: "Case Law",
-                    subtitle: "Recent legal updates and searchable references",
-                    systemImage: "book.closed.fill"
-                )
+            Text(cloudSync.status.isHealthy ? "iCloud" : "Sync Off")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(BluePDTheme.primaryText)
+                .lineLimit(2)
+                .minimumScaleFactor(0.80)
 
-                compactToolRow(
-                    title: "State Codes",
-                    subtitle: "Traffic and criminal statute references",
-                    systemImage: "doc.text.magnifyingglass"
-                )
-
-                compactToolRow(
-                    title: "Evidence",
-                    subtitle: "Store and review case-related images",
-                    systemImage: "camera.fill"
-                )
-
-                compactToolRow(
-                    title: "Quick Cards",
-                    subtitle: "Custom reminders, notes, and reference cards",
-                    systemImage: "rectangle.stack.text.card.fill"
-                )
-            }
+            Text(cloudSync.status.displayText)
+                .font(.caption)
+                .foregroundStyle(BluePDTheme.secondaryText)
+                .lineLimit(2)
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
+        .bluePDInnerCard(cornerRadius: 22)
     }
 
     private var greetingLine: String {
@@ -188,6 +181,11 @@ struct HomeView: View {
         } else {
             return officer
         }
+    }
+
+    private var savedReportsSubtitle: String {
+        let count = savedReports.count
+        return count == 0 ? "No reports saved yet" : "\(count) report\(count == 1 ? "" : "s") saved"
     }
 
     private func sectionHeader(_ title: String) -> some View {
@@ -236,32 +234,6 @@ struct HomeView: View {
         .bluePDInnerCard(cornerRadius: 20)
     }
 
-    private func compactToolRow(title: String, subtitle: String, systemImage: String) -> some View {
-        HStack(spacing: 14) {
-            BluePDIconContainer(
-                systemImage: systemImage,
-                size: 50,
-                iconSize: 20
-            )
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text(title)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(BluePDTheme.primaryText)
-
-                Text(subtitle)
-                    .font(.subheadline)
-                    .foregroundStyle(BluePDTheme.secondaryText)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(16)
-        .bluePDInnerCard(cornerRadius: 22)
-    }
-
     private func compactStatCard(title: String, subtitle: String, systemImage: String) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             BluePDIconContainer(
@@ -284,10 +256,24 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
         .bluePDInnerCard(cornerRadius: 22)
     }
+
+    @MainActor
+    private func runInitialSync() async {
+        await cloudSync.checkAccountStatus()
+        guard cloudSync.status.isHealthy else { return }
+
+        let remoteReports = await cloudSync.pullAll(kind: .report, as: SavedSFSTReport.self)
+        let merged = CloudSyncManager.mergeAdditively(local: savedReports, remote: remoteReports)
+
+        if merged.count != savedReports.count {
+            savedReports = merged
+        }
+    }
 }
 
 #Preview {
     NavigationStack {
         HomeView()
+            .environmentObject(CloudSyncManager())
     }
 }

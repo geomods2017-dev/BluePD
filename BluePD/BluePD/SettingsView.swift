@@ -1,7 +1,9 @@
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
     @EnvironmentObject var storeManager: StoreManager
+    @EnvironmentObject var cloudSync: CloudSyncManager
 
     @AppStorage("officerName") private var officerName: String = ""
     @AppStorage("badgeNumber") private var badgeNumber: String = ""
@@ -10,7 +12,7 @@ struct SettingsView: View {
     @AppStorage("officerUnit") private var officerUnit: String = ""
     @AppStorage("defaultState") private var defaultState: String = "Indiana"
     @AppStorage("autoFillOfficerInfo") private var autoFillOfficerInfo: Bool = true
-    @AppStorage("darkModeEnabled") private var darkModeEnabled: Bool = false
+    @AppStorage(BluePDTheme.daylightModeKey) private var daylightModeEnabled: Bool = false
     @AppStorage("useBiometrics") private var useBiometrics: Bool = true
     @AppStorage("savedPIN") private var savedPIN: String = ""
     @AppStorage("hasCreatedPIN") private var hasCreatedPIN: Bool = false
@@ -25,6 +27,8 @@ struct SettingsView: View {
     @State private var purchaseStatusMessage: String = ""
     @State private var isPurchasingPro = false
     @State private var isRestoringPurchases = false
+    @State private var isSyncingNow = false
+    @State private var syncActionMessage = ""
 
     private let states = [
         "Indiana", "Illinois", "Michigan", "Ohio", "Kentucky",
@@ -198,13 +202,17 @@ struct SettingsView: View {
                     }
                 }
 
-                settingsSectionCard(title: "Appearance", systemImage: "moon.fill") {
+                settingsSectionCard(title: "Appearance", systemImage: "sun.max.fill") {
                     settingsToggleRow(
-                        title: "Dark Mode",
-                        subtitle: "Visual preference",
-                        systemImage: "moon.fill",
-                        isOn: $darkModeEnabled
+                        title: "Daylight Mode",
+                        subtitle: "High-contrast light theme for bright outdoor conditions",
+                        systemImage: "sun.max.fill",
+                        isOn: $daylightModeEnabled
                     )
+                }
+
+                settingsSectionCard(title: "iCloud Sync", systemImage: "icloud.fill") {
+                    iCloudSyncSection
                 }
 
                 settingsSectionCard(title: "Account", systemImage: "person.crop.circle") {
@@ -234,7 +242,9 @@ struct SettingsView: View {
                 purchaseStatusMessage = error
             }
         }
-        .sheet(isPresented: $showProfileEditor) {
+        .sheet(isPresented: $showProfileEditor, onDismiss: {
+            Task { await pushProfile() }
+        }) {
             ProfileEditorView(
                 officerName: $officerName,
                 badgeNumber: $badgeNumber,
@@ -242,6 +252,88 @@ struct SettingsView: View {
                 officerRank: $officerRank,
                 officerUnit: $officerUnit
             )
+        }
+    }
+
+    private struct OfficerProfilePayload: Codable {
+        var officerName: String
+        var badgeNumber: String
+        var agencyName: String
+        var officerRank: String
+        var officerUnit: String
+        var defaultState: String
+    }
+
+    @MainActor
+    private func pushProfile() async {
+        let payload = OfficerProfilePayload(
+            officerName: officerName,
+            badgeNumber: badgeNumber,
+            agencyName: agencyName,
+            officerRank: officerRank,
+            officerUnit: officerUnit,
+            defaultState: defaultState
+        )
+
+        // A single stable id keeps this as one profile record per device account,
+        // rather than accumulating a new record every time the profile is edited.
+        let profileID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        await cloudSync.push(payload, id: profileID, kind: .profile)
+    }
+
+    private var iCloudSyncSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                Image(systemName: cloudSync.status.isHealthy ? "checkmark.icloud.fill" : "exclamationmark.icloud.fill")
+                    .foregroundStyle(cloudSync.status.isHealthy ? BluePDTheme.success : BluePDTheme.warning)
+                    .font(.title3)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(cloudSync.status.isHealthy ? "iCloud Connected" : "iCloud Unavailable")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(BluePDTheme.primaryText)
+
+                    Text(cloudSync.status.displayText)
+                        .font(.caption)
+                        .foregroundStyle(BluePDTheme.secondaryText)
+                }
+
+                Spacer()
+            }
+
+            Text("Saved SFST reports, evidence photos, and Quick Cards back up to your private iCloud account automatically as you save them. Use the buttons below when setting up a new device.")
+                .font(.caption)
+                .foregroundStyle(BluePDTheme.secondaryText)
+
+            HStack(spacing: 12) {
+                Button {
+                    Task { await backUpNow() }
+                } label: {
+                    Text("Back Up Now")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(BluePDSecondaryButtonStyle())
+                .disabled(isSyncingNow)
+
+                Button {
+                    Task { await restoreFromCloud() }
+                } label: {
+                    Text("Restore from iCloud")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(BluePDSecondaryButtonStyle())
+                .disabled(isSyncingNow)
+            }
+
+            if isSyncingNow {
+                Text("Syncing...")
+                    .font(.caption)
+                    .foregroundStyle(BluePDTheme.secondaryText)
+            } else if !syncActionMessage.isEmpty {
+                Text(syncActionMessage)
+                    .font(.caption)
+                    .foregroundStyle(BluePDTheme.secondaryText)
+            }
         }
     }
 
@@ -475,6 +567,80 @@ struct SettingsView: View {
         newPIN = ""
         confirmNewPIN = ""
     }
+
+    @MainActor
+    private func backUpNow() async {
+        isSyncingNow = true
+        syncActionMessage = ""
+        defer { isSyncingNow = false }
+
+        await cloudSync.checkAccountStatus()
+        guard cloudSync.status.isHealthy else {
+            syncActionMessage = cloudSync.status.displayText
+            return
+        }
+
+        for report in SavedSFSTReportStore.load() {
+            await cloudSync.push(report, id: report.id, kind: .report, updatedAt: report.createdAt)
+        }
+
+        for card in QuickCardStorage.load() {
+            await cloudSync.push(card, id: card.id, kind: .card, updatedAt: card.createdAt)
+        }
+
+        for record in EvidenceStorage.loadManifest() {
+            if let image = record.uiImage {
+                await cloudSync.pushEvidence(record, image: image)
+            }
+        }
+
+        syncActionMessage = "Backup complete."
+    }
+
+    @MainActor
+    private func restoreFromCloud() async {
+        isSyncingNow = true
+        syncActionMessage = ""
+        defer { isSyncingNow = false }
+
+        await cloudSync.checkAccountStatus()
+        guard cloudSync.status.isHealthy else {
+            syncActionMessage = cloudSync.status.displayText
+            return
+        }
+
+        let remoteReports = await cloudSync.pullAll(kind: .report, as: SavedSFSTReport.self)
+        let mergedReports = CloudSyncManager.mergeAdditively(local: SavedSFSTReportStore.load(), remote: remoteReports)
+        SavedSFSTReportStore.save(mergedReports)
+
+        let remoteCards = await cloudSync.pullAll(kind: .card, as: QuickReferenceCard.self)
+        let mergedCards = CloudSyncManager.mergeAdditively(local: QuickCardStorage.load(), remote: remoteCards)
+        QuickCardStorage.save(mergedCards.sorted { $0.createdAt > $1.createdAt })
+
+        let remoteEvidence = await cloudSync.pullEvidence()
+        var localEvidence = EvidenceStorage.loadManifest()
+        let localEvidenceIDs = Set(localEvidence.map(\.id))
+
+        for (record, imageData) in remoteEvidence where !localEvidenceIDs.contains(record.id) {
+            guard let imageData,
+                  let image = UIImage(data: imageData),
+                  let filename = EvidenceStorage.saveImage(image) else { continue }
+            localEvidence.append(EvidenceRecord(id: record.id, filename: filename))
+        }
+        EvidenceStorage.saveManifest(localEvidence)
+
+        let remoteProfiles = await cloudSync.pullAll(kind: .profile, as: OfficerProfilePayload.self)
+        if let profile = remoteProfiles.first?.item {
+            // Fill gaps only — never overwrite a value the officer already has set locally.
+            if officerName.isEmpty { officerName = profile.officerName }
+            if badgeNumber.isEmpty { badgeNumber = profile.badgeNumber }
+            if agencyName.isEmpty { agencyName = profile.agencyName }
+            if officerRank.isEmpty { officerRank = profile.officerRank }
+            if officerUnit.isEmpty { officerUnit = profile.officerUnit }
+        }
+
+        syncActionMessage = "Restore complete. Reopen a tab to see any newly restored items."
+    }
 }
 
 struct ProfileEditorView: View {
@@ -529,11 +695,11 @@ struct SecureSettingsField: View {
                 .frame(height: 58)
                 .background(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
+                        .fill(BluePDTheme.cardFill)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                        .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
                 )
                 .foregroundStyle(BluePDTheme.primaryText)
         }
@@ -544,5 +710,6 @@ struct SecureSettingsField: View {
     NavigationStack {
         SettingsView()
             .environmentObject(StoreManager())
+            .environmentObject(CloudSyncManager())
     }
 }

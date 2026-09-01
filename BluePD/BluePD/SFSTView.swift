@@ -3,6 +3,7 @@ import UIKit
 
 struct SFSTView: View {
     @EnvironmentObject var storeManager: StoreManager
+    @EnvironmentObject var cloudSync: CloudSyncManager
     @Binding var savedReports: [SavedSFSTReport]
 
     @State private var subjectName = ""
@@ -521,6 +522,10 @@ struct SFSTView: View {
         savedReports.insert(newReport, at: 0)
         saveStatusMessage = "Report saved."
         showSavedReports = true
+
+        Task {
+            await cloudSync.push(newReport, id: newReport.id, kind: .report, updatedAt: newReport.createdAt)
+        }
     }
 
     private func yesNo(_ value: Bool) -> String {
@@ -633,11 +638,11 @@ struct StyledTextField: View {
             .frame(height: 58)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
+                    .fill(BluePDTheme.cardFill)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
             )
             .foregroundStyle(BluePDTheme.primaryText)
             .focused(focusedField, equals: field)
@@ -668,13 +673,12 @@ struct StyledDateField: View {
             .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
+                    .fill(BluePDTheme.cardFill)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
             )
-            .colorScheme(.dark)
         }
     }
 }
@@ -710,11 +714,11 @@ struct DropdownField: View {
                 .frame(height: 58)
                 .background(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
+                        .fill(BluePDTheme.cardFill)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                        .stroke(BluePDTheme.innerCardStroke, lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)

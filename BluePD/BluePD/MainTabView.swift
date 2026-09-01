@@ -1,21 +1,61 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @AppStorage(BluePDTheme.daylightModeKey) private var daylightModeEnabled: Bool = false
+
     init() {
+        Self.applyTabBarAppearance()
+    }
+
+    var body: some View {
+        TabView {
+            NavigationStack {
+                HomeView()
+            }
+            .tabItem {
+                Label("Home", systemImage: "shield.fill")
+            }
+
+            ReferenceView()
+                .tabItem {
+                    Label("Reference", systemImage: "book.closed.fill")
+                }
+
+            NavigationStack {
+                EvidenceView()
+            }
+            .tabItem {
+                Label("Evidence", systemImage: "camera.fill")
+            }
+
+            QuickCardsView()
+                .tabItem {
+                    Label("Quick Cards", systemImage: "rectangle.stack.text.card.fill")
+                }
+
+            NavigationStack {
+                SettingsView()
+            }
+            .tabItem {
+                Label("Settings", systemImage: "gearshape.fill")
+            }
+        }
+        .tint(BluePDTheme.accent)
+        .background(BluePDTheme.backgroundTop.ignoresSafeArea())
+        .onChange(of: daylightModeEnabled) { _ in
+            Self.applyTabBarAppearance()
+        }
+    }
+
+    private static func applyTabBarAppearance() {
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
 
-        appearance.backgroundColor = UIColor(
-            red: 5/255,
-            green: 10/255,
-            blue: 20/255,
-            alpha: 0.98
-        )
+        appearance.backgroundColor = UIColor(BluePDTheme.backgroundTop)
+        appearance.shadowColor = UIColor(BluePDTheme.innerCardStroke)
 
-        appearance.shadowColor = UIColor.white.withAlphaComponent(0.08)
-
-        let selectedColor = UIColor.systemBlue
-        let normalColor = UIColor.white.withAlphaComponent(0.55)
+        let selectedColor = UIColor(BluePDTheme.accent)
+        let normalColor = UIColor(BluePDTheme.tertiaryText)
 
         appearance.stackedLayoutAppearance.selected.iconColor = selectedColor
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
@@ -32,49 +72,10 @@ struct MainTabView: View {
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
     }
-
-    var body: some View {
-        TabView {
-            NavigationStack {
-                HomeView()
-            }
-            .tabItem {
-                Label("Home", systemImage: "shield.fill")
-            }
-
-            NavigationStack {
-                CaseLawView()
-            }
-            .tabItem {
-                Label("Case Law", systemImage: "book.closed.fill")
-            }
-
-            NavigationStack {
-                StatesView()
-            }
-            .tabItem {
-                Label("Codes", systemImage: "doc.text.magnifyingglass")
-            }
-
-            NavigationStack {
-                EvidenceView()
-            }
-            .tabItem {
-                Label("Evidence", systemImage: "camera.fill")
-            }
-
-            NavigationStack {
-                SettingsView()
-            }
-            .tabItem {
-                Label("Settings", systemImage: "gearshape.fill")
-            }
-        }
-        .tint(BluePDTheme.accent)
-        .background(Color.black.ignoresSafeArea())
-    }
 }
 
 #Preview {
     MainTabView()
+        .environmentObject(StoreManager())
+        .environmentObject(CloudSyncManager())
 }

@@ -4,6 +4,7 @@ import SwiftUI
 struct BluePDApp: App {
     @AppStorage("isLoggedIn") private var isLoggedIn = false
     @StateObject private var storeManager = StoreManager()
+    @StateObject private var cloudSync = CloudSyncManager()
 
     var body: some Scene {
         WindowGroup {
@@ -15,6 +16,10 @@ struct BluePDApp: App {
                 }
             }
             .environmentObject(storeManager)
+            .environmentObject(cloudSync)
+            .task {
+                await cloudSync.checkAccountStatus()
+            }
         }
     }
 }

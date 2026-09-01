@@ -17,6 +17,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.bluepd.app
         INFOPLIST_FILE: BluePD/Info.plist
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: BluePD/BluePD.entitlements
         DEVELOPMENT_TEAM: ""  # leave empty if Codemagic handles signing
 
     info:
